@@ -43,6 +43,13 @@
       "when": 1795125975547,
       "tag": "0005_booster_rates_and_mythic_pity",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795126098531,
+      "tag": "0006_complete_protagonist_rarity_pools",
+      "breakpoints": true
     }
   ]
 }

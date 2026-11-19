@@ -54,6 +54,11 @@ describe("booster content", () => {
     });
   }
   it("removes the guaranteed Goku override", () => expect(migration).not.toContain("al-246"));
+  it("fills missing protagonist tiers without substituting another rarity", () => {
+    const pools = readFileSync("drizzle/migrations/0006_complete_protagonist_rarity_pools.sql", "utf8");
+    expect(pools).toContain("c.active AND c.rarity=_rarity");
+    expect(pools).toContain("c.role IS DISTINCT FROM ''antagoniste''");
+  });
   it("guarantees Mythique on booster 200 and advances per booster, not per card", () => {
     expect(PITY_LIMIT).toBe(200);
     expect(migration).toContain("_pity >= 199 AND i=5 AND NOT _mythic");

@@ -1,6 +1,6 @@
 # Zenkai — roadmap
 
-- [ ] Nouveaux taux par carte, fin du test Goku garanti, Pity globale par joueur à 200 boosters (x1/x5/x10), encadré et progression sous le paquet ; vérifier sauvegarde, garantie et remise à zéro.
+- [x] Nouveaux taux par carte, fin du test Goku garanti, Pity globale par joueur à 200 boosters (x1/x5/x10), encadré et progression sous le paquet ; ouverture réelle 0→1 et sauvegarde vérifiées, règles de garantie/remise à zéro couvertes par tests. Scénario réel à 199 non exercé (création du joueur de test refusée). Paliers manquants du pack Protagoniste complétés avec alliés de même rareté.
 
 - [x] Revue des halos : boosters x1/x5/x10, révélations, récapitulatifs et miniatures, collection, éveil et comparaison inspectés ; pulsation Épique limitée à la préparation pour préserver l’intensification de déchirure, halo fixe conservé avec mouvement réduit. Échanges/connexion sans cartes ; règles et données inchangées.
 - [x] Corriger l’aura du booster : halo permanent, ombre détourée, débordement visible, noms bilingues normalisés et flash de déchirure pour toutes les raretés ; repos ordinateur/téléphone, ouverture réelle et 32 tests vérifiés.
