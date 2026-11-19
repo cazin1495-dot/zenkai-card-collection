@@ -1,5 +1,5 @@
 import { ShieldCheck } from "lucide-react";
-import { DROP_RATES, PITY_LIMIT, RARITY } from "@/lib/cards";
+import { effectiveDropRate, GOKU_TEST_DROP_PERCENT, PITY_LIMIT, RARITY } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 
 export function BoosterOdds({ counter, failed = false }: { counter: number | undefined; failed?: boolean }) {
@@ -9,12 +9,13 @@ export function BoosterOdds({ counter, failed = false }: { counter: number | und
       <div className="mb-3 flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
         <span>Taux de drop</span><span>Par carte</span>
       </div>
+      {GOKU_TEST_DROP_PERCENT === 100 && <p className="mb-3 text-xs font-semibold text-rarity-legendaire">Mode Test : Goku 100 % · Éveil 100 %</p>}
       <ul className="grid grid-cols-2 gap-x-5 gap-y-2.5 sm:grid-cols-3">
         {(["commune", "non_commune", "rare", "epique", "legendaire", "mythique"] as const).map((rarity) => (
           <li key={rarity} className="flex items-center gap-2 text-[11px]">
             <span className={cn("size-1.5 shrink-0 rounded-full", rarity === "commune" ? "bg-flash" : RARITY[rarity].bg)} />
             <span className="whitespace-nowrap text-muted-foreground">{RARITY[rarity].label}</span>
-            <span className="ml-auto whitespace-nowrap font-semibold tabular-nums">{String(DROP_RATES[rarity]).replace(".", ",")} %</span>
+            <span className="ml-auto whitespace-nowrap font-semibold tabular-nums">{String(effectiveDropRate(rarity)).replace(".", ",")} %</span>
           </li>
         ))}
       </ul>

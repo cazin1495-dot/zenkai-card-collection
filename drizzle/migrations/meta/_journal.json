@@ -50,6 +50,13 @@
       "when": 1795126098531,
       "tag": "0006_complete_protagonist_rarity_pools",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795126222507,
+      "tag": "0007_temporary_all_packs_goku_test",
+      "breakpoints": true
     }
   ]
 }

@@ -41,6 +41,7 @@ export const STOCK_REGEN_MINUTES = 10;
 export const STOCK_REGEN_MS = STOCK_REGEN_MINUTES * 60 * 1000;
 export const OPEN_COUNTS = [1, 5, 10] as const;
 /** Temporary test values; restore normal probabilities after testing. */
+export const GOKU_TEST_DROP_PERCENT = 100;
 export const TRANSCEND_CHANCE_PERCENT = 100;
 export const TRANSCEND_CHANCE_LABEL = `${TRANSCEND_CHANCE_PERCENT} %`;
 export const GOKU_CARD_ID = "al-246";
@@ -63,6 +64,11 @@ export const DROP_RATES: Record<BaseRarity, number> = {
 };
 
 export const PITY_LIMIT = 200;
+
+export function effectiveDropRate(rarity: BaseRarity) {
+  if (GOKU_TEST_DROP_PERCENT === 100) return rarity === "mythique" ? 100 : 0;
+  return DROP_RATES[rarity];
+}
 
 /** Legacy fictional test art, kept for cards without an AniList portrait. */
 export const CARD_ART: Record<string, string> = {

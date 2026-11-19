@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boosterStock, bestRarity, cardIdentity, GOKU_CARD_ID, TRANSCEND_CHANCE_PERCENT, CARDS_PER_BOOSTER, DROP_RATES, STOCK_CAP, PITY_LIMIT, formatCountdown, inPack, type Card } from "./cards";
+import { boosterStock, bestRarity, cardIdentity, effectiveDropRate, GOKU_TEST_DROP_PERCENT, GOKU_CARD_ID, TRANSCEND_CHANCE_PERCENT, CARDS_PER_BOOSTER, DROP_RATES, STOCK_CAP, PITY_LIMIT, formatCountdown, inPack, type Card } from "./cards";
 import { readFileSync } from "node:fs";
 
 const t0 = new Date("2026-11-19T12:00:00Z");
@@ -27,6 +27,21 @@ describe("booster stock", () => {
 });
 
 describe("temporary Goku test rules", () => {
+  const allPacks = readFileSync("drizzle/migrations/0007_temporary_all_packs_goku_test.sql", "utf8");
+  it("forces Mythique Goku on every draw across all packs", () => {
+    expect(GOKU_TEST_DROP_PERCENT).toBe(100);
+    expect(allPacks).toContain("c.id=''al-246'' AND c.active AND c.rarity=''mythique''");
+    expect(allPacks).toContain("_rarity:=''mythique'';");
+    expect(allPacks).not.toContain("IF _category=");
+    expect(effectiveDropRate("mythique")).toBe(100);
+    for (const r of ["commune", "non_commune", "rare", "epique", "legendaire"] as const) expect(effectiveDropRate(r)).toBe(0);
+  });
+  it("guarantees evolution while preserving ownership and one attempt per copy", () => {
+    expect(allPacks).toContain("uc.id=_user_card_id AND uc.user_id=_uid FOR UPDATE OF uc");
+    expect(allPacks).toContain("IF _attempted THEN RAISE EXCEPTION 'already_attempted'");
+    expect(allPacks).toContain("SET awaken_attempted=true,transcended=true");
+    expect(allPacks).toContain("RETURN true;");
+  });
   const migration = readFileSync("drizzle/migrations/0002_temporary_goku_guaranteed_tests.sql", "utf8");
   it("keeps Goku in the card catalogue", () => {
     expect(GOKU_CARD_ID).toBe("al-246");
