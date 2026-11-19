@@ -43,4 +43,4 @@ use the editor.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep ornamental TCG framing, engraved foil and collector metadata inside the shared Transcendance card face, with subtle overlays and reduced-motion fallbacks so all views share the physical finish without altering card identity.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.
-- Keep comparison faces permanently mounted and eagerly decoded with a back face in a dedicated full-turn rotor; use stepped CSS visibility at the edge halfway through the rotation, and lock the sliding selector until landing to prevent interrupted swaps.
+- Keep complete comparison faces permanently mounted and eagerly decoded, with an opaque base under the awakened clip-path layer; synchronize its vertical reveal and scanner beam with identical duration/easing, and lock the sliding selector until the scan finishes to avoid interrupted swaps.
