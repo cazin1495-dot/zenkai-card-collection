@@ -14,7 +14,7 @@ export const profileQuery = (userId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, last_booster_at")
+        .select("id, username, boosters_stored, stock_updated_at")
         .eq("id", userId)
         .maybeSingle();
       if (error) throw error;
@@ -28,7 +28,7 @@ export const collectionQuery = (userId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_cards")
-        .select("card_id, obtained_at")
+        .select("id, card_id, obtained_at, transcended, awaken_attempted")
         .eq("user_id", userId)
         .order("obtained_at", { ascending: false });
       if (error) throw error;

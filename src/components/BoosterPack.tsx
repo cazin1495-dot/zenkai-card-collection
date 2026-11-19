@@ -1,26 +1,72 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
-import boosterArt from "@/assets/booster-art.jpg";
+import packArt from "@/assets/zenkai-booster-pack.png.asset.json";
+import type { Rarity } from "@/lib/cards";
 
-/** Stylised foil booster pack. */
-export function BoosterPack({ shaking, className }: { shaking?: boolean; className?: string }) {
+export type PackState = "idle" | "opening" | "tearing";
+
+const TEAR = 16; // % of the pack height that rips off
+
+/** The Zenkai booster pack. While tearing, a beam in the best rarity's colour bursts out. */
+export function BoosterPack({
+  state = "idle",
+  accent = "var(--primary)",
+  beam,
+  className,
+}: {
+  state?: PackState;
+  accent?: string;
+  beam?: Rarity | null;
+  className?: string;
+}) {
+  const beamColor = beam === "transcendance" ? "var(--rarity-transcendance)" : beam ? `var(--rarity-${beam})` : accent;
+  const style = { "--accent": accent, "--beam": beamColor } as CSSProperties;
+  const tearing = state === "tearing";
+  const img = <img src={packArt.url} alt="" draggable={false} className="absolute inset-0 size-full object-contain mix-blend-lighten" />;
+
   return (
-    <div className={cn(shaking ? "animate-pack-shake" : "animate-pack-float", className)}>
-      <div className="booster-pack relative aspect-[5/8] w-56 overflow-hidden rounded-xl shadow-glow sm:w-64">
-        <img src={boosterArt} alt="" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/90" />
-        <div className="holo-sheen absolute inset-0 animate-sheen opacity-70" />
-        <div className="absolute inset-x-0 top-6 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-primary-foreground/80">
-            Booster
-          </p>
-        </div>
-        <div className="absolute inset-x-0 bottom-8 flex flex-col items-center gap-1">
-          <p className="font-display text-4xl font-black tracking-tight text-primary-foreground">ZENKAI</p>
-          <p className="rounded-full border border-primary-foreground/30 bg-background/40 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary-foreground backdrop-blur">
-            3 cartes
-          </p>
-        </div>
+    <div className={cn("relative", state === "idle" && "animate-pack-float", className)} style={style}>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 size-[130%] -translate-x-1/2 -translate-y-1/2 animate-halo rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--accent) 55%, transparent), transparent 65%)" }}
+      />
+      <div className={cn("relative aspect-[1170/1532] w-60 sm:w-72", (state === "opening" || tearing) && "animate-pack-rumble")}>
+        {tearing ? (
+          <>
+            <div className="absolute inset-0" style={{ clipPath: `inset(${TEAR}% 0 0 0)` }}>{img}</div>
+            <div className="absolute inset-0 animate-tear-off" style={{ clipPath: `inset(0 0 ${100 - TEAR}% 0)` }}>{img}</div>
+            {/* Beam of light from the tear */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 w-[140%] origin-bottom -translate-x-1/2 animate-beam"
+              style={{ bottom: `${100 - TEAR}%`, height: "120vh", background: "linear-gradient(to top, var(--beam), color-mix(in oklab, var(--beam) 40%, transparent) 35%, transparent 80%)", clipPath: "polygon(38% 100%, 62% 100%, 100% 0, 0 0)", filter: "blur(6px)", mixBlendMode: "screen" }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-[6%] h-3 -translate-y-1/2 animate-beam rounded-full"
+              style={{ top: `${TEAR}%`, background: "var(--beam)", boxShadow: "0 0 40px 12px var(--beam)" }}
+            />
+            {beam === "transcendance" && (
+              <div aria-hidden className="pointer-events-none absolute left-1/2 w-[120%] -translate-x-1/2 animate-beam bg-gradient-rainbow opacity-70 mix-blend-screen blur-md" style={{ bottom: `${100 - TEAR}%`, height: "120vh", clipPath: "polygon(42% 100%, 58% 100%, 85% 0, 15% 0)" }} />
+            )}
+            {(beam === "legendaire" || beam === "mythique") && <Bolts />}
+          </>
+        ) : (
+          img
+        )}
       </div>
     </div>
+  );
+}
+
+function Bolts() {
+  const paths = ["M20 0 L35 40 L22 42 L40 90", "M80 5 L64 38 L78 40 L58 95", "M50 0 L44 30 L56 34 L46 70"];
+  return (
+    <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute -top-[60%] left-0 h-[80%] w-full animate-beam">
+      {paths.map((d, i) => (
+        <path key={i} d={d} fill="none" stroke="var(--beam)" strokeWidth="1.6" className="animate-bolt" style={{ animationDelay: `${i * 0.12}s`, filter: "drop-shadow(0 0 3px var(--beam))" }} />
+      ))}
+    </svg>
   );
 }

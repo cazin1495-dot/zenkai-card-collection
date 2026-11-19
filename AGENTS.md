@@ -31,6 +31,6 @@ use the editor.
 
 ## Project rules
 
-- Booster opening runs only through the `public.open_booster()` security-definer DB function (randomness, cooldown, inserts); clients have no insert rights on `user_cards`, so rules can't be bypassed.
-- Card metadata lives in `public.cards`; card art is mapped by card id in `src/lib/cards.ts` (`CARD_ART`) — add both when adding a character.
+- Booster opening runs only through the `public.open_boosters(category, count)` security-definer DB function (stock regen, randomness, inserts); Transcendance attempts only through `public.attempt_transcendance(user_card_id)`. Clients have no insert/update rights on `user_cards`, so rules can't be bypassed.
+- Card metadata (incl. AniList portrait URL, genre, saga, role, quote) lives in `public.cards`; it was imported once from the AniList GraphQL API. Legacy fictional cards are kept with `active=false`. Transcendance is a per-copy state on `user_cards`, not a card rarity. Client rule constants in `src/lib/cards.ts` mirror the SQL and are covered by tests.
 - Rarity colors are semantic tokens (`--rarity-*`) with matching `glow-*` utilities in `src/styles.css`; components pick them via the `RARITY` map.

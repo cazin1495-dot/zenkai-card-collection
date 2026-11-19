@@ -3,17 +3,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
+import { TranscendButton } from "@/components/Transcendance";
 import { cardsQuery, collectionQuery } from "@/lib/queries";
-import { RARITY, type Rarity } from "@/lib/cards";
+import { inPack, type Card, type PackId } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/collection")({
   head: () => ({
     meta: [
       { title: "Ma Collection — Zenkai" },
-      { name: "description", content: "Retrouve toutes les cartes anime que tu as obtenues sur Zenkai." },
+      { name: "description", content: "Tes classeurs de cartes anime par saga, avec ta progression." },
       { property: "og:title", content: "Ma Collection — Zenkai" },
-      { property: "og:description", content: "Retrouve toutes les cartes anime que tu as obtenues sur Zenkai." },
+      { property: "og:description", content: "Tes classeurs de cartes anime par saga, avec ta progression." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -21,23 +22,49 @@ export const Route = createFileRoute("/_authenticated/collection")({
   component: CollectionPage,
 });
 
-const FILTERS: (Rarity | "all")[] = ["all", "commune", "rare", "epique", "legendaire"];
+type Filter = "all" | PackId;
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "Toutes" },
+  { id: "shonen", label: "Shonen" },
+  { id: "seinen", label: "Seinen" },
+  { id: "shojo", label: "Shojo" },
+  { id: "sport", label: "Sport" },
+  { id: "protagoniste", label: "Protagonistes" },
+  { id: "antagoniste", label: "Antagonistes" },
+];
+
+type Owned = { count: number; transcended: boolean; pendingCopy: string | null };
 
 function CollectionPage() {
   const { userId } = Route.useRouteContext();
   const cards = useQuery(cardsQuery);
   const owned = useQuery(collectionQuery(userId));
-  const [filter, setFilter] = useState<Rarity | "all">("all");
+  const [filter, setFilter] = useState<Filter>("all");
 
-  const counts = useMemo(() => {
-    const m = new Map<string, number>();
-    owned.data?.forEach((row) => m.set(row.card_id, (m.get(row.card_id) ?? 0) + 1));
+  const byCard = useMemo(() => {
+    const m = new Map<string, Owned>();
+    const rarity = new Map((cards.data ?? []).map((c) => [c.id, c.rarity]));
+    owned.data?.forEach((row) => {
+      const o = m.get(row.card_id) ?? { count: 0, transcended: false, pendingCopy: null };
+      o.count++;
+      if (row.transcended) o.transcended = true;
+      if (!o.pendingCopy && rarity.get(row.card_id) === "mythique" && !row.awaken_attempted) o.pendingCopy = row.id;
+      m.set(row.card_id, o);
+    });
     return m;
-  }, [owned.data]);
+  }, [owned.data, cards.data]);
 
-  const list = (cards.data ?? []).filter((c) => filter === "all" || c.rarity === filter);
-  const uniqueOwned = counts.size;
-  const total = cards.data?.length ?? 0;
+  const list = (cards.data ?? []).filter((c) => filter === "all" || inPack(c, filter));
+  const binders = useMemo(() => {
+    const g = new Map<string, Card[]>();
+    list.forEach((c) => {
+      const k = c.series ?? "Autres";
+      g.set(k, [...(g.get(k) ?? []), c]);
+    });
+    return [...g.entries()];
+  }, [list]);
+
+  const ownedInView = list.filter((c) => byCard.has(c.id)).length;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
@@ -45,29 +72,23 @@ function CollectionPage() {
         <div>
           <h1 className="text-3xl font-black sm:text-4xl">Ma Collection</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {uniqueOwned} / {total} personnages · {owned.data?.length ?? 0} cartes au total
+            {ownedInView} / {list.length} personnages · {owned.data?.length ?? 0} cartes au total
           </p>
         </div>
-        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full bg-gradient-primary transition-all"
-            style={{ width: total ? `${(uniqueOwned / total) * 100}%` : "0%" }}
-          />
-        </div>
+        <Progress value={ownedInView} total={list.length} className="max-w-xs" />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={f.id}
+            onClick={() => setFilter(f.id)}
             className={cn(
               "rounded-full border border-border px-4 py-1.5 text-xs font-semibold transition-colors",
-              filter === f ? "bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
-              f !== "all" && RARITY[f].text,
+              filter === f.id ? "bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {f === "all" ? "Toutes" : RARITY[f].label}
+            {f.label}
           </button>
         ))}
       </div>
@@ -75,19 +96,48 @@ function CollectionPage() {
       {owned.data && owned.data.length === 0 && (
         <div className="mt-10 rounded-2xl border border-border bg-surface/60 p-8 text-center">
           <p className="font-display text-lg font-bold">Ta collection est vide</p>
-          <p className="mt-1 text-sm text-muted-foreground">Ouvre ton premier booster gratuit pour obtenir 3 cartes.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Ouvre ton premier booster pour obtenir 5 cartes.</p>
           <Button variant="hero" className="mt-5 rounded-full" asChild>
             <Link to="/">Ouvrir un booster</Link>
           </Button>
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {list.map((card) => {
-          const n = counts.get(card.id) ?? 0;
-          return <AnimeCard key={card.id} card={card} count={n} locked={n === 0} />;
+      <div className="mt-8 flex flex-col gap-10">
+        {binders.map(([series, items]) => {
+          const got = items.filter((c) => byCard.has(c.id)).length;
+          return (
+            <section key={series} className="rounded-3xl border border-border bg-surface/40 p-4 sm:p-6">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-xl font-black">{series}</h2>
+                <div className="flex w-full max-w-xs items-center gap-3">
+                  <Progress value={got} total={items.length} />
+                  <span className="shrink-0 text-xs text-muted-foreground">{got} / {items.length}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-8">
+                {items.map((card) => {
+                  const o = byCard.get(card.id);
+                  return (
+                    <div key={card.id} className="flex flex-col items-center gap-2">
+                      <AnimeCard card={card} count={o?.count} locked={!o} transcended={o?.transcended} />
+                      {o?.pendingCopy && <TranscendButton size="xs" userCardId={o.pendingCopy} card={card} />}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
         })}
       </div>
+    </div>
+  );
+}
+
+function Progress({ value, total, className }: { value: number; total: number; className?: string }) {
+  return (
+    <div className={cn("h-2 w-full overflow-hidden rounded-full bg-muted", className)}>
+      <div className="h-full bg-gradient-primary transition-all" style={{ width: total ? `${(value / total) * 100}%` : "0%" }} />
     </div>
   );
 }

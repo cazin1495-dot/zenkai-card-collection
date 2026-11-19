@@ -20,7 +20,8 @@ export const getCards = createServerFn({ method: "GET" }).handler(async (): Prom
   });
   const { data, error } = await client
     .from("cards")
-    .select("id, name, title, rarity, description, sort_order")
+    .select("id, name, title, rarity, description, sort_order, category, series, role, image_url, quote")
+    .eq("active", true)
     .order("sort_order");
   if (error) throw new Error(error.message);
   return (data ?? []) as Card[];

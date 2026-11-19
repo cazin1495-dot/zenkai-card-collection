@@ -2,26 +2,33 @@ import { useRef, useState, type PointerEvent } from "react";
 import { ChevronRight, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
-import { RARITY, type Card } from "@/lib/cards";
+import { TranscendButton } from "@/components/Transcendance";
+import { RARITY, type PulledCard } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 
 const SWIPE_DISTANCE = 50;
 
 type Props = {
-  cards: Card[];
+  cards: PulledCard[];
   onDone: () => void;
+  /** Awakening outcome per copy (userCardId). */
+  awakened?: Record<string, "transcended" | "failed">;
+  onAwaken?: (userCardId: string, r: "transcended" | "failed") => void;
 };
 
 /** Reveals booster cards one at a time: tap or swipe to flip, then "Carte suivante". */
-export function CardReveal({ cards, onDone }: Props) {
+export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [dragX, setDragX] = useState(0);
   const startX = useRef<number | null>(null);
 
-  const card = cards[index];
-  if (!card) return null;
-  const r = RARITY[card.rarity];
+  const item = cards[index];
+  if (!item) return null;
+  const card = item.card;
+  const state = awakened[item.userCardId];
+  const transcended = state === "transcended";
+  const r = RARITY[transcended ? "transcendance" : card.rarity];
   const isLast = index === cards.length - 1;
 
   function flip() {
@@ -90,7 +97,7 @@ export function CardReveal({ cards, onDone }: Props) {
             className={cn(
               "pointer-events-none absolute left-1/2 top-1/2 size-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-rarity-burst",
               r.bg,
-              card.rarity === "legendaire" && "size-96",
+              (card.rarity === "legendaire" || card.rarity === "mythique") && "size-96",
             )}
           />
         )}
@@ -118,7 +125,7 @@ export function CardReveal({ cards, onDone }: Props) {
             }}
           >
             <div className={cn(!flipped && "animate-suspense")}>
-              <AnimeCard card={card} flipped={flipped} />
+              <AnimeCard card={card} flipped={flipped} transcended={transcended} />
             </div>
           </button>
         </div>
@@ -130,6 +137,10 @@ export function CardReveal({ cards, onDone }: Props) {
             <p className={cn("font-display text-xs font-bold uppercase tracking-[0.3em]", r.text)}>
               {r.label}
             </p>
+            {card.rarity === "mythique" && !state && (
+              <TranscendButton userCardId={item.userCardId} card={card} onResult={(res) => onAwaken?.(item.userCardId, res)} />
+            )}
+            {state === "failed" && <p className="text-xs text-muted-foreground">Éveil échoué — reste Mythique</p>}
             <Button variant="hero" size="lg" className="rounded-full" onClick={next}>
               {isLast ? "Voir le récapitulatif" : "Carte suivante"}
               <ChevronRight />

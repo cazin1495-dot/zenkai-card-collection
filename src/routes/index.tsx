@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Clock, Gift, Sparkles } from "lucide-react";
+import { Clock, Layers, Package, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { BoosterPack } from "@/components/BoosterPack";
 import { CardReveal } from "@/components/CardReveal";
+import { TranscendButton } from "@/components/Transcendance";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, profileQuery } from "@/lib/queries";
 import {
-  BOOSTER_COOLDOWN_MS,
-  cooldownRemaining,
+  bestRarity,
+  boosterStock,
+  CARDS_PER_BOOSTER,
+  DROP_RATES,
   formatCountdown,
+  OPEN_COUNTS,
+  PACKS,
   RARITY,
-  RARITY_ORDER,
+  rarityRank,
+  STOCK_CAP,
+  type BaseRarity,
   type Card,
+  type PackId,
+  type PulledCard,
+  type Rarity,
 } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 
@@ -24,15 +34,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Boosters — Zenkai" },
-      {
-        name: "description",
-        content: "Ouvre un booster gratuit toutes les 10 minutes et découvre 3 cartes anime.",
-      },
+      { name: "description", content: "Ouvre des boosters de 5 cartes anime : Shonen, Seinen, Shojo, Sport, Antagonistes et Protagonistes." },
       { property: "og:title", content: "Boosters — Zenkai" },
-      {
-        property: "og:description",
-        content: "Ouvre un booster gratuit toutes les 10 minutes et découvre 3 cartes anime.",
-      },
+      { property: "og:description", content: "Ouvre des boosters de 5 cartes anime : Shonen, Seinen, Shojo, Sport, Antagonistes et Protagonistes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -41,14 +45,8 @@ export const Route = createFileRoute("/")({
   component: BoostersPage,
 });
 
-const DROP_RATES: Record<string, string> = {
-  commune: "60 %",
-  rare: "27 %",
-  epique: "10 %",
-  legendaire: "3 %",
-};
-
-type Phase = "idle" | "opening" | "reveal" | "summary";
+type Phase = "idle" | "opening" | "tearing" | "reveal" | "summary";
+type Awake = Record<string, "transcended" | "failed">;
 
 function BoostersPage() {
   const { data: cards } = useSuspenseQuery(cardsQuery);
@@ -60,7 +58,10 @@ function BoostersPage() {
 
   const [now, setNow] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [pulled, setPulled] = useState<Card[]>([]);
+  const [pack, setPack] = useState<PackId>("shonen");
+  const [pulled, setPulled] = useState<PulledCard[]>([]);
+  const [opened, setOpened] = useState(1);
+  const [awake, setAwake] = useState<Awake>({});
 
   useEffect(() => {
     setNow(Date.now());
@@ -68,163 +69,214 @@ function BoostersPage() {
     return () => window.clearInterval(id);
   }, []);
 
-  const remaining = now === null ? 0 : cooldownRemaining(profile.data?.last_booster_at, now);
-  const onCooldown = !!userId && remaining > 0;
-  const busy = phase === "opening" || phase === "reveal" || (!!userId && profile.isLoading);
+  const stock =
+    profile.data && now !== null
+      ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now)
+      : null;
+  const busy = phase === "opening" || phase === "tearing" || phase === "reveal" || (!!userId && profile.isLoading);
+  const packInfo = PACKS.find((p) => p.id === pack)!;
+  const best = bestRarity(pulled.map((p) => (awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity)));
 
-  async function openBooster() {
+  async function open(count: number) {
     if (!session) {
       navigate({ to: "/auth" });
       return;
     }
-    if (onCooldown || busy) return;
-
+    if (busy || (stock && stock.count < count)) return;
     setPhase("opening");
+    setAwake({});
     const started = Date.now();
-    const { data, error } = await supabase.rpc("open_booster");
-    const wait = Math.max(0, 700 - (Date.now() - started));
-    await new Promise((r) => setTimeout(r, wait));
+    const { data, error } = await supabase.rpc("open_boosters", { _category: pack, _count: count });
+    await new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started))));
 
     if (error || !data?.length) {
       setPhase(pulled.length ? "summary" : "idle");
-      if (error?.message.includes("cooldown_active")) {
-        toast.error("Patience ! Ton prochain booster n'est pas encore prêt.");
-      } else {
-        toast.error("Impossible d'ouvrir le booster. Réessaie dans un instant.");
-      }
+      toast.error(
+        error?.message.includes("not_enough_boosters")
+          ? "Pas assez de boosters en stock."
+          : "Impossible d'ouvrir le booster. Réessaie dans un instant.",
+      );
       queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
       return;
     }
 
     const byId = new Map(cards.map((c) => [c.id, c]));
-    setPulled(data.map((row) => byId.get(row.card_id)).filter((c): c is Card => !!c));
-    setPhase("reveal");
-
-    const nextAt = data[0]?.next_booster_at;
-    const openedAt = nextAt
-      ? new Date(new Date(nextAt).getTime() - BOOSTER_COOLDOWN_MS).toISOString()
-      : new Date().toISOString();
+    const items = data
+      .map((row) => ({ userCardId: row.user_card_id, card: byId.get(row.card_id) }))
+      .filter((p): p is PulledCard => !!p.card);
+    setPulled(items);
+    setOpened(count);
     queryClient.setQueryData(profileQuery(session.user.id).queryKey, (old) =>
-      old ? { ...old, last_booster_at: openedAt } : old,
+      old && data[0] ? { ...old, boosters_stored: data[0].boosters_left, stock_updated_at: data[0].stock_updated_at } : old,
     );
     queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
-    queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setPhase("tearing");
+    const top = bestRarity(items.map((p) => p.card.rarity));
+    await new Promise((r) => setTimeout(r, top === "mythique" ? 3000 : 2500));
+    setPhase(count === 1 ? "reveal" : "summary");
   }
 
-  const best = pulled.reduce<Card | null>(
-    (acc, c) =>
-      !acc || RARITY_ORDER.indexOf(c.rarity) < RARITY_ORDER.indexOf(acc.rarity) ? c : acc,
-    null,
-  );
+  const tearBeam = useMemo(() => bestRarity(pulled.map((p) => p.card.rarity)), [pulled]);
+  const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
-      {phase !== "idle" && phase !== "opening" && <h1 className="sr-only">Ouverture du booster</h1>}
-      {(phase === "idle" || phase === "opening") && (
+    <div
+      className={cn(
+        "mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-6 sm:px-6 sm:pt-10",
+        phase === "tearing" && tearBeam === "mythique" && "animate-screen-shake",
+      )}
+    >
+      {(phase === "reveal" || phase === "summary") && <h1 className="sr-only">Ouverture du booster</h1>}
+      {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Gift className="size-3.5 text-primary" /> Un booster gratuit toutes les 10 minutes
-          </p>
           <h1 className="text-center text-3xl font-black sm:text-5xl">
-            Ouvre ton <span className="text-gradient-primary">booster</span>
+            Ouvre tes <span className="text-gradient-primary">boosters</span>
           </h1>
           <p className="mt-3 max-w-md text-center text-sm text-muted-foreground">
-            3 cartes au hasard. Trouveras-tu la légendaire ?
+            {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
           </p>
+
+          <div role="radiogroup" aria-label="Catégorie de booster" className="mt-6 grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {PACKS.map((p) => (
+              <button
+                key={p.id}
+                role="radio"
+                aria-checked={pack === p.id}
+                disabled={busy}
+                onClick={() => setPack(p.id)}
+                className={cn(
+                  "rounded-xl border bg-surface/60 px-3 py-2 text-left transition-all",
+                  pack === p.id ? "border-[var(--accent)] bg-surface-raised" : "border-border opacity-70 hover:opacity-100",
+                )}
+                style={{ ["--accent" as string]: p.accent, boxShadow: pack === p.id ? `0 0 24px -6px ${p.accent}` : undefined }}
+              >
+                <span className="flex items-center gap-2 text-sm font-bold">
+                  <span className="size-2.5 rounded-full" style={{ background: p.accent }} /> {p.label}
+                </span>
+                <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{p.hint}</span>
+              </button>
+            ))}
+          </div>
         </>
       )}
 
-      <section
-        className={cn(
-          "relative flex min-h-[440px] w-full items-center justify-center",
-          phase === "idle" || phase === "opening" ? "mt-8" : "mt-0",
-        )}
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 size-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-3xl"
-        />
+      <section className={cn("relative flex min-h-[460px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-6")}>
         {phase === "reveal" ? (
-          <CardReveal cards={pulled} onDone={() => setPhase("summary")} />
+          <CardReveal cards={pulled} awakened={awake} onAwaken={onAwaken} onDone={() => setPhase("summary")} />
         ) : phase === "summary" ? (
-          <div className="relative flex w-full flex-col items-center">
-            <h2 className="mb-5 text-xl font-black sm:text-2xl">Récapitulatif</h2>
-            <div className="grid w-full max-w-2xl grid-cols-3 gap-3 sm:gap-6">
-              {pulled.map((card, i) => (
-                <div
-                  key={`${card.id}-${i}`}
-                  className="animate-card-in"
-                  style={{ animationDelay: `${i * 120}ms` }}
-                >
-                  <AnimeCard card={card} />
-                </div>
-              ))}
-            </div>
-            {best && (
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Meilleure carte :{" "}
-                <span className={cn("font-semibold", RARITY[best.rarity].text)}>
-                  {best.name} ({RARITY[best.rarity].label})
-                </span>
-              </p>
-            )}
-            {session && (
-              <Link
-                to="/collection"
-                className="mt-2 text-sm font-semibold text-primary hover:underline"
-              >
-                Voir ma collection
-              </Link>
-            )}
-          </div>
+          <Summary items={pulled} opened={opened} awake={awake} onAwaken={onAwaken} best={best} signedIn={!!session} />
         ) : (
-          <BoosterPack shaking={phase === "opening"} />
+          <BoosterPack
+            state={phase === "tearing" ? "tearing" : phase === "opening" ? "opening" : "idle"}
+            accent={packInfo.accent}
+            beam={phase === "tearing" ? tearBeam : null}
+          />
         )}
       </section>
 
-      <div className={cn("mt-8 flex flex-col items-center gap-3", phase === "reveal" && "hidden")}>
-        <Button
-          variant="hero"
-          size="xl"
-          onClick={openBooster}
-          disabled={!ready || busy || onCooldown}
-        >
-          {onCooldown ? (
-            <>
-              <Clock /> Prochain booster dans {formatCountdown(remaining)}
-            </>
-          ) : phase === "opening" ? (
-            <>
-              <Sparkles className="animate-spin" /> Ouverture…
-            </>
-          ) : (
-            <>
-              <Gift /> Ouvrir un booster gratuit
-            </>
-          )}
-        </Button>
-        {ready && !session && (
-          <p className="text-xs text-muted-foreground">
-            Connecte-toi pour garder tes cartes dans ta collection.
+      <div className={cn("mt-6 flex flex-col items-center gap-3", phase === "reveal" && "hidden")}>
+        {session && stock && (
+          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-4 py-1.5 text-xs text-muted-foreground">
+            <Package className="size-3.5 text-primary" />
+            <span className="font-semibold text-foreground">{stock.count} / {STOCK_CAP}</span> boosters
+            <span aria-hidden>·</span>
+            {stock.nextInMs === null ? "Stock plein" : (<><Clock className="size-3.5" /> +1 dans {formatCountdown(stock.nextInMs)}</>)}
           </p>
         )}
+        {phase === "summary" && <p className="text-xs text-muted-foreground">Pack sélectionné : {packInfo.label}</p>}
+        <div className="flex flex-wrap justify-center gap-2">
+          {OPEN_COUNTS.map((n) => (
+            <Button
+              key={n}
+              variant={n === 1 ? "hero" : "glass"}
+              size="lg"
+              className="rounded-full"
+              onClick={() => open(n)}
+              disabled={!ready || busy || (!!stock && stock.count < n)}
+            >
+              {phase === "opening" ? <Sparkles className="animate-spin" /> : <Layers />} Ouvrir x{n}
+            </Button>
+          ))}
+        </div>
+        {phase === "summary" && (
+          <Button variant="link" size="sm" onClick={() => setPhase("idle")}>Changer de pack</Button>
+        )}
+        {ready && !session && <p className="text-xs text-muted-foreground">Connecte-toi pour ouvrir des boosters et garder tes cartes.</p>}
       </div>
 
-      <ul className="mt-14 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-        {(["commune", "rare", "epique", "legendaire"] as const).map((r) => (
-          <li
-            key={r}
-            className="flex items-center gap-3 rounded-xl border border-border bg-surface/60 px-4 py-3"
-          >
-            <span className={cn("size-3 rounded-full", RARITY[r].bg, RARITY[r].glow)} />
+      <ul className="mt-14 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
+        {(["commune", "rare", "epique", "legendaire", "mythique", "transcendance"] as const).map((r) => (
+          <li key={r} className="flex items-center gap-3 rounded-xl border border-border bg-surface/60 px-4 py-3">
+            <span className={cn("size-3 rounded-full", r === "transcendance" ? "bg-gradient-rainbow" : RARITY[r].bg, RARITY[r].glow)} />
             <div>
               <p className={cn("text-sm font-semibold", RARITY[r].text)}>{RARITY[r].label}</p>
-              <p className="text-xs text-muted-foreground">{DROP_RATES[r]}</p>
+              <p className="text-xs text-muted-foreground">
+                {r === "transcendance" ? "Évolution d'une Mythique (1 %)" : `${String(DROP_RATES[r as BaseRarity]).replace(".", ",")} % par carte`}
+              </p>
             </div>
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function Summary({
+  items, opened, awake, onAwaken, best, signedIn,
+}: {
+  items: PulledCard[];
+  opened: number;
+  awake: Awake;
+  onAwaken: (id: string, r: "transcended" | "failed") => void;
+  best: Rarity | null;
+  signedIn: boolean;
+}) {
+  const rank = (p: PulledCard) => rarityRank(awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity);
+  const sorted = [...items].sort((a, b) => rank(a) - rank(b));
+  const highlights = opened === 1 ? items : (sorted.filter((p) => rank(p) <= rarityRank("epique")).slice(0, 10).length ? sorted.filter((p) => rank(p) <= rarityRank("epique")).slice(0, 10) : sorted.slice(0, 5));
+
+  return (
+    <div className="relative flex w-full flex-col items-center">
+      <h2 className="text-xl font-black sm:text-2xl">{opened === 1 ? "Récapitulatif" : `Récapitulatif — ${items.length} cartes`}</h2>
+      {best && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          Meilleure rareté : <span className={cn("font-semibold", RARITY[best].text)}>{RARITY[best].label}</span>
+        </p>
+      )}
+      {opened > 1 && <h3 className="mt-6 text-sm font-bold uppercase tracking-widest text-muted-foreground">Meilleures cartes</h3>}
+      <div className="mt-4 grid w-full max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {highlights.map((p, i) => (
+          <SummaryCard key={p.userCardId} item={p} delay={i * 90} state={awake[p.userCardId]} onAwaken={onAwaken} />
+        ))}
+      </div>
+      {opened > 1 && (
+        <>
+          <h3 className="mt-10 text-sm font-bold uppercase tracking-widest text-muted-foreground">Tout le tirage</h3>
+          <div className="mt-4 grid w-full max-w-5xl grid-cols-5 gap-2 sm:grid-cols-10">
+            {sorted.map((p) => (
+              <AnimeCard key={p.userCardId} card={p.card} compact transcended={awake[p.userCardId] === "transcended"} />
+            ))}
+          </div>
+        </>
+      )}
+      {signedIn && (
+        <Link to="/collection" className="mt-6 text-sm font-semibold text-primary hover:underline">Voir ma collection</Link>
+      )}
+    </div>
+  );
+}
+
+function SummaryCard({ item, delay, state, onAwaken }: { item: PulledCard; delay: number; state?: "transcended" | "failed" | undefined; onAwaken: (id: string, r: "transcended" | "failed") => void }) {
+  const card: Card = item.card;
+  return (
+    <div className="flex animate-card-in flex-col items-center gap-2" style={{ animationDelay: `${delay}ms` }}>
+      <AnimeCard card={card} transcended={state === "transcended"} />
+      {card.rarity === "mythique" && !state && (
+        <TranscendButton size="xs" userCardId={item.userCardId} card={card} onResult={(r) => onAwaken(item.userCardId, r)} />
+      )}
+      {state === "failed" && <p className="text-[11px] text-muted-foreground">Éveil échoué</p>}
     </div>
   );
 }

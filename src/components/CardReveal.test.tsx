@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CardReveal } from "./CardReveal";
-import type { Card } from "@/lib/cards";
+import type { PulledCard } from "@/lib/cards";
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: vi.fn() } }));
 
-const cards: Card[] = [
-  { id: "riku", name: "Riku Tanaka", title: "Lycéen épéiste", rarity: "commune", description: "", sort_order: 1 },
-  { id: "kaito", name: "Kaito Ren", title: "Samouraï", rarity: "rare", description: "", sort_order: 5 },
-  { id: "ryujin", name: "Ryujin", title: "Dieu-dragon", rarity: "legendaire", description: "", sort_order: 10 },
-];
+const cards: PulledCard[] = [
+  { id: "riku", name: "Riku Tanaka", title: "Lycéen épéiste", rarity: "commune" as const, description: "", sort_order: 1 },
+  { id: "kaito", name: "Kaito Ren", title: "Samouraï", rarity: "rare" as const, description: "", sort_order: 5 },
+  { id: "ryujin", name: "Ryujin", title: "Dieu-dragon", rarity: "legendaire" as const, description: "", sort_order: 10 },
+].map((card, i) => ({ userCardId: `uc-${i}`, card }));
 
 describe("booster reveal one card at a time", () => {
   it("starts with a single face-down card and no next button", () => {

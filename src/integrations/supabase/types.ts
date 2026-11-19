@@ -16,26 +16,50 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          active: boolean
+          anilist_id: number | null
+          category: string | null
           description: string
           id: string
+          image_url: string | null
           name: string
+          popularity: number
+          quote: string | null
           rarity: Database["public"]["Enums"]["card_rarity"]
+          role: string | null
+          series: string | null
           sort_order: number
           title: string
         }
         Insert: {
+          active?: boolean
+          anilist_id?: number | null
+          category?: string | null
           description?: string
           id: string
+          image_url?: string | null
           name: string
+          popularity?: number
+          quote?: string | null
           rarity: Database["public"]["Enums"]["card_rarity"]
+          role?: string | null
+          series?: string | null
           sort_order?: number
           title: string
         }
         Update: {
+          active?: boolean
+          anilist_id?: number | null
+          category?: string | null
           description?: string
           id?: string
+          image_url?: string | null
           name?: string
+          popularity?: number
+          quote?: string | null
           rarity?: Database["public"]["Enums"]["card_rarity"]
+          role?: string | null
+          series?: string | null
           sort_order?: number
           title?: string
         }
@@ -43,42 +67,54 @@ export type Database = {
       }
       profiles: {
         Row: {
+          boosters_stored: number
           created_at: string
           id: string
           last_booster_at: string | null
+          stock_updated_at: string
           username: string
         }
         Insert: {
+          boosters_stored?: number
           created_at?: string
           id: string
           last_booster_at?: string | null
+          stock_updated_at?: string
           username: string
         }
         Update: {
+          boosters_stored?: number
           created_at?: string
           id?: string
           last_booster_at?: string | null
+          stock_updated_at?: string
           username?: string
         }
         Relationships: []
       }
       user_cards: {
         Row: {
+          awaken_attempted: boolean
           card_id: string
           id: string
           obtained_at: string
+          transcended: boolean
           user_id: string
         }
         Insert: {
+          awaken_attempted?: boolean
           card_id: string
           id?: string
           obtained_at?: string
+          transcended?: boolean
           user_id: string
         }
         Update: {
+          awaken_attempted?: boolean
           card_id?: string
           id?: string
           obtained_at?: string
+          transcended?: boolean
           user_id?: string
         }
         Relationships: [
@@ -96,6 +132,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attempt_transcendance: {
+        Args: { _user_card_id: string }
+        Returns: boolean
+      }
       open_booster: {
         Args: never
         Returns: {
@@ -103,9 +143,18 @@ export type Database = {
           next_booster_at: string
         }[]
       }
+      open_boosters: {
+        Args: { _category: string; _count: number }
+        Returns: {
+          boosters_left: number
+          card_id: string
+          stock_updated_at: string
+          user_card_id: string
+        }[]
+      }
     }
     Enums: {
-      card_rarity: "commune" | "rare" | "epique" | "legendaire"
+      card_rarity: "commune" | "rare" | "epique" | "legendaire" | "mythique"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -233,7 +282,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      card_rarity: ["commune", "rare", "epique", "legendaire"],
+      card_rarity: ["commune", "rare", "epique", "legendaire", "mythique"],
     },
   },
 } as const
