@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Play, SkipForward, Sparkles, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
+import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningPhraseIndex, awakeningSpinProgress, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -27,6 +28,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [result, setResult] = useState<Result | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
   const [audioTime, setAudioTime] = useState(0);
+  const [form, setForm] = useState<"base" | "awakened">("awakened");
 
   useEffect(() => {
     if (!open) return;
@@ -64,6 +66,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       setPlaybackError(false);
       setOpen(true);
       setAudioTime(0);
+      setForm("awakened");
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -92,6 +95,8 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
 
   const evolved = canRevealEvolution(ended, result);
   const phraseIndex = awakeningPhraseIndex(audioTime);
+  const spinProgress = awakeningSpinProgress(audioTime);
+  const showingEvolved = evolved && form === "awakened";
   return <>
     <Button type="button" variant="transcend" size="sm" onClick={attempt} disabled={open}
       className={cn("h-auto min-h-9 w-full max-w-64 whitespace-normal rounded-lg px-3 py-2 text-center leading-snug", size === "xs" && "gap-1 px-2 text-[10px]", className)}>
@@ -101,7 +106,17 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "audio"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
           <audio ref={videoRef} src={AWAKENING_AUDIO_URL} preload="auto" controls={false} aria-hidden className="hidden" onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
-          {phraseIndex !== null && <p key={phraseIndex} data-phrase={phraseIndex} style={{ animationDelay: `${-(audioTime - AWAKENING_PHRASE_WINDOWS[phraseIndex].start)}s`, animationPlayState: "paused" }} className={cn("cinema-quote relative mx-auto max-w-4xl px-8 text-center font-sans font-semibold leading-relaxed", phraseIndex === 0 ? "cinema-quote-first text-xl sm:text-3xl" : "cinema-quote-impact text-2xl sm:text-4xl")}>
+          <div className="awakening-orbit-scene relative grid place-items-center">
+            <div aria-hidden className="awakening-orbits pointer-events-none absolute">
+              {[0, 1, 2].map((i) => <span key={i} className="awakening-orbit absolute" style={{ "--orbit-index": i, animationDelay: `${-audioTime}s`, animationPlayState: "paused" } as CSSProperties} />)}
+              {Array.from({ length: 18 }, (_, i) => <span key={`p-${i}`} className="awakening-dust absolute" style={{ left: `${12 + (i * 31 % 78)}%`, top: `${15 + (i * 23 % 70)}%`, animationDelay: `${-(audioTime + i * 0.29)}s`, animationPlayState: "paused" }} />)}
+            </div>
+            <div aria-hidden className="awakening-silver-column pointer-events-none absolute" style={{ opacity: spinProgress * 0.65 }} />
+            <div data-spin-progress={spinProgress} className="awakening-central-card relative w-[min(15rem,38dvh,58vw)]" style={{ animationDelay: `${-spinProgress * 2}s`, animationPlayState: "paused" }}>
+              <AnimeCard card={card} />
+            </div>
+          </div>
+          {phraseIndex !== null && <p key={phraseIndex} data-phrase={phraseIndex} style={{ animationDelay: `${-(audioTime - AWAKENING_PHRASE_WINDOWS[phraseIndex].start)}s`, animationPlayState: "paused" }} className={cn("cinema-quote awakening-subtitle absolute inset-x-0 mx-auto max-w-3xl px-7 text-center font-sans text-sm font-medium leading-relaxed sm:text-lg", phraseIndex === 0 ? "cinema-quote-first" : "cinema-quote-impact")}>
             {AWAKENING_PHRASES[phraseIndex]}
           </p>}
           <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -114,19 +129,21 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
           </div>}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {result ? <>
-            <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "anime-card-arrival" : "animate-in fade-in duration-700")}>
-              <AnimeCard card={card} transcended={evolved} />
+            <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "awakening-settle" : "animate-in fade-in duration-700")}>
+              <AnimeCard card={card} transcended={showingEvolved} />
             </div>
             <div className="relative flex flex-col items-center gap-3 text-center">
-              <p className={cn("font-display text-2xl font-black uppercase sm:text-3xl", evolved ? "text-gradient-transcend" : "text-muted-foreground")}>{evolved ? "Transcendance" : "Éveil échoué"}</p>
-              <p className="text-sm text-muted-foreground">{cardIdentity(card, evolved).name}</p>
+              <p className="text-sm font-medium text-rarity-transcendance">{evolved ? cardIdentity(card, showingEvolved).name : "Éveil échoué"}</p>
+              {evolved && <ToggleGroup type="single" value={form} onValueChange={(value) => { if (value === "base" || value === "awakened") setForm(value); }} aria-label="Forme de Son Goku" className="rounded-md border border-border bg-surface/70 p-1">
+                <ToggleGroupItem value="base" size="sm" className="px-3 text-xs">Forme de base</ToggleGroupItem>
+                <ToggleGroupItem value="awakened" size="sm" className="px-3 text-xs">Forme Éveillée</ToggleGroupItem>
+              </ToggleGroup>}
               <Button variant="hero" onClick={close}>{evolved ? "Continuer" : <><X /> Fermer</>}</Button>
             </div>
           </> : <p className="text-sm text-muted-foreground">Éveil en cours…</p>}
         </div>}
         {evolved && <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
-          <div aria-hidden className="awakening-shockwave absolute" />
-          <div aria-hidden className="anime-outro-flash absolute inset-0 bg-flash" />
+          <div aria-hidden className="awakening-clean-flash absolute inset-0 bg-flash" />
         </div>}
       </div>, document.body,
     )}

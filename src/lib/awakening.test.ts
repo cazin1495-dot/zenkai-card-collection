@@ -1,10 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { AWAKENING_DURATION_MS, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "./awakening";
+import { AWAKENING_DURATION_MS, awakeningPhraseIndex, awakeningSpinProgress, canRevealEvolution, playAwakeningAudio } from "./awakening";
 import { cardArt } from "./cards";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 describe("original awakening audio", () => {
   it("reveals after seven seconds", () => expect(AWAKENING_DURATION_MS).toBe(7000));
+  it("accelerates the rotation only during the final two seconds", () => {
+    expect(awakeningSpinProgress(4.999)).toBe(0);
+    expect(awakeningSpinProgress(5)).toBe(0);
+    expect(awakeningSpinProgress(6)).toBe(0.5);
+    expect(awakeningSpinProgress(7)).toBe(1);
+  });
   it("shows the first phrase only from audio time 0.4 to 3.8 seconds", () => {
     expect(awakeningPhraseIndex(0)).toBe(null);
     expect(awakeningPhraseIndex(0.399)).toBe(null);

@@ -40,3 +40,4 @@ use the editor.
 - Map pack seam rarity cues in a shared helper, separate from card frame colors, so common and rare openings can share a neutral cue without changing card identity.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
 - Mask reverse-foil layers to the frame and isolate the opaque metadata band from the portrait; only pointer tilt activates foil reflections, never idle animations over artwork.
+- Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.

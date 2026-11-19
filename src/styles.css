@@ -147,6 +147,8 @@
   --gradient-prismatic: repeating-linear-gradient(115deg, var(--rarity-transcendance) 0%, var(--accent) 12%, var(--rarity-epique) 24%, var(--rarity-legendaire) 36%, var(--rarity-transcendance) 48%);
   --gradient-glitter: radial-gradient(circle, var(--flash) 0 0.7px, transparent 1.4px);
   --gradient-speed-lines: repeating-conic-gradient(from 15deg, transparent 0deg 8deg, var(--flash) 8.2deg 8.6deg, transparent 9deg 15deg);
+  --shadow-awakening-ring: 0 0 6px color-mix(in oklab, var(--rarity-transcendance) 18%, transparent);
+  --gradient-awakening-column: linear-gradient(90deg, transparent, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 40%, color-mix(in oklab, var(--flash) 34%, transparent) 50%, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 60%, transparent);
   --foil-base: oklch(0.25 0.012 260);
   --foil-edge: oklch(0.56 0.02 260);
   --shadow-reverse-card: 0 0 0 1px var(--foil-edge), 0 6px 16px color-mix(in oklab, var(--letterbox) 40%, transparent);
@@ -730,7 +732,64 @@
   100% { opacity: 0; }
 }
 
+.awakening-orbit-scene {
+  width: min(40rem, 100vw);
+  height: min(38rem, 65dvh);
+  perspective: 1200px;
+  margin-top: -6dvh;
+}
+.awakening-orbits { width: min(36rem, 94vw); aspect-ratio: 1; }
+.awakening-orbit {
+  inset: calc(4% + var(--orbit-index) * 9%);
+  border: 1px solid color-mix(in oklab, var(--rarity-transcendance) 32%, transparent);
+  border-radius: 50%;
+  box-shadow: var(--shadow-awakening-ring);
+  animation: awakening-orbit 7s linear infinite;
+}
+.awakening-dust {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--rarity-transcendance);
+  animation: awakening-dust 3.5s linear infinite;
+}
+.awakening-silver-column {
+  width: min(18rem, 58vw);
+  height: 95dvh;
+  background: var(--gradient-awakening-column);
+  mask-image: linear-gradient(transparent, var(--letterbox) 20% 80%, transparent);
+}
+.awakening-central-card { animation: awakening-accelerating-spin 2s ease-in both; }
+.awakening-central-card .flame-aura,
+.awakening-central-card .holo-sheen { display: none; }
+.awakening-central-card .glow-mythique { box-shadow: var(--shadow-reverse-card); }
+.awakening-subtitle { bottom: max(5.5rem, 12dvh); text-shadow: none; }
+.awakening-clean-flash { animation: awakening-clean-flash 450ms ease-out both; }
+.awakening-settle { animation: awakening-settle 650ms ease-out both; }
+@keyframes awakening-orbit {
+  0%, 100% { transform: rotateX(22deg) rotateZ(-8deg) scale(0.96); opacity: 0.4; }
+  50% { transform: rotateX(-12deg) rotateZ(8deg) scale(1.04); opacity: 0.8; }
+}
+@keyframes awakening-dust {
+  0% { transform: translateY(55px); opacity: 0; }
+  20%, 70% { opacity: 0.6; }
+  100% { transform: translateY(-100px); opacity: 0; }
+}
+@keyframes awakening-accelerating-spin {
+  from { transform: rotateY(0deg) scale(1); }
+  to { transform: rotateY(1800deg) scale(1.04); }
+}
+@keyframes awakening-clean-flash {
+  0%, 8% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes awakening-settle {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 @media (prefers-reduced-motion: reduce) {
+  .awakening-orbit, .awakening-dust, .awakening-central-card, .awakening-settle { animation: none; }
+  .awakening-clean-flash, .awakening-silver-column { display: none; }
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }
   .pack-seal-light, .pack-reflection { display: none; }
   .pack-cap-peel, .pack-card-stack { animation: none; }

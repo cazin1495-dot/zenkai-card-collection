@@ -2,6 +2,10 @@ import transformation from "@/assets/goku-transformation.m4a.asset.json";
 
 export const AWAKENING_AUDIO_URL = transformation.url;
 export const AWAKENING_DURATION_MS = 7000;
+export const AWAKENING_SPIN_START_SECONDS = 5;
+export function awakeningSpinProgress(currentTime: number) {
+  return Math.min(1, Math.max(0, (currentTime - AWAKENING_SPIN_START_SECONDS) / 2));
+}
 export const AWAKENING_PHRASE_WINDOWS = [{ start: 0.4, end: 3.8 }, { start: 4, end: 7 }] as const;
 export const AWAKENING_PHRASES = [
   "Mais ceux qui ont fait du mal à mes amis...",

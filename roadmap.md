@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Éveil avec anneaux fins, particules, rotation accélérée sur les deux dernières secondes et sous-titres bas ; comparaison base/éveillée sans voile sur le portrait (audio original à 100 %, téléphone, inclinaison et sauvegarde vérifiés).
 - [x] Holo Reverse : illustration sans voile, cadre métallisé sombre et reflet diagonal réactif uniquement à l’inclinaison (collection connectée, souris et toucher vérifiés).
 - [x] Soudure lumineuse par rareté, déchirure gauche-droite et pile 3D ; phrases synchronisées sur le temps audio à 0,4–3,8 s et 4–7 s (ouverture réelle, pauses, recherche audio, fin du son et évolution sauvegardée vérifiées).
 - [x] Ouverture métallisée épurée et deux phrases sur 0–3,5 s puis 3,5–7 s (ouverture réelle, audio à 100 %, évolution sauvegardée, ordinateur et téléphone vérifiés).
