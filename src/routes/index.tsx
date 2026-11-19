@@ -164,11 +164,13 @@ function BoostersPage() {
         ) : phase === "summary" ? (
           <Summary items={pulled} opened={opened} awake={awake} onAwaken={onAwaken} best={best} signedIn={!!session} />
         ) : (
+          <Button variant="ghost" aria-label="Ouvrir ce booster" disabled={!ready || busy || (!!stock && stock.count < 1)} onClick={() => open(1)} className="h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100">
           <BoosterPack
             state={phase === "tearing" ? "tearing" : phase === "opening" ? "opening" : "idle"}
             accent={packInfo.accent}
             beam={phase === "tearing" ? tearBeam : null}
           />
+          </Button>
         )}
       </section>
 

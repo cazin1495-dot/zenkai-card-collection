@@ -149,8 +149,9 @@
   --gradient-speed-lines: repeating-conic-gradient(from 15deg, transparent 0deg 8deg, var(--flash) 8.2deg 8.6deg, transparent 9deg 15deg);
   --shadow-cinema-quote: 0 0 2px var(--rarity-transcendance), 0 0 12px color-mix(in oklab, var(--rarity-transcendance) 35%, transparent);
   --gradient-pack-reflection: radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--beam) 15%, transparent), transparent 68%);
-  --gradient-pack-cut: linear-gradient(90deg, var(--rarity-transcendance), var(--flash) 50%, var(--beam));
-  --shadow-pack-cut: 0 0 3px color-mix(in oklab, var(--beam) 65%, transparent);
+  --gradient-pack-seal: linear-gradient(180deg, transparent, color-mix(in oklab, var(--beam) 85%, var(--flash)) 45%, var(--beam) 65%, transparent);
+  --gradient-pack-prism: linear-gradient(105deg, transparent 20%, var(--rarity-mythique) 35%, var(--rarity-transcendance) 45%, var(--rarity-epique) 49%, var(--rarity-mythique) 60%, transparent 80%);
+  --shadow-pack-seal: 0 0 5px color-mix(in oklab, var(--beam) 65%, transparent);
   --gradient-awakening-blue: radial-gradient(ellipse, color-mix(in oklab, var(--aura-ui) 75%, transparent), color-mix(in oklab, var(--rarity-rare) 40%, transparent) 45%, transparent 72%);
   --gradient-awakening-silver: radial-gradient(ellipse, color-mix(in oklab, var(--rarity-transcendance) 45%, transparent), transparent 70%);
   --gradient-awakening-rays: repeating-conic-gradient(from 0deg, transparent 0deg 13deg, color-mix(in oklab, var(--aura-ui) 65%, transparent) 14deg 16deg, transparent 17deg 30deg);
@@ -438,11 +439,11 @@
   letter-spacing: 0;
   text-wrap: balance;
 }
-.cinema-quote-first { animation: cinema-phrase-first 3.5s linear both; }
+.cinema-quote-first { animation: cinema-phrase-first 3.4s linear both; }
 .cinema-quote-impact {
   color: var(--flash);
   text-shadow: var(--shadow-cinema-quote);
-  animation: cinema-phrase-impact 3.5s ease-out both;
+  animation: cinema-phrase-impact 3s ease-out both;
 }
 @keyframes cinema-phrase-first {
   0% { opacity: 0; transform: scale(0.96); }
@@ -455,41 +456,72 @@
   4% { opacity: 1; transform: translateX(-2px) scale(1.012); }
   7% { transform: translateX(2px) scale(1); }
   10% { transform: translateX(0) scale(1); }
-  92% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.015); }
+  100% { opacity: 1; transform: scale(1.015); }
 }
-.pack-micro-vibration { animation: pack-micro-vibration 80ms linear 6; }
-.pack-cap { animation: pack-cap-lift 850ms cubic-bezier(0.22, 0.7, 0.3, 1) 550ms both; }
-.pack-laser-cut {
-  top: var(--tear-position);
-  left: 7%;
-  width: 86%;
-  height: 1px;
+.pack-opening-scene { perspective: 1100px; }
+.pack-micro-vibration { animation: pack-micro-vibration 80ms linear 6; transform-style: preserve-3d; }
+.pack-cap { animation: pack-cap-lift 650ms cubic-bezier(0.22, 0.7, 0.3, 1) 850ms both; }
+.pack-cap-peel { transform-origin: left top; animation: pack-peel 400ms ease-in-out 450ms both; }
+.pack-seal-light {
+  top: calc(var(--tear-position) - 1%);
+  left: 16%;
+  width: 68%;
+  height: 7px;
   z-index: 5;
-  background: var(--gradient-pack-cut);
-  box-shadow: var(--shadow-pack-cut);
-  transform-origin: left center;
-  animation: pack-laser-cut 950ms ease-in-out both;
+  background: var(--gradient-pack-seal);
+  box-shadow: var(--shadow-pack-seal);
+  animation: pack-seal-light 900ms ease-in-out both;
+}
+.pack-opening-scene[data-rarity="commune"] .pack-seal-light,
+.pack-opening-scene[data-rarity="rare"] .pack-seal-light { height: 4px; opacity: 0.55; }
+.pack-opening-scene[data-rarity="mythique"] .pack-seal-light::after {
+  content: "";
+  position: absolute;
+  inset: -3px 0;
+  background: var(--gradient-pack-prism);
+  background-size: 250% 100%;
+  mix-blend-mode: screen;
+  animation: pack-prism 850ms ease-out both;
 }
 .pack-reflection {
   inset: -12% -35%;
   background-image: var(--gradient-pack-reflection);
   animation: pack-reflection 1.5s ease-out 450ms both;
 }
+.pack-sleeve { animation: pack-sleeve 700ms ease-in-out 1100ms both; }
+.pack-card-stack {
+  inset: 17% 18% 5%;
+  transform-style: preserve-3d;
+  animation: pack-stack 700ms ease-out 1000ms both;
+}
+.pack-stack-card { border-radius: 6px; }
 @keyframes pack-micro-vibration {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-0.7px) rotate(-0.15deg); }
   75% { transform: translateX(0.7px) rotate(0.15deg); }
 }
-@keyframes pack-laser-cut {
-  0% { transform: scaleX(0); opacity: 0; }
-  12% { opacity: 1; }
-  55% { transform: scaleX(1); opacity: 1; }
-  100% { transform: scaleX(1); opacity: 0; }
+@keyframes pack-seal-light {
+  0% { opacity: 0; }
+  22%, 48% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes pack-prism { from { background-position: 130% 0; } to { background-position: -80% 0; } }
+@keyframes pack-peel {
+  0% { clip-path: polygon(0 0, 100% 0, 100% var(--tear-position), 50% var(--tear-position), 0 var(--tear-position)); transform: rotateZ(0); }
+  50% { clip-path: polygon(0 0, 100% 0, 100% var(--tear-position), 50% var(--tear-position), 0 calc(var(--tear-position) - 3%)); transform: rotateZ(-1deg); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% calc(var(--tear-position) - 3%), 50% calc(var(--tear-position) - 3%), 0 calc(var(--tear-position) - 3%)); transform: rotateZ(-2deg); }
 }
 @keyframes pack-cap-lift {
+  from { transform: translateY(0) rotateZ(0); opacity: 1; }
+  to { transform: translateY(-105px) rotateZ(-8deg); opacity: 0; }
+}
+@keyframes pack-sleeve {
   from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-65px); opacity: 0; }
+  to { transform: translateY(70px); opacity: 0; }
+}
+@keyframes pack-stack {
+  from { transform: translateY(10px) rotateX(0) rotateY(0); opacity: 0; }
+  to { transform: translateY(-8px) rotateX(10deg) rotateY(-12deg); opacity: 1; }
 }
 @keyframes pack-reflection {
   0%, 100% { opacity: 0; }
@@ -659,7 +691,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }
-  .pack-laser-cut, .pack-reflection { display: none; }
+  .pack-seal-light, .pack-reflection { display: none; }
+  .pack-cap-peel, .pack-card-stack { animation: none; }
+  .pack-sleeve { animation: none; opacity: 0; }
   .pack-cap { animation: none; opacity: 0; }
   .anime-speed-lines, .anime-impact, .anime-outro-flash { display: none; }
   .anime-card-launch, .anime-card-arrival, .cinema-fade-in { animation: none; }

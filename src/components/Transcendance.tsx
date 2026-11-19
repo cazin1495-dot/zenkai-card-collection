@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_AUDIO_URL, AWAKENING_DURATION_MS, AWAKENING_PHRASES, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
+import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -26,15 +26,18 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [ended, setEnded] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
-  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [audioTime, setAudioTime] = useState(0);
 
   useEffect(() => {
     if (!open) return;
     if (ended || playbackError) return;
-    const start = performance.now();
-    const interval = window.setInterval(() => setPhraseIndex(awakeningPhraseIndex(performance.now() - start)), 25);
-    const timer = window.setTimeout(() => setEnded(true), AWAKENING_DURATION_MS);
-    return () => { window.clearTimeout(timer); window.clearInterval(interval); };
+    let frame = 0;
+    function syncAudio() {
+      setAudioTime(videoRef.current?.currentTime ?? 0);
+      frame = window.requestAnimationFrame(syncAudio);
+    }
+    frame = window.requestAnimationFrame(syncAudio);
+    return () => window.cancelAnimationFrame(frame);
   }, [open, ended, playbackError]);
 
   useEffect(() => {
@@ -60,7 +63,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       setEnded(false);
       setPlaybackError(false);
       setOpen(true);
-      setPhraseIndex(0);
+      setAudioTime(0);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -88,6 +91,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   }
 
   const evolved = canRevealEvolution(ended, result);
+  const phraseIndex = awakeningPhraseIndex(audioTime);
   return <>
     <Button type="button" variant="transcend" size="sm" onClick={attempt} disabled={open}
       className={cn("h-auto min-h-9 w-full max-w-64 whitespace-normal rounded-lg px-3 py-2 text-center leading-snug", size === "xs" && "gap-1 px-2 text-[10px]", className)}>
@@ -96,10 +100,10 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
     {open && createPortal(
       <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "audio"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
-          <audio ref={videoRef} src={AWAKENING_AUDIO_URL} preload="auto" controls={false} aria-hidden className="hidden" onError={() => setPlaybackError(true)} />
-          <p key={phraseIndex} data-phrase={phraseIndex} className={cn("cinema-quote relative mx-auto max-w-4xl px-8 text-center font-sans font-semibold leading-relaxed", phraseIndex === 0 ? "cinema-quote-first text-xl sm:text-3xl" : "cinema-quote-impact text-2xl sm:text-4xl")}>
+          <audio ref={videoRef} src={AWAKENING_AUDIO_URL} preload="auto" controls={false} aria-hidden className="hidden" onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
+          {phraseIndex !== null && <p key={phraseIndex} data-phrase={phraseIndex} style={{ animationDelay: `${-(audioTime - AWAKENING_PHRASE_WINDOWS[phraseIndex].start)}s`, animationPlayState: "paused" }} className={cn("cinema-quote relative mx-auto max-w-4xl px-8 text-center font-sans font-semibold leading-relaxed", phraseIndex === 0 ? "cinema-quote-first text-xl sm:text-3xl" : "cinema-quote-impact text-2xl sm:text-4xl")}>
             {AWAKENING_PHRASES[phraseIndex]}
-          </p>
+          </p>}
           <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
             Passer <SkipForward className="size-3.5" />
           </Button>

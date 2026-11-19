@@ -5,13 +5,18 @@ import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 describe("original awakening audio", () => {
   it("reveals after seven seconds", () => expect(AWAKENING_DURATION_MS).toBe(7000));
-  it("keeps only the first phrase from zero until 3.5 seconds", () => {
-    expect(awakeningPhraseIndex(0)).toBe(0);
-    expect(awakeningPhraseIndex(3499)).toBe(0);
+  it("shows the first phrase only from audio time 0.4 to 3.8 seconds", () => {
+    expect(awakeningPhraseIndex(0)).toBe(null);
+    expect(awakeningPhraseIndex(0.399)).toBe(null);
+    expect(awakeningPhraseIndex(0.4)).toBe(0);
+    expect(awakeningPhraseIndex(3.799)).toBe(0);
+    expect(awakeningPhraseIndex(3.8)).toBe(null);
   });
-  it("switches to the second phrase at 3.5 seconds through seven seconds", () => {
-    expect(awakeningPhraseIndex(3500)).toBe(1);
-    expect(awakeningPhraseIndex(6999)).toBe(1);
+  it("shows the second phrase only from audio time 4.0 to 7.0 seconds", () => {
+    expect(awakeningPhraseIndex(3.999)).toBe(null);
+    expect(awakeningPhraseIndex(4)).toBe(1);
+    expect(awakeningPhraseIndex(6.999)).toBe(1);
+    expect(awakeningPhraseIndex(7)).toBe(null);
   });
   it("plays immediately with the original audio at 100 percent and no controls", () => {
     const play = vi.fn().mockResolvedValue(undefined);
