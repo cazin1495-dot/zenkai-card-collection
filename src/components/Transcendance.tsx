@@ -146,9 +146,10 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
             </div>
             <div className="relative flex flex-col items-center gap-3 text-center">
               <p className="text-sm font-medium text-rarity-transcendance">{evolved ? cardIdentity(card, showingEvolved).name : "Éveil échoué"}</p>
-              {evolved && <ToggleGroup type="single" value={form} disabled={formBusy} onValueChange={(value) => { if (!formBusy && (value === "base" || value === "awakened") && value !== form) setForm(value); }} aria-label="Forme de Son Goku" className="rounded-md border border-border bg-surface/70 p-1">
-                <ToggleGroupItem value="base" size="sm" className="px-3 text-xs">Forme de base</ToggleGroupItem>
-                <ToggleGroupItem value="awakened" size="sm" className="px-3 text-xs">Forme Éveillée</ToggleGroupItem>
+              {evolved && <ToggleGroup data-form={form} type="single" value={form} disabled={formBusy} onValueChange={(value) => { if (!formBusy && (value === "base" || value === "awakened") && value !== form) setForm(value); }} aria-label="Forme de Son Goku" className="form-selector relative isolate grid grid-cols-2 gap-0 rounded-md border border-border bg-surface/70 p-1">
+                <span aria-hidden className="form-selector-indicator pointer-events-none absolute rounded-sm bg-accent" />
+                <ToggleGroupItem value="base" size="sm" className="relative z-10 px-3 text-xs data-[state=on]:bg-transparent data-[state=on]:text-accent-foreground">Forme de base</ToggleGroupItem>
+                <ToggleGroupItem value="awakened" size="sm" className="relative z-10 px-3 text-xs data-[state=on]:bg-transparent data-[state=on]:text-accent-foreground">Forme Éveillée</ToggleGroupItem>
               </ToggleGroup>}
               <Button variant="hero" onClick={close}>{evolved ? "Continuer" : <><X /> Fermer</>}</Button>
             </div>

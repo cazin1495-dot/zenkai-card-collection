@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Comparaison organique 0,8 s : deux faces chargées en permanence, base opaque, fondu/netteté et zoom doux, montée de Ki et indicateur glissant ; deux sens et téléphone vérifiés sur une évolution réelle, base à opacité 1 au milieu du fondu, deux portraits décodés ; alternative mouvement réduit conservée.
+
 - [x] Finition TCG Transcendance : double cadre à 6 px, coins métalliques, gravure foil réactive, plaque de nom, emblème et numéro collector, étincelles tricolores et balayage toutes les 4 s ; collection réelle, inclinaison, téléphone et mouvement réduit vérifiés ; règles de jeu inchangées.
 
 - [x] Mode test temporaire : cinq Goku Mythiques dans chaque booster de tous les packs, éveil à 100 %, taux affichés honnêtes ; pack Seinen réel, audio original à 100 %, cinématique, Ultra Instinct sauvegardé et affichage téléphone vérifiés, 57 tests réussis. Stock du demandeur rechargé à cinq pour ses tests ; pas de bouton optionnel, taux normaux conservés pour rétablissement ultérieur.

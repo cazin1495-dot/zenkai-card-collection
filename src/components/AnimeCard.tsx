@@ -14,6 +14,7 @@ type Props = {
   compact?: boolean | undefined;
   comparisonForm?: "base" | "awakened" | undefined;
   transformationKey?: number | undefined;
+  preload?: boolean;
 };
 
 export function displayRarity(card: Card, transcended?: boolean): Rarity {
@@ -38,7 +39,7 @@ export function TranscendFrame() {
 }
 
 /** Trading card with a flip animation and a rarity-coloured frame. */
-export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0 }: Props) {
+export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0, preload = false }: Props) {
   const rarity = displayRarity(card, transcended);
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
@@ -83,7 +84,7 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
               <img src={cardArt(card, true)} alt={comparisonForm === "awakened" ? cardIdentity(card, true).name : ""} aria-hidden={comparisonForm !== "awakened"} loading="eager" className="form-portrait form-portrait-awakened absolute inset-0 size-full object-cover" />
             </div>
           ) : art ? (
-            <img src={art} alt={identity.name} loading="lazy" className={cn("object-cover", rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")} />
+            <img src={art} alt={identity.name} loading={preload ? "eager" : "lazy"} className={cn("object-cover", rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")} />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />

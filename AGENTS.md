@@ -43,4 +43,4 @@ use the editor.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep ornamental TCG framing, engraved foil and collector metadata inside the shared Transcendance card face, with subtle overlays and reduced-motion fallbacks so all views share the physical finish without altering card identity.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.
-- Keep form comparison as two preloaded backface-hidden card faces in a dedicated perspective rotor; their visibility switches geometrically at 90 degrees, and disable the selector until landing to prevent interrupted rotations.
+- Keep form comparison as permanently mounted, eagerly decoded absolute faces with an opaque base below the awakened overlay; morph opacity, clarity and Ki together, and lock the sliding selector until the transition settles to avoid interrupted changes.
