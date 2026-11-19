@@ -10,13 +10,13 @@ function audio() {
 }
 
 /** Rising power-up hum lasting `seconds`. */
-export function playCharge(seconds = 3) {
+export function playCharge(seconds = 3, volume = 0.18) {
   const a = audio();
   if (!a) return;
   const t = a.currentTime;
   const gain = a.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.18, t + seconds * 0.9);
+  gain.gain.exponentialRampToValueAtTime(volume, t + seconds * 0.9);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + seconds + 0.1);
   const filter = a.createBiquadFilter();
   filter.type = "lowpass";
@@ -36,7 +36,7 @@ export function playCharge(seconds = 3) {
 }
 
 /** Energy explosion: noise burst + sub boom. */
-export function playExplosion() {
+export function playExplosion(volume = 1) {
   const a = audio();
   if (!a) return;
   const t = a.currentTime;
@@ -47,7 +47,7 @@ export function playExplosion() {
   const noise = a.createBufferSource();
   noise.buffer = buf;
   const ng = a.createGain();
-  ng.gain.value = 0.35;
+  ng.gain.value = 0.35 * volume;
   noise.connect(ng).connect(a.destination);
   noise.start(t);
   const boom = a.createOscillator();
@@ -55,7 +55,7 @@ export function playExplosion() {
   boom.frequency.setValueAtTime(120, t);
   boom.frequency.exponentialRampToValueAtTime(30, t + 1.2);
   const bg = a.createGain();
-  bg.gain.setValueAtTime(0.5, t);
+  bg.gain.setValueAtTime(0.5 * volume, t);
   bg.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
   boom.connect(bg).connect(a.destination);
   boom.start(t);

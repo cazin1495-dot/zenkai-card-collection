@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Voix française dès le clic, sous-titre synchronisé et transformation en trois étapes sur quatre secondes ; test à 100 % conservé (lecture audible à vérifier sur le navigateur de l'utilisateur, aucune voix française disponible dans le navigateur de contrôle)
+
 - [x] Test Goku Mythique garanti dans Shonen Mix, éveil garanti et transformation Ultra Instinct visible (portrait existant argenté ; génération du nouveau portrait refusée)
 
 - [x] Design sombre + barre de navigation (Boosters, Ma Collection, Échanges)
