@@ -128,42 +128,43 @@ function BoostersPage() {
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
+    <div className="booster-hub mx-auto flex max-w-6xl flex-col items-center px-4 pb-12 pt-6 sm:px-6">
       {(phase === "reveal" || phase === "summary") && <h1 className="sr-only">Ouverture du booster</h1>}
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
-          <h1 className="text-center text-3xl font-black sm:text-5xl">
-            Ouvre tes <span className="text-gradient-primary">boosters</span>
+          <p className="game-eyebrow"><Sparkles className="size-3.5" /> LE HUB DES COLLECTIONNEURS</p>
+          <h1 className="mt-2 text-center text-3xl font-black sm:text-4xl">
+            ZENKAI <span className="text-accent">Boosters</span>
           </h1>
           <p className="mt-3 max-w-md text-center text-sm text-muted-foreground">
             {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
           </p>
 
-          <div role="radiogroup" aria-label="Catégorie de booster" className="mt-6 grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div role="radiogroup" aria-label="Catégorie de booster" className="hub-pack-selector mt-5 grid w-full max-w-4xl grid-cols-3 gap-2 sm:grid-cols-6">
             {PACKS.map((p) => (
-              <button
+              <Button variant="ghost"
                 key={p.id}
                 role="radio"
                 aria-checked={pack === p.id}
                 disabled={busy}
                 onClick={() => setPack(p.id)}
                 className={cn(
-                  "rounded-xl border bg-surface/60 px-3 py-2 text-left transition-all",
+                  "hub-pack-option block h-auto min-w-0 rounded-md border bg-foreground/5 px-2 py-2 text-left transition-all",
                   pack === p.id ? "border-[var(--accent)] bg-surface-raised" : "border-border opacity-70 hover:opacity-100",
                 )}
                 style={{ ["--accent" as string]: p.accent, boxShadow: pack === p.id ? `0 0 24px -6px ${p.accent}` : undefined }}
               >
-                <span className="flex items-center gap-2 text-sm font-bold">
+                <span className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold sm:text-xs">
                   <span className="size-2.5 rounded-full" style={{ background: p.accent }} /> {p.label}
                 </span>
-                <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{p.hint}</span>
-              </button>
+                <span className="mt-1 block truncate text-[9px] text-muted-foreground">{p.hint}</span>
+              </Button>
             ))}
           </div>
         </>
       )}
 
-      <section className={cn("opening-stage relative flex min-h-[460px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-6")}>
+      <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
           <CardReveal cards={pulled} awakened={awake} onAwaken={onAwaken} onDone={() => setPhase("summary")} />

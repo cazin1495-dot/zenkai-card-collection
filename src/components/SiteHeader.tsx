@@ -1,65 +1,50 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Sparkles } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, Zap, Coins, Package, Layers, Sparkles, Repeat2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { cardsQuery, profileQuery } from "@/lib/queries";
+import { boosterStock } from "@/lib/cards";
 
 const tabs = [
-  { to: "/", label: "Boosters" },
-  { to: "/collection", label: "Ma Collection" },
-  { to: "/echanges", label: "Échanges" },
+  { to: "/", label: "Boosters", icon: Layers },
+  { to: "/collection", label: "Ma Collection", icon: Package },
+  { to: "/eveil", label: "Éveil & Fusion", icon: Sparkles },
+  { to: "/echanges", label: "Échanges", icon: Repeat2 },
+  { to: "/boutique", label: "Boutique", icon: ShoppingBag },
 ] as const;
 
 export function SiteHeader() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
+  const profile = useQuery({ ...profileQuery(session?.user.id ?? ""), enabled: !!session });
+  const cards = useQuery(cardsQuery);
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  const stock = profile.data && now !== null ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now).count : null;
+  const avatar = cards.data?.find(card => card.id === "al-246")?.image_url;
   async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true });
   }
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-4 sm:px-6 sm:py-0">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-gradient-primary shadow-glow">
-            <Sparkles className="size-4 text-primary-foreground" />
-          </span>
-          <span className="font-display text-lg font-bold tracking-tight">ZENKAI</span>
-        </Link>
-
-        <nav className="mx-auto flex w-full items-center justify-center gap-1 rounded-full border border-border bg-surface/60 p-1 sm:w-auto">
-          {tabs.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              activeOptions={{ exact: true }}
-              className="rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:px-4 sm:text-sm"
-              activeProps={{ className: "bg-gradient-primary !text-primary-foreground shadow-glow" }}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden sm:block">
-          {session ? (
-            <Button variant="ghost" size="sm" onClick={signOut} aria-label="Se déconnecter">
-              <LogOut />
-              Déconnexion
-            </Button>
-          ) : (
-            <Button variant="glass" size="sm" asChild>
-              <Link to="/auth">Connexion</Link>
-            </Button>
-          )}
-        </div>
+  return <header className="game-header sticky top-0 z-40 border-b border-border backdrop-blur-xl">
+    <div className="game-header-inner mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:px-8 lg:py-4">
+      <Link to="/" aria-label="ZENKAI — Accueil et Boosters" className="game-logo flex min-w-0 items-center gap-2">
+        <span className="game-logo-mark grid size-9 shrink-0 place-items-center"><Zap className="size-6" /></span>
+        <span className="min-w-0"><span className="block font-display text-xl font-black italic sm:text-2xl">ZENKAI</span><span className="hidden text-[8px] font-semibold text-muted-foreground sm:block">ANIME CARD COLLECTION</span></span>
+      </Link>
+      <nav aria-label="Navigation principale" className="game-nav col-span-2 row-start-2 grid grid-cols-5 gap-1 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:mx-auto lg:gap-2">
+        {tabs.map(tab => <Button key={tab.to} variant="ghost" asChild className="game-nav-item h-auto min-w-0 rounded-md px-1 py-2 lg:px-3"><Link to={tab.to} activeOptions={{ exact: true }} activeProps={{ className: "game-nav-active" }}><tab.icon className="size-4 shrink-0" /><span className="text-center text-[9px] leading-tight sm:text-xs">{tab.label}</span></Link></Button>)}
+      </nav>
+      <div className="col-start-2 row-start-1 min-w-0 lg:col-start-3">
+        {session ? <div aria-label="Profil joueur" className="player-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-border bg-foreground/5 p-2">
+          {avatar ? <img src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
+          <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{profile.data?.username ?? "Joueur"}</p><div className="mt-1 flex items-center gap-2 text-[9px] text-muted-foreground"><span title="Niveau non disponible">Niv. —</span><span title="Zenkai Coins non disponibles" className="flex items-center gap-1"><Coins className="size-3 text-rarity-legendaire" /> —</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock ?? "…"}</span></div></div>
+          <Button variant="ghost" size="icon" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter" className="size-7"><LogOut className="size-3.5" /></Button>
+        </div> : <Button variant="glass" size="sm" asChild><Link to="/auth">Connexion</Link></Button>}
       </div>
-    </header>
-  );
+    </div>
+  </header>;
 }

@@ -36,7 +36,7 @@ function TradesPage() {
       </p>
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
         {steps.map((s) => (
-          <div key={s.title} className="rounded-2xl border border-border bg-surface/60 p-6 text-left">
+          <div key={s.title} className="rounded-md border border-border bg-foreground/5 p-6 text-left backdrop-blur-xl">
             <s.icon className="size-6 text-primary" />
             <p className="mt-4 font-display text-sm font-bold">{s.title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{s.text}</p>

@@ -96,7 +96,10 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.14 0.02 270);
+  --background: #090B10;
+  --gradient-game-atmosphere: radial-gradient(ellipse 85% 70% at 0% 20%, color-mix(in oklab, var(--rarity-rare) 12%, transparent), transparent 75%), radial-gradient(ellipse 70% 65% at 100% 15%, color-mix(in oklab, var(--rarity-legendaire) 9%, transparent), transparent 75%);
+  --gradient-game-grid: linear-gradient(color-mix(in oklab, var(--accent) 3%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--accent) 3%, transparent) 1px, transparent 1px);
+  --shadow-game-logo: -2px 0 18px color-mix(in oklab, var(--rarity-legendaire) 35%, transparent), 2px 0 20px color-mix(in oklab, var(--rarity-rare) 45%, transparent);
   --foreground: oklch(0.96 0.01 270);
   --surface: oklch(0.18 0.025 270);
   --surface-raised: oklch(0.22 0.03 270);
@@ -219,9 +222,7 @@
 
   body {
     background-color: var(--color-background);
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%),
-      radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
+    background-image: var(--gradient-game-atmosphere);
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -230,11 +231,26 @@
 
   h1, h2, h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 }
 
 /* ---------- Utilities ---------- */
+.game-header { background: color-mix(in oklab, var(--background) 88%, transparent); }
+.game-logo { color: var(--foreground); text-shadow: var(--shadow-game-logo); }
+.game-logo-mark { color: var(--rarity-legendaire); border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); background: color-mix(in oklab, var(--accent) 6%, transparent); clip-path: polygon(22% 0,100% 0,100% 78%,78% 100%,0 100%,0 22%); }
+.game-nav-item { color: var(--muted-foreground); }
+.game-nav-active { color: var(--accent); background: color-mix(in oklab, var(--accent) 10%, transparent); box-shadow: inset 0 -2px var(--accent); }
+.game-nav-item a { min-width: 0; }
+.game-eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; color: var(--rarity-legendaire); letter-spacing: 0; }
+.booster-hub { background-image: var(--gradient-game-grid); background-size: 48px 48px; }
+.booster-hub .pack-body { width: 220px; }
+.hub-pack-option { backdrop-filter: blur(12px); white-space: normal; }
+.hub-pack-option > span:first-child { min-height: 24px; }
+.hub-pack-option > span:first-child > span { flex-shrink: 0; }
+.hub-odds { box-shadow: 0 12px 48px color-mix(in oklab, var(--background) 50%, transparent); }
+@media (max-width: 1023px) { .game-nav-item > svg { display: none; } }
+@media (max-width: 639px) { .booster-hub .pack-body { width: 185px; } .booster-hub .opening-stage { min-height: 285px; } .game-nav-item { min-height: 38px; } }
 
 .pity-progress { background-image: var(--gradient-pity); box-shadow: var(--shadow-pity); transition: width 600ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .pity-progress { transition: none; } }

@@ -1,5 +1,8 @@
 # Zenkai — roadmap
 
+- [ ] Refonte globale ZENKAI : navigation cinq onglets, profil avec stock réel et niveau/Coins non disponibles, ambiance bleu/or et grille, hub compact, atelier d’éveil et boutique sans fausses transactions ; vérifier ordinateur/téléphone et fonctions existantes.
+- [ ] Définir les gains de Zenkai Coins et la progression des niveaux avant activation — en attente des règles du joueur.
+
 - [x] Retirer le rectangle noir du booster : fonds transparents et fusion screen sur toute la chaîne ; halo ovale diffus par rareté et aura persistante avec flash/18 particules pendant révélation et récapitulatif ; repos, ouverture réelle, rouge Mythique exact, téléphone et mouvement réduit vérifiés, 32 tests réussis.
 
 - [x] Adoucir l’éveil : alternance 3,47 s, minimum 90 ms, fondus 150 ms, zoom sans secousses et halo lents, flash doux 500 ms et atterrissage à 1,04 sur 600 ms ; évolution réelle, téléphone, mouvement réduit, audio et sauvegarde vérifiés, 14 tests réussis.

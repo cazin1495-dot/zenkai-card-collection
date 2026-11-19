@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BoutiqueRouteImport } from './routes/boutique'
 import { Route as EchangesRouteImport } from './routes/echanges'
+import { Route as EveilRouteImport } from './routes/eveil'
 import { Route as AuthenticatedCollectionRouteImport } from './routes/_authenticated/collection'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,9 +31,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoutiqueRoute = BoutiqueRouteImport.update({
+  id: '/boutique',
+  path: '/boutique',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EchangesRoute = EchangesRouteImport.update({
   id: '/echanges',
   path: '/echanges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EveilRoute = EveilRouteImport.update({
+  id: '/eveil',
+  path: '/eveil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedCollectionRoute = AuthenticatedCollectionRouteImport.update({
@@ -43,13 +55,17 @@ const AuthenticatedCollectionRoute = AuthenticatedCollectionRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/boutique': typeof BoutiqueRoute
   '/echanges': typeof EchangesRoute
+  '/eveil': typeof EveilRoute
   '/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/boutique': typeof BoutiqueRoute
   '/echanges': typeof EchangesRoute
+  '/eveil': typeof EveilRoute
   '/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRoutesById {
@@ -57,20 +73,25 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/boutique': typeof BoutiqueRoute
   '/echanges': typeof EchangesRoute
+  '/eveil': typeof EveilRoute
   '/_authenticated/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/echanges' | '/collection'
+  fullPaths:
+    '/' | '/auth' | '/boutique' | '/echanges' | '/eveil' | '/collection'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/echanges' | '/collection'
+  to: '/' | '/auth' | '/boutique' | '/echanges' | '/eveil' | '/collection'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/boutique'
     | '/echanges'
+    | '/eveil'
     | '/_authenticated/collection'
   fileRoutesById: FileRoutesById
 }
@@ -78,7 +99,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BoutiqueRoute: typeof BoutiqueRoute
   EchangesRoute: typeof EchangesRoute
+  EveilRoute: typeof EveilRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -104,11 +127,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boutique': {
+      id: '/boutique'
+      path: '/boutique'
+      fullPath: '/boutique'
+      preLoaderRoute: typeof BoutiqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/echanges': {
       id: '/echanges'
       path: '/echanges'
       fullPath: '/echanges'
       preLoaderRoute: typeof EchangesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eveil': {
+      id: '/eveil'
+      path: '/eveil'
+      fullPath: '/eveil'
+      preLoaderRoute: typeof EveilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/collection': {
@@ -136,7 +173,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BoutiqueRoute: BoutiqueRoute,
   EchangesRoute: EchangesRoute,
+  EveilRoute: EveilRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

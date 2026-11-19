@@ -68,28 +68,28 @@ function CollectionPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-3xl font-black sm:text-4xl">Ma Collection</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {ownedInView} / {list.length} personnages · {owned.data?.length ?? 0} cartes au total
           </p>
         </div>
-        <Progress value={ownedInView} total={list.length} className="max-w-xs" />
+        <Progress value={ownedInView} total={list.length} className="max-w-20 sm:max-w-xs" />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
-          <button
+          <Button variant="ghost"
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={cn(
-              "rounded-full border border-border px-4 py-1.5 text-xs font-semibold transition-colors",
+              "h-auto rounded-md border border-border px-3 py-2 text-xs font-semibold transition-colors",
               filter === f.id ? "bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -107,10 +107,10 @@ function CollectionPage() {
         {binders.map(([series, items]) => {
           const got = items.filter((c) => byCard.has(c.id)).length;
           return (
-            <section key={series} className="rounded-3xl border border-border bg-surface/40 p-4 sm:p-6">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <section key={series} className="border-t border-border py-6">
+              <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
                 <h2 className="text-xl font-black">{series}</h2>
-                <div className="flex w-full max-w-xs items-center gap-3">
+                <div className="flex w-24 shrink-0 items-center gap-3 sm:w-full sm:max-w-xs">
                   <Progress value={got} total={items.length} />
                   <span className="shrink-0 text-xs text-muted-foreground">{got} / {items.length}</span>
                 </div>

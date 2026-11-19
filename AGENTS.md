@@ -41,6 +41,7 @@ use the editor.
 - Drive cinematic face alternation from the shared audio timeline over permanently decoded layers; soften rapid-swap contrast and respect reduced motion to avoid strobing while keeping the confirmed result gated by audio completion.
 - Keep opening aura colors, maximum-rarity detection and effect tiers in the shared opening helper, independent from card identity and database rarity rules; resolve beam-dependent CSS tokens on the opening wrapper rather than the root.
 - Blend black-backed pack art at both image and composited-body levels without parent filters; keep the draw's afterglow outside the pack so it survives tearing, reveals and batch summaries.
+- Keep the shared game header tied to the real profile stock; unimplemented currency and level fields remain unavailable, and new hub destinations reuse existing evolution actions rather than inventing game rules.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep ornamental TCG framing, engraved foil and collector metadata inside the shared Transcendance card face, with subtle overlays and reduced-motion fallbacks so all views share the physical finish without altering card identity.

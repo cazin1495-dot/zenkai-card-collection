@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function BoosterOdds({ counter, failed = false }: { counter: number | undefined; failed?: boolean }) {
   const count = Math.max(0, Math.min(PITY_LIMIT, counter ?? 0));
   return (
-    <aside aria-label="Taux de drop et garantie Mythique" className="mt-1 w-full max-w-lg rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-4 backdrop-blur-md">
+    <aside aria-label="Taux de drop et garantie Mythique" className="hub-odds mt-1 w-full max-w-lg rounded-md border border-foreground/10 bg-foreground/5 px-4 py-4 backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
         <span>Taux de drop</span><span>Par carte</span>
       </div>
