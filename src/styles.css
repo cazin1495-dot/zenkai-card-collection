@@ -983,12 +983,17 @@
   background: var(--gradient-awakening-column);
   mask-image: linear-gradient(transparent, var(--letterbox) 20% 80%, transparent);
 }
-.awakening-central-card { animation: awakening-accelerating-spin 2s ease-in both; }
+.awakening-central-card { --charge: 0; animation: awakening-charge-tension 2220ms linear both; }
+.awakening-alternate-base { z-index: 0; }
+.awakening-alternate-evolved { z-index: 1; opacity: var(--preview-opacity, 0); pointer-events: none; }
+.awakening-central-card .holo-tilt { transform: none; }
+.awakening-charge-halo { z-index: -1; box-shadow: var(--shadow-premium-aura); opacity: calc(0.2 + var(--charge) * 0.8); transform: scale(calc(1 + var(--charge) * 0.1)); }
+.awakening-central-card[data-phase="settled"] { animation: awakening-charge-land 500ms ease-out both; }
 .awakening-central-card .flame-aura,
 .awakening-central-card .holo-sheen { display: none; }
 .awakening-central-card .glow-mythique { box-shadow: var(--shadow-reverse-card); }
 .awakening-subtitle { bottom: max(5.5rem, 12dvh); text-shadow: none; }
-.awakening-clean-flash { animation: awakening-clean-flash 450ms ease-out both; }
+.awakening-clean-flash { background: radial-gradient(ellipse, var(--flash) 15%, color-mix(in oklab, var(--flash) 80%, var(--accent)) 65%, var(--accent)); animation: awakening-clean-flash 250ms ease-out both; }
 .awakening-settle { animation: awakening-settle 650ms ease-out both; }
 @keyframes awakening-orbit {
   0%, 100% { transform: rotateX(22deg) rotateZ(-8deg) scale(0.96); opacity: 0.4; }
@@ -999,10 +1004,18 @@
   20%, 70% { opacity: 0.6; }
   100% { transform: translateY(-100px); opacity: 0; }
 }
-@keyframes awakening-accelerating-spin {
-  from { transform: rotateY(0deg) scale(1); }
-  to { transform: rotateY(1800deg) scale(1.04); }
+@keyframes awakening-charge-tension {
+  0% { transform: translateX(0) scale(1); filter: brightness(1); }
+  30% { transform: translateX(-0.5px) scale(1.035); filter: brightness(1.08); }
+  50% { transform: translateX(0.8px) scale(1.06); filter: brightness(1.15); }
+  65% { transform: translateX(-1px) scale(1.08); filter: brightness(1.2); }
+  75% { transform: translateX(1px) scale(1.09); filter: brightness(1.23); }
+  82% { transform: translateX(-1.3px) scale(1.1); filter: brightness(1.26); }
+  88% { transform: translateX(1.3px) scale(1.11); filter: brightness(1.3); }
+  94% { transform: translateX(-1.5px) scale(1.115); filter: brightness(1.32); }
+  100% { transform: translateX(0) scale(1.12); filter: brightness(1.35); }
 }
+@keyframes awakening-charge-land { from { transform: scale(1.12); filter: brightness(1.35); } to { transform: scale(1.05); filter: brightness(1); } }
 @keyframes awakening-clean-flash {
   0%, 8% { opacity: 1; }
   100% { opacity: 0; }
@@ -1027,6 +1040,8 @@
   .form-portrait { transition: opacity 150ms ease-out; transform: none; }
   .form-energy-transition, .premium-form-flash, .premium-energy-spark, .tcg-light-sweep { display: none; }
   .awakening-orbit, .awakening-dust, .awakening-central-card, .awakening-settle { animation: none; }
+  .awakening-central-card[data-phase] { animation: none; transform: none; filter: none; }
+  .awakening-central-card[data-phase="alternating"] .awakening-alternate-evolved { opacity: 0; }
   .awakening-clean-flash, .awakening-silver-column { display: none; }
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }
   .pack-seal-light, .pack-reflection { display: none; }

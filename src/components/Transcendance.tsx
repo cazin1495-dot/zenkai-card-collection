@@ -9,7 +9,7 @@ import { AnimeCard } from "@/components/AnimeCard";
 import { FormFlipCard } from "@/components/FormFlipCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardArt, cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningPhraseIndex, awakeningSpinProgress, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
+import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -31,14 +31,25 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [audioTime, setAudioTime] = useState(0);
   const [form, setForm] = useState<"base" | "awakened">("awakened");
   const [formBusy, setFormBusy] = useState(false);
+  const cinematicStack = useRef<HTMLDivElement | null>(null);
+  const [framesReady, setFramesReady] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
-    // Warm both portraits during the cinematic, before comparison is available.
+    // Warm both portraits before the click without delaying original audio.
     for (const awakened of [false, true]) {
       const image = new Image();
       image.src = cardArt(card, awakened);
     }
+  }, [card]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const images = Array.from(cinematicStack.current?.querySelectorAll("img") ?? []);
+    void Promise.all(images.map(image => image.decode().catch(() => undefined))).then(() => {
+      if (!cancelled) setFramesReady(images.length === 2 && images.every(image => image.complete && image.naturalWidth > 0));
+    });
+    return () => { cancelled = true; };
   }, [open, card]);
 
   useEffect(() => {
@@ -79,6 +90,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       setAudioTime(0);
       setForm("awakened");
       setFormBusy(false);
+      setFramesReady(false);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -107,7 +119,8 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
 
   const evolved = canRevealEvolution(ended, result);
   const phraseIndex = awakeningPhraseIndex(audioTime);
-  const spinProgress = awakeningSpinProgress(audioTime);
+  const alternation = awakeningAlternation(audioTime);
+  const previewOpacity = framesReady && result !== "failed" ? alternation.awakenedOpacity : 0;
   const showingEvolved = evolved && form === "awakened";
   return <>
     <Button type="button" variant="transcend" size="sm" onClick={attempt} disabled={open}
@@ -123,9 +136,11 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
               {[0, 1, 2].map((i) => <span key={i} className="awakening-orbit absolute" style={{ "--orbit-index": i, animationDelay: `${-audioTime}s`, animationPlayState: "paused" } as CSSProperties} />)}
               {Array.from({ length: 18 }, (_, i) => <span key={`p-${i}`} className="awakening-dust absolute" style={{ left: `${12 + (i * 31 % 78)}%`, top: `${15 + (i * 23 % 70)}%`, animationDelay: `${-(audioTime + i * 0.29)}s`, animationPlayState: "paused" }} />)}
             </div>
-            <div aria-hidden className="awakening-silver-column pointer-events-none absolute" style={{ opacity: spinProgress * 0.65 }} />
-            <div data-spin-progress={spinProgress} className="awakening-central-card relative w-[min(15rem,38dvh,58vw)]" style={{ animationDelay: `${-spinProgress * 2}s`, animationPlayState: "paused" }}>
-              <AnimeCard card={card} />
+            <div aria-hidden className="awakening-silver-column pointer-events-none absolute" style={{ opacity: alternation.progress * 0.65 }} />
+            <div ref={cinematicStack} data-phase={alternation.phase} data-ready={framesReady} className="awakening-central-card relative aspect-[2/3] w-[min(15rem,38dvh,58vw)]" style={{ "--charge": alternation.progress, "--preview-opacity": previewOpacity, animationDelay: `${-(alternation.phase === "settled" ? audioTime - 2.47 : audioTime)}s`, animationPlayState: "paused" } as CSSProperties}>
+              <div className="awakening-alternate-base absolute inset-0"><AnimeCard card={card} preload /></div>
+              <div aria-hidden className="awakening-alternate-evolved absolute inset-0"><AnimeCard card={card} transcended preload /></div>
+              <div aria-hidden className="awakening-charge-halo pointer-events-none absolute inset-0 rounded-2xl" />
             </div>
           </div>
           {phraseIndex !== null && <p key={phraseIndex} data-phrase={phraseIndex} style={{ animationDelay: `${-(audioTime - AWAKENING_PHRASE_WINDOWS[phraseIndex].start)}s`, animationPlayState: "paused" }} className={cn("cinema-quote awakening-subtitle absolute inset-x-0 mx-auto max-w-3xl px-7 text-center font-sans text-sm font-medium leading-relaxed sm:text-lg", phraseIndex === 0 ? "cinema-quote-first" : "cinema-quote-impact")}>
@@ -139,6 +154,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
             <Button variant="transcend" onClick={play}><Play /> Relancer le son</Button>
             <Button variant="glass" onClick={skip}>Continuer</Button>
           </div>}
+          {alternation.phase === "flash" && framesReady && result === "transcended" && <div aria-hidden className="awakening-clean-flash pointer-events-none absolute inset-0 z-30" style={{ animationDelay: `${-(audioTime - 2.22)}s`, animationPlayState: "paused" }} />}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {result ? <>
             <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "awakening-settle" : "animate-in fade-in duration-700")}>
@@ -154,9 +170,6 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
               <Button variant="hero" onClick={close}>{evolved ? "Continuer" : <><X /> Fermer</>}</Button>
             </div>
           </> : <p className="text-sm text-muted-foreground">Éveil en cours…</p>}
-        </div>}
-        {evolved && <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
-          <div aria-hidden className="awakening-clean-flash absolute inset-0 bg-flash" />
         </div>}
       </div>, document.body,
     )}

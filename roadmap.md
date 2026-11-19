@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Cinématique : alternance accélérée dès le début (2,22 s), faces préchargées, tension et flash 0,25 s, stabilisation ; contraste des bascules rapides atténué pour éviter le stroboscope ; évolution réelle, portraits décodés, téléphone, mouvement réduit, audio et sauvegarde vérifiés, 14 tests réussis.
+
 - [x] Métamorphose ascendante 1,2 s : deux rendus complets superposés, masque et faisceau synchronisés, tremblement léger, zoom 1,06 et flash final ; évolution réelle, masque à 50 % et faisceau à mi-hauteur vérifiés, retour, téléphone et mouvement réduit sans erreur ; 35 tests réussis, collection sauvegardée.
 
 - [x] Tour complet 0,9 s : perspective 1200 px, tranche à 50 %, zoom 1→1,15→1,05, faces permanentes, impact final et retour inverse à taille 1 ; deux sens sur évolution réelle vérifiés, animation arrêtée à 450 ms confirmant rotation 90° et permutation exacte des faces, atterrissage et sauvegarde sans erreur.
