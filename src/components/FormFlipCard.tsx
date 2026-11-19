@@ -4,7 +4,7 @@ import type { Card } from "@/lib/cards";
 
 type Form = "base" | "awakened";
 
-/** Permanent opaque base beneath a decoded, crossfading awakened face. */
+/** Decoded permanent faces switch on the edge during a full 3D turn. */
 export function FormFlipCard({ card, form, onBusyChange }: { card: Card; form: Form; onBusyChange: (busy: boolean) => void }) {
   const previous = useRef(form);
   const [direction, setDirection] = useState<"forward" | "reverse" | null>(null);
@@ -22,11 +22,12 @@ export function FormFlipCard({ card, form, onBusyChange }: { card: Card; form: F
 
   useEffect(() => {
     if (previous.current === form) return;
+    if (!ready) return;
     previous.current = form;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setDirection(form === "awakened" ? "forward" : "reverse");
     onBusyChange(true);
-  }, [form, onBusyChange]);
+  }, [form, ready, onBusyChange]);
 
   function finish() {
     setDirection(null);
@@ -41,7 +42,10 @@ export function FormFlipCard({ card, form, onBusyChange }: { card: Card; form: F
       <div className="form-morph-awakened absolute inset-0" aria-hidden={form !== "awakened"}>
         <AnimeCard card={card} transcended preload />
       </div>
+      <div aria-hidden className="form-turn-back card-back absolute inset-0 grid place-items-center rounded-2xl border border-border"><span className="font-display text-xl font-bold tracking-widest text-foreground/70">ZENKAI</span></div>
     </div>
     <div aria-hidden className="form-morph-ki pointer-events-none absolute inset-0 rounded-2xl" />
+    <div aria-hidden className="form-turn-impact pointer-events-none absolute inset-0 rounded-2xl" />
+    <div aria-hidden className="form-turn-ring pointer-events-none absolute" />
   </div>;
 }

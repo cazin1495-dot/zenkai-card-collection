@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Tour complet 0,9 s : perspective 1200 px, tranche à 50 %, zoom 1→1,15→1,05, faces permanentes, impact final et retour inverse à taille 1 ; deux sens sur évolution réelle vérifiés, animation arrêtée à 450 ms confirmant rotation 90° et permutation exacte des faces, atterrissage et sauvegarde sans erreur.
+
 - [x] Comparaison organique 0,8 s : deux faces chargées en permanence, base opaque, fondu/netteté et zoom doux, montée de Ki et indicateur glissant ; deux sens et téléphone vérifiés sur une évolution réelle, base à opacité 1 au milieu du fondu, deux portraits décodés ; alternative mouvement réduit conservée.
 
 - [x] Finition TCG Transcendance : double cadre à 6 px, coins métalliques, gravure foil réactive, plaque de nom, emblème et numéro collector, étincelles tricolores et balayage toutes les 4 s ; collection réelle, inclinaison, téléphone et mouvement réduit vérifiés ; règles de jeu inchangées.
