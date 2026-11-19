@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Adoucir l’éveil : alternance 3,47 s, minimum 90 ms, fondus 150 ms, zoom sans secousses et halo lents, flash doux 500 ms et atterrissage à 1,04 sur 600 ms ; évolution réelle, téléphone, mouvement réduit, audio et sauvegarde vérifiés, 14 tests réussis.
+
 - [x] Cinématique : alternance accélérée dès le début (2,22 s), faces préchargées, tension et flash 0,25 s, stabilisation ; contraste des bascules rapides atténué pour éviter le stroboscope ; évolution réelle, portraits décodés, téléphone, mouvement réduit, audio et sauvegarde vérifiés, 14 tests réussis.
 
 - [x] Métamorphose ascendante 1,2 s : deux rendus complets superposés, masque et faisceau synchronisés, tremblement léger, zoom 1,06 et flash final ; évolution réelle, masque à 50 % et faisceau à mi-hauteur vérifiés, retour, téléphone et mouvement réduit sans erreur ; 35 tests réussis, collection sauvegardée.

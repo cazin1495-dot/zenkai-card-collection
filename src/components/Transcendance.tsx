@@ -9,7 +9,7 @@ import { AnimeCard } from "@/components/AnimeCard";
 import { FormFlipCard } from "@/components/FormFlipCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardArt, cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
+import { AWAKENING_ALTERNATION_MS, AWAKENING_FLASH_MS, AWAKENING_LANDING_MS, AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -137,7 +137,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
               {Array.from({ length: 18 }, (_, i) => <span key={`p-${i}`} className="awakening-dust absolute" style={{ left: `${12 + (i * 31 % 78)}%`, top: `${15 + (i * 23 % 70)}%`, animationDelay: `${-(audioTime + i * 0.29)}s`, animationPlayState: "paused" }} />)}
             </div>
             <div aria-hidden className="awakening-silver-column pointer-events-none absolute" style={{ opacity: alternation.progress * 0.65 }} />
-            <div ref={cinematicStack} data-phase={alternation.phase} data-ready={framesReady} className="awakening-central-card relative aspect-[2/3] w-[min(15rem,38dvh,58vw)]" style={{ "--charge": alternation.progress, "--preview-opacity": previewOpacity, animationDelay: `${-(alternation.phase === "settled" ? audioTime - 2.47 : audioTime)}s`, animationPlayState: "paused" } as CSSProperties}>
+            <div ref={cinematicStack} data-phase={alternation.phase} data-ready={framesReady} className="awakening-central-card relative aspect-[2/3] w-[min(15rem,38dvh,58vw)]" style={{ "--charge": alternation.progress, "--preview-opacity": previewOpacity, "--charge-duration": `${AWAKENING_ALTERNATION_MS}ms`, "--landing-duration": `${AWAKENING_LANDING_MS}ms`, animationDelay: `${-(alternation.phase === "settled" ? audioTime - (AWAKENING_ALTERNATION_MS + AWAKENING_FLASH_MS) / 1000 : audioTime)}s`, animationPlayState: "paused" } as CSSProperties}>
               <div className="awakening-alternate-base absolute inset-0"><AnimeCard card={card} preload /></div>
               <div aria-hidden className="awakening-alternate-evolved absolute inset-0"><AnimeCard card={card} transcended preload /></div>
               <div aria-hidden className="awakening-charge-halo pointer-events-none absolute inset-0 rounded-2xl" />
@@ -154,7 +154,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
             <Button variant="transcend" onClick={play}><Play /> Relancer le son</Button>
             <Button variant="glass" onClick={skip}>Continuer</Button>
           </div>}
-          {alternation.phase === "flash" && framesReady && result === "transcended" && <div aria-hidden className="awakening-clean-flash pointer-events-none absolute inset-0 z-30" style={{ animationDelay: `${-(audioTime - 2.22)}s`, animationPlayState: "paused" }} />}
+          {alternation.phase === "flash" && framesReady && result === "transcended" && <div aria-hidden className="awakening-clean-flash pointer-events-none absolute inset-0 z-30" style={{ "--flash-duration": `${AWAKENING_FLASH_MS}ms`, animationDelay: `${-(audioTime - AWAKENING_ALTERNATION_MS / 1000)}s`, animationPlayState: "paused" } as CSSProperties} />}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {result ? <>
             <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "awakening-settle" : "animate-in fade-in duration-700")}>

@@ -1,25 +1,29 @@
 import { describe, expect, it, vi } from "vitest";
-import { AWAKENING_DURATION_MS, AWAKENING_ALTERNATION_MS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "./awakening";
+import { AWAKENING_DURATION_MS, AWAKENING_ALTERNATION_DELAYS, AWAKENING_ALTERNATION_MS, AWAKENING_FLASH_MS, AWAKENING_LANDING_MS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "./awakening";
 import { cardArt } from "./cards";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 describe("original awakening audio", () => {
   it("reveals after seven seconds", () => expect(AWAKENING_DURATION_MS).toBe(7000));
-  it("alternates from the start for approximately 2.2 seconds", () => {
-    expect(AWAKENING_ALTERNATION_MS).toBe(2220);
+  it("alternates gently for approximately 3.5 seconds without intervals below 90ms", () => {
+    expect(AWAKENING_ALTERNATION_MS).toBe(3470);
+    expect(AWAKENING_ALTERNATION_DELAYS[0]).toBe(650);
+    expect(Math.min(...AWAKENING_ALTERNATION_DELAYS)).toBe(90);
     expect(awakeningAlternation(0).awakenedOpacity).toBe(0);
-    expect(awakeningAlternation(0.35).awakenedOpacity).toBe(1);
-    expect(awakeningAlternation(0.7).awakenedOpacity).toBe(0);
-    expect(awakeningAlternation(2.219).phase).toBe("alternating");
+    expect(awakeningAlternation(0.65).awakenedOpacity).toBe(1);
+    expect(awakeningAlternation(1.3).awakenedOpacity).toBe(0);
+    expect(awakeningAlternation(3.469).phase).toBe("alternating");
   });
-  it("finishes with one 250ms flash and holds the awakened face", () => {
-    expect(awakeningAlternation(2.22).phase).toBe("flash");
-    expect(awakeningAlternation(2.469).phase).toBe("flash");
-    expect(awakeningAlternation(2.47)).toEqual({ progress: 1, awakenedOpacity: 1, phase: "settled" });
+  it("finishes with a 500ms flash followed by a 600ms landing", () => {
+    expect(AWAKENING_FLASH_MS).toBe(500);
+    expect(AWAKENING_LANDING_MS).toBe(600);
+    expect(awakeningAlternation(3.47).phase).toBe("flash");
+    expect(awakeningAlternation(3.969).phase).toBe("flash");
+    expect(awakeningAlternation(3.97)).toEqual({ progress: 1, awakenedOpacity: 1, phase: "settled" });
   });
   it("softens contrast for the fastest swaps", () => {
-    expect(awakeningAlternation(1.8).awakenedOpacity).toBe(0.45);
-    expect(awakeningAlternation(1.9).awakenedOpacity).toBe(0.55);
+    expect(awakeningAlternation(2.9).awakenedOpacity).toBe(0.55);
+    expect(awakeningAlternation(3.05).awakenedOpacity).toBe(0.45);
   });
   it("shows the first phrase only from audio time 0.4 to 3.8 seconds", () => {
     expect(awakeningPhraseIndex(0)).toBe(null);

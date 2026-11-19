@@ -2,9 +2,10 @@ import transformation from "@/assets/goku-transformation.m4a.asset.json";
 
 export const AWAKENING_AUDIO_URL = transformation.url;
 export const AWAKENING_DURATION_MS = 7000;
-export const AWAKENING_ALTERNATION_DELAYS = [350, 350, 280, 280, 210, 210, 150, 100, 70, 50, 50, 40, 40, 40] as const;
+export const AWAKENING_ALTERNATION_DELAYS = [650, 650, 500, 380, 280, 200, 200, 150, 150, 110, 110, 90] as const;
 export const AWAKENING_ALTERNATION_MS = AWAKENING_ALTERNATION_DELAYS.reduce((sum, delay) => sum + delay, 0);
-export const AWAKENING_FLASH_MS = 250;
+export const AWAKENING_FLASH_MS = 500;
+export const AWAKENING_LANDING_MS = 600;
 /** Audio-clock driven; fast swaps soften contrast rather than strobing. */
 export function awakeningAlternation(currentTime: number) {
   const time = Math.max(0, currentTime * 1000);
