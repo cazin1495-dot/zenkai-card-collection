@@ -580,12 +580,12 @@
 .rarity-opening[data-rarity="epique"] { --aura-strength: 0.85; }
 .rarity-opening[data-rarity="legendaire"] { --aura-strength: 1; --shake-distance: 1px; --shake-angle: 0.3deg; }
 .rarity-opening[data-rarity="mythique"] { --aura-strength: 1; --shake-distance: 3px; --shake-angle: 0.8deg; }
-.pack-opening-scene { overflow: visible; isolation: isolate; }
-.pack-body { z-index: 1; filter: drop-shadow(0 0 25px color-mix(in oklab, var(--beam) 70%, transparent)); transition: filter 350ms ease-out; }
-.pack-dynamic-aura { z-index: 0; inset: -6% -12%; border-radius: 12px; background: var(--gradient-opening-aura); box-shadow: var(--shadow-opening-halo); filter: blur(16px); opacity: max(0.65, var(--aura-strength)); animation: pack-aura-arrive 350ms ease-out both; }
+.pack-opening-scene { overflow: visible; isolation: auto; perspective: none; background: transparent; mix-blend-mode: screen; }
+.pack-body { z-index: 1; background: transparent; mix-blend-mode: screen; }
+.pack-art, .pack-sleeve, .pack-cap, .pack-cap-peel { background: transparent; }
+.pack-dynamic-aura { z-index: 0; inset: -5% 1%; border-radius: 50%; background: var(--gradient-opening-aura); filter: blur(48px); opacity: max(0.65, var(--aura-strength)); animation: pack-aura-arrive 350ms ease-out both; }
 .pack-opening-scene[data-state="idle"] { --aura-strength: 0.65; }
-.pack-opening-scene[data-state="opening"] .pack-body,
-.pack-opening-scene[data-state="tearing"] .pack-body { filter: drop-shadow(0 0 25px var(--beam)) drop-shadow(0 0 45px color-mix(in oklab, var(--beam) 55%, transparent)); }
+.pack-opening-scene[data-state="opening"] .pack-dynamic-aura { opacity: 1; }
 .pack-opening-scene[data-state="tearing"] .pack-dynamic-aura { animation: pack-tear-aura 1100ms ease-out both; }
 .pack-tear-flash { z-index: 9; background: var(--gradient-opening-flash); animation: pack-jackpot-flash 350ms ease-out 450ms both; }
 .pack-tear-flash-jackpot { animation-duration: 450ms; }
@@ -613,6 +613,19 @@
 @keyframes pack-jackpot-flash { from { opacity: 0; } 15% { opacity: 0.9; } to { opacity: 0; } }
 @keyframes pack-tear-glow { from { opacity: 0; transform: scaleX(0.7); } 40% { opacity: 0.6; } 55%, 70% { opacity: 1; transform: scaleX(1.03); } to { opacity: 0; transform: scaleX(1); } }
 @keyframes card-personal-halo { from { opacity: 0; scale: 0.97; } 55% { opacity: var(--aura-strength); scale: 1.02; } to { opacity: var(--aura-strength); scale: 1; } }
+.opening-stage { overflow: visible; }
+.opening-afterglow { z-index: 0; }
+.opening-stage > :not(.opening-afterglow) { position: relative; z-index: 1; }
+.opening-stage > button { mix-blend-mode: screen; }
+.opening-afterglow-halo { inset: 4% 0; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in oklab, var(--beam) 48%, transparent), color-mix(in oklab, var(--beam) 20%, transparent) 45%, transparent 72%); filter: blur(48px); animation: opening-afterglow-pulse 2800ms ease-in-out infinite alternate; }
+.opening-afterglow[data-rarity="mythique"] .opening-afterglow-halo::after { content: ""; position: absolute; inset: 10%; border-radius: inherit; background: var(--gradient-rainbow); opacity: 0.18; filter: blur(48px); }
+.opening-afterglow-flash { background: radial-gradient(ellipse, color-mix(in oklab, var(--flash) 45%, var(--beam)), color-mix(in oklab, var(--beam) 40%, transparent) 30%, transparent 70%); animation: opening-afterglow-flash 850ms ease-out both; }
+.opening-afterglow[data-stage="tearing"] .opening-afterglow-flash { animation-delay: 450ms; }
+.opening-afterglow[data-stage="summary"] .opening-afterglow-flash { display: none; }
+.opening-afterglow-particle { width: 3px; height: 3px; border-radius: 50%; background: var(--beam); box-shadow: 0 0 8px var(--beam); animation: opening-afterglow-drift 4200ms ease-in-out infinite; }
+@keyframes opening-afterglow-pulse { from { opacity: 0.55; transform: scale(0.96); } to { opacity: 0.9; transform: scale(1.08); } }
+@keyframes opening-afterglow-flash { 0%, 100% { opacity: 0; } 25% { opacity: 0.65; } }
+@keyframes opening-afterglow-drift { 0%,100% { opacity: 0; transform: translateY(30px); } 30% { opacity: 0.75; } 85% { opacity: 0.3; transform: translateY(-90px); } }
 .cinema-player {
   width: 85vw;
   aspect-ratio: 1280 / 716;
@@ -1019,6 +1032,8 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .opening-afterglow-halo { animation: none; opacity: 0.65; }
+  .opening-afterglow-flash, .opening-afterglow-particle { display: none; }
   .form-morph-scene .form-morph-body { animation: none; }
   .form-morph-scene .form-morph-base, .form-morph-scene .form-morph-awakened { animation: none; }
   .form-scan-beam, .form-scan-flash { display: none; }

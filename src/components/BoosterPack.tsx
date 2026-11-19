@@ -24,7 +24,7 @@ export function BoosterPack({
   const style = { "--accent": accent, "--beam": beamColor, "--tear-position": `${TEAR}%` } as CSSProperties;
   const tearing = state === "tearing";
   const effects = openingEffects(beam);
-  const img = <img src={packArt.url} alt="" draggable={false} className="absolute inset-0 size-full object-contain mix-blend-lighten" />;
+  const img = <img src={packArt.url} alt="" draggable={false} className="pack-art absolute inset-0 size-full object-contain mix-blend-screen" />;
 
   return (
     <div data-rarity={rarity} data-state={state} className={cn("pack-opening-scene rarity-opening relative overflow-visible", className)} style={style}>

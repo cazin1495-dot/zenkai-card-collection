@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { BoosterPack } from "@/components/BoosterPack";
 import { BoosterOdds } from "@/components/BoosterOdds";
+import { OpeningAura } from "@/components/OpeningAura";
 import { CardReveal } from "@/components/CardReveal";
 import { TranscendButton } from "@/components/Transcendance";
 import { useAuth } from "@/hooks/use-auth";
@@ -162,7 +163,8 @@ function BoostersPage() {
         </>
       )}
 
-      <section className={cn("relative flex min-h-[460px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-6")}>
+      <section className={cn("opening-stage relative flex min-h-[460px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-6")}>
+        {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
           <CardReveal cards={pulled} awakened={awake} onAwaken={onAwaken} onDone={() => setPhase("summary")} />
         ) : phase === "summary" ? (
