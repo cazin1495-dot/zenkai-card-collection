@@ -115,8 +115,7 @@ function BoostersPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     setPhase("tearing");
-    const top = bestRarity(items.map((p) => p.card.rarity));
-    await new Promise((r) => setTimeout(r, top === "mythique" ? 3000 : 2500));
+    await new Promise((r) => setTimeout(r, 2000));
     setPhase(count === 1 ? "reveal" : "summary");
   }
 
@@ -124,12 +123,7 @@ function BoostersPage() {
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
-    <div
-      className={cn(
-        "mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-6 sm:px-6 sm:pt-10",
-        phase === "tearing" && tearBeam === "mythique" && "animate-screen-shake",
-      )}
-    >
+    <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
       {(phase === "reveal" || phase === "summary") && <h1 className="sr-only">Ouverture du booster</h1>}
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>

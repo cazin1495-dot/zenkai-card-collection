@@ -2,10 +2,13 @@ import transformation from "@/assets/goku-transformation.m4a.asset.json";
 
 export const AWAKENING_AUDIO_URL = transformation.url;
 export const AWAKENING_DURATION_MS = 7000;
-export const AWAKENING_QUOTE = "Mais ceux qui ont fait du mal à mes amis... je ne le pardonnerai jamais !";
-export function awakeningWordCount(elapsedMs: number) {
-  const total = AWAKENING_QUOTE.split(" ").length;
-  return Math.min(total, Math.max(1, Math.floor(elapsedMs / 6000 * total) + 1));
+export const AWAKENING_PHRASE_CHANGE_MS = 3500;
+export const AWAKENING_PHRASES = [
+  "Mais ceux qui ont fait du mal à mes amis...",
+  "Je ne le pardonnerai jamais !",
+] as const;
+export function awakeningPhraseIndex(elapsedMs: number) {
+  return elapsedMs < AWAKENING_PHRASE_CHANGE_MS ? 0 : 1;
 }
 
 /** Run within the click gesture; never mute the original soundtrack. */

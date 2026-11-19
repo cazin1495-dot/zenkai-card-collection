@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_AUDIO_URL, AWAKENING_DURATION_MS, AWAKENING_QUOTE, awakeningWordCount, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
+import { AWAKENING_AUDIO_URL, AWAKENING_DURATION_MS, AWAKENING_PHRASES, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -26,13 +26,13 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [ended, setEnded] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
-  const [wordCount, setWordCount] = useState(1);
+  const [phraseIndex, setPhraseIndex] = useState(0);
 
   useEffect(() => {
     if (!open) return;
     if (ended || playbackError) return;
     const start = performance.now();
-    const interval = window.setInterval(() => setWordCount(awakeningWordCount(performance.now() - start)), 80);
+    const interval = window.setInterval(() => setPhraseIndex(awakeningPhraseIndex(performance.now() - start)), 25);
     const timer = window.setTimeout(() => setEnded(true), AWAKENING_DURATION_MS);
     return () => { window.clearTimeout(timer); window.clearInterval(interval); };
   }, [open, ended, playbackError]);
@@ -60,7 +60,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       setEnded(false);
       setPlaybackError(false);
       setOpen(true);
-      setWordCount(1);
+      setPhraseIndex(0);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -97,8 +97,8 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "audio"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
           <audio ref={videoRef} src={AWAKENING_AUDIO_URL} preload="auto" controls={false} aria-hidden className="hidden" onError={() => setPlaybackError(true)} />
-          <p aria-label={AWAKENING_QUOTE} className="anime-spoken-quote relative mx-auto max-w-4xl px-7 text-center font-display text-xl font-black italic leading-relaxed sm:text-3xl">
-            {AWAKENING_QUOTE.split(" ").map((word, i) => <span key={i} aria-hidden className={cn("inline-block", i < wordCount ? "spoken-word" : "invisible")}>{word}{"\u00a0"}</span>)}
+          <p key={phraseIndex} data-phrase={phraseIndex} className={cn("cinema-quote relative mx-auto max-w-4xl px-8 text-center font-sans font-semibold leading-relaxed", phraseIndex === 0 ? "cinema-quote-first text-xl sm:text-3xl" : "cinema-quote-impact text-2xl sm:text-4xl")}>
+            {AWAKENING_PHRASES[phraseIndex]}
           </p>
           <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
             Passer <SkipForward className="size-3.5" />
