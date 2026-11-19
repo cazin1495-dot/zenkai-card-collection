@@ -147,6 +147,7 @@
   --gradient-prismatic: repeating-linear-gradient(115deg, var(--rarity-transcendance) 0%, var(--accent) 12%, var(--rarity-epique) 24%, var(--rarity-legendaire) 36%, var(--rarity-transcendance) 48%);
   --gradient-glitter: radial-gradient(circle, var(--flash) 0 0.7px, transparent 1.4px);
   --gradient-speed-lines: repeating-conic-gradient(from 15deg, transparent 0deg 8deg, var(--flash) 8.2deg 8.6deg, transparent 9deg 15deg);
+  --shadow-spoken-quote: 0 0 8px var(--rarity-transcendance), 0 0 22px var(--aura-ui), 0 0 45px color-mix(in oklab, var(--aura-ui) 65%, transparent);
   --gradient-awakening-blue: radial-gradient(ellipse, color-mix(in oklab, var(--aura-ui) 75%, transparent), color-mix(in oklab, var(--rarity-rare) 40%, transparent) 45%, transparent 72%);
   --gradient-awakening-silver: radial-gradient(ellipse, color-mix(in oklab, var(--rarity-transcendance) 45%, transparent), transparent 70%);
   --gradient-awakening-rays: repeating-conic-gradient(from 0deg, transparent 0deg 13deg, color-mix(in oklab, var(--aura-ui) 65%, transparent) 14deg 16deg, transparent 17deg 30deg);
@@ -428,6 +429,85 @@
   100% { opacity: 0; transform: translate(0, 0) scale(1); }
 }
 
+.anime-spoken-quote {
+  color: var(--flash);
+  -webkit-text-stroke: 0.5px var(--rarity-transcendance);
+  text-shadow: var(--shadow-spoken-quote);
+}
+.spoken-word { animation: spoken-word 400ms ease-out both; }
+@keyframes spoken-word {
+  from { opacity: 0; filter: blur(6px); transform: translateY(8px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+.pack-crack, .pack-crack-core {
+  top: var(--tear-position);
+  left: 7%;
+  width: 86%;
+  transform: translateY(-50%);
+  z-index: 5;
+  animation: crack-ignite 1s ease-out both;
+}
+.pack-crack {
+  height: 28px;
+  background: radial-gradient(ellipse, var(--flash), var(--beam) 28%, transparent 72%);
+  filter: blur(5px);
+  box-shadow: 0 0 30px var(--beam), 0 0 65px color-mix(in oklab, var(--beam) 70%, transparent);
+}
+.pack-crack-core {
+  height: 5px;
+  background: var(--flash);
+  clip-path: polygon(0 45%, 13% 20%, 24% 40%, 39% 0, 53% 30%, 69% 10%, 80% 40%, 100% 20%, 100% 75%, 83% 100%, 68% 60%, 53% 90%, 37% 65%, 22% 100%, 0 80%);
+  filter: drop-shadow(0 0 5px var(--flash));
+}
+.pack-god-ray {
+  bottom: calc(100% - var(--tear-position));
+  left: 32%;
+  width: 36%;
+  height: min(80vh, 700px);
+  transform-origin: 50% 100%;
+  background: linear-gradient(to top, var(--flash), color-mix(in oklab, var(--beam) 65%, transparent) 18%, transparent 95%);
+  clip-path: polygon(46% 100%, 54% 100%, 100% 0, 0 0);
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  animation: god-ray-rise 1.7s ease-out var(--ray-delay) both;
+}
+.pack-ember {
+  top: var(--tear-position);
+  width: 3px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--flash);
+  box-shadow: 0 0 5px var(--flash), 0 0 12px var(--beam);
+  animation: ember-rise 1.4s ease-out both;
+}
+.pack-tear-flash {
+  top: calc(var(--tear-position) - 20%);
+  left: -25%;
+  width: 150%;
+  height: 40%;
+  background: radial-gradient(ellipse, var(--flash), color-mix(in oklab, var(--beam) 60%, transparent) 35%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: tear-flash 700ms ease-out 900ms both;
+}
+@keyframes crack-ignite {
+  from { opacity: 0; scale: 0.1 0.3; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes god-ray-rise {
+  from { opacity: 0; transform: rotate(var(--ray-angle)) scaleY(0.1); }
+  55% { opacity: 0.8; }
+  to { opacity: 0.35; transform: rotate(var(--ray-angle)) scaleY(1); }
+}
+@keyframes ember-rise {
+  from { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translate(var(--ember-drift), -230px) scale(0.1); }
+}
+@keyframes tear-flash {
+  from { opacity: 0; }
+  15% { opacity: 1; }
+  to { opacity: 0; }
+}
 .cinema-player {
   width: 85vw;
   aspect-ratio: 1280 / 716;
@@ -591,6 +671,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .spoken-word, .pack-crack, .pack-crack-core, .pack-god-ray, .pack-ember { animation: none; }
+  .pack-tear-flash { display: none; }
   .anime-speed-lines, .anime-impact, .anime-outro-flash { display: none; }
   .anime-card-launch, .anime-card-arrival, .cinema-fade-in { animation: none; }
   .holo-tilt { transform: none; }

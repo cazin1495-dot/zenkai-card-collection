@@ -35,5 +35,5 @@ use the editor.
 - Card metadata (incl. AniList portrait URL, genre, saga, role, quote) lives in `public.cards`; it was imported once from the AniList GraphQL API. Legacy fictional cards are kept with `active=false`. Transcendance is a per-copy state on `user_cards`, not a card rarity. Client rule constants in `src/lib/cards.ts` mirror the SQL and are covered by tests.
 - Rarity colors are semantic tokens (`--rarity-*`) with matching `glow-*` utilities in `src/styles.css`; components pick them via the `RARITY` map.
 - Resolve evolved card identity centrally in `cardIdentity`; keep original metadata and per-copy evolution separate so collection and booster views agree.
-- Start the original awakening video unmuted inside the click gesture; reveal evolution only after playback ends or is explicitly skipped and confirmed RPC success, and refresh collection on close to avoid interrupting playback.
+- Start the original awakening audio unmuted inside the click gesture; reveal evolution only after the quote timeline ends or is explicitly skipped and confirmed RPC success, and refresh collection on close to avoid interrupting playback.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.

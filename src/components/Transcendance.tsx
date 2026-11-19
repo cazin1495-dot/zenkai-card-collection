@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
-import { AWAKENING_VIDEO_URL, canRevealEvolution, playAwakeningVideo } from "@/lib/awakening";
+import { AWAKENING_AUDIO_URL, AWAKENING_DURATION_MS, AWAKENING_QUOTE, awakeningWordCount, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
 type Result = "transcended" | "failed";
@@ -20,25 +20,22 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   size?: "sm" | "xs";
 }) {
   const queryClient = useQueryClient();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLAudioElement | null>(null);
   const running = useRef(false);
   const [open, setOpen] = useState(false);
   const [ended, setEnded] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
-  const [intro, setIntro] = useState(true);
-  const introActive = useRef(true);
+  const [wordCount, setWordCount] = useState(1);
 
   useEffect(() => {
     if (!open) return;
-    const timer = window.setTimeout(() => {
-      introActive.current = false;
-      setIntro(false);
-      const video = videoRef.current;
-      if (video) { video.currentTime = 0; void playAwakeningVideo(video).catch(() => setPlaybackError(true)); }
-    }, 800);
-    return () => window.clearTimeout(timer);
-  }, [open]);
+    if (ended || playbackError) return;
+    const start = performance.now();
+    const interval = window.setInterval(() => setWordCount(awakeningWordCount(performance.now() - start)), 80);
+    const timer = window.setTimeout(() => setEnded(true), AWAKENING_DURATION_MS);
+    return () => { window.clearTimeout(timer); window.clearInterval(interval); };
+  }, [open, ended, playbackError]);
 
   useEffect(() => {
     if (!open) return;
@@ -51,22 +48,19 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
     const video = videoRef.current;
     if (!video) return;
     setPlaybackError(false);
-    void playAwakeningVideo(video).then(() => {
-      if (introActive.current) video.pause();
-    }).catch(() => setPlaybackError(true));
+    void playAwakeningAudio(video).catch(() => setPlaybackError(true));
   }
 
   async function attempt() {
     if (running.current) return;
     running.current = true;
-    introActive.current = true;
-    // Mount the video synchronously so play() remains inside the user's click gesture.
+    // Mount audio synchronously so play() remains inside the user's click gesture.
     flushSync(() => {
       setResult(null);
       setEnded(false);
       setPlaybackError(false);
       setOpen(true);
-      setIntro(true);
+      setWordCount(1);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -89,8 +83,6 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   }
 
   function skip() {
-    introActive.current = false;
-    setIntro(false);
     videoRef.current?.pause();
     setEnded(true);
   }
@@ -102,26 +94,18 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       <Sparkles /> Tenter la Transcendance · {TRANSCEND_CHANCE_LABEL}
     </Button>
     {open && createPortal(
-      <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : intro ? "intro" : "video"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
+      <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "audio"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[12dvh] bg-letterbox" />
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[12dvh] bg-letterbox" />
-          <div className={cn("cinema-player relative", intro ? "invisible" : "cinema-fade-in")}>
-            <video ref={videoRef} src={AWAKENING_VIDEO_URL} playsInline preload="auto" controls={false}
-              className="block size-full object-contain" aria-label="Transformation de Son Goku"
-              onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
-          </div>
-          {intro && <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
-            <div aria-hidden className="anime-speed-lines absolute inset-0" />
-            <div className="anime-card-launch w-[min(15rem,40dvh,60vw)]"><AnimeCard card={card} /></div>
-            <div aria-hidden className="anime-impact absolute inset-0" />
-          </div>}
+          <audio ref={videoRef} src={AWAKENING_AUDIO_URL} preload="auto" controls={false} aria-hidden className="hidden" onError={() => setPlaybackError(true)} />
+          <p aria-label={AWAKENING_QUOTE} className="anime-spoken-quote relative mx-auto max-w-4xl px-7 text-center font-display text-xl font-black italic leading-relaxed sm:text-3xl">
+            {AWAKENING_QUOTE.split(" ").map((word, i) => <span key={i} aria-hidden className={cn("inline-block", i < wordCount ? "spoken-word" : "invisible")}>{word}{"\u00a0"}</span>)}
+          </p>
           <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
             Passer <SkipForward className="size-3.5" />
           </Button>
           {playbackError && <div className="relative z-10 flex flex-col items-center gap-4 bg-background/90 p-6">
-            <p className="text-sm text-foreground">La vidéo n’a pas pu démarrer.</p>
-            <Button variant="transcend" onClick={play}><Play /> Relancer la vidéo</Button>
+            <p className="text-sm text-foreground">Le son n’a pas pu démarrer.</p>
+            <Button variant="transcend" onClick={play}><Play /> Relancer le son</Button>
             <Button variant="glass" onClick={skip}>Continuer</Button>
           </div>}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">

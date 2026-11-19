@@ -20,7 +20,7 @@ export function BoosterPack({
   className?: string;
 }) {
   const beamColor = beam === "transcendance" ? "var(--rarity-transcendance)" : beam ? `var(--rarity-${beam})` : accent;
-  const style = { "--accent": accent, "--beam": beamColor } as CSSProperties;
+  const style = { "--accent": accent, "--beam": beamColor, "--tear-position": `${TEAR}%` } as CSSProperties;
   const tearing = state === "tearing";
   const img = <img src={packArt.url} alt="" draggable={false} className="absolute inset-0 size-full object-contain mix-blend-lighten" />;
 
@@ -36,17 +36,13 @@ export function BoosterPack({
           <>
             <div className="absolute inset-0" style={{ clipPath: `inset(${TEAR}% 0 0 0)` }}>{img}</div>
             <div className="absolute inset-0 animate-tear-off" style={{ clipPath: `inset(0 0 ${100 - TEAR}% 0)` }}>{img}</div>
-            {/* Beam of light from the tear */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 w-[140%] origin-bottom -translate-x-1/2 animate-beam"
-              style={{ bottom: `${100 - TEAR}%`, height: "120vh", background: "linear-gradient(to top, var(--beam), color-mix(in oklab, var(--beam) 40%, transparent) 35%, transparent 80%)", clipPath: "polygon(38% 100%, 62% 100%, 100% 0, 0 0)", filter: "blur(6px)", mixBlendMode: "screen" }}
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-[6%] h-3 -translate-y-1/2 animate-beam rounded-full"
-              style={{ top: `${TEAR}%`, background: "var(--beam)", boxShadow: "0 0 40px 12px var(--beam)" }}
-            />
+            <div aria-hidden className="pack-crack pointer-events-none absolute" />
+            <div aria-hidden className="pack-crack-core pointer-events-none absolute" />
+            {Array.from({ length: 7 }, (_, i) => <div key={`ray-${i}`} aria-hidden className="pack-god-ray pointer-events-none absolute"
+              style={{ "--ray-angle": `${(i - 3) * 14}deg`, "--ray-delay": `${i * 0.035}s` } as CSSProperties} />)}
+            {Array.from({ length: 24 }, (_, i) => <span key={`ember-${i}`} aria-hidden className="pack-ember pointer-events-none absolute"
+              style={{ left: `${8 + (i * 17 % 84)}%`, "--ember-drift": `${(i % 2 ? 1 : -1) * (20 + i * 3)}px`, animationDelay: `${i % 8 * 0.09}s` } as CSSProperties} />)}
+            <div aria-hidden className="pack-tear-flash pointer-events-none absolute" />
             {beam === "transcendance" && (
               <div aria-hidden className="pointer-events-none absolute left-1/2 w-[120%] -translate-x-1/2 animate-beam bg-gradient-rainbow opacity-70 mix-blend-screen blur-md" style={{ bottom: `${100 - TEAR}%`, height: "120vh", clipPath: "polygon(42% 100%, 58% 100%, 85% 0, 15% 0)" }} />
             )}

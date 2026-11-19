@@ -1,13 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { canRevealEvolution, playAwakeningVideo } from "./awakening";
+import { AWAKENING_DURATION_MS, awakeningWordCount, canRevealEvolution, playAwakeningAudio } from "./awakening";
 import { cardArt } from "./cards";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
-describe("original awakening video", () => {
+describe("original awakening audio", () => {
+  it("reveals after seven seconds", () => expect(AWAKENING_DURATION_MS).toBe(7000));
+  it("progressively reveals words and finishes the phrase before seven seconds", () => {
+    expect(awakeningWordCount(0)).toBe(1);
+    expect(awakeningWordCount(3000)).toBe(9);
+    expect(awakeningWordCount(6000)).toBe(16);
+  });
   it("plays immediately with the original audio at 100 percent and no controls", () => {
     const play = vi.fn().mockResolvedValue(undefined);
     const video = { muted: true, volume: 0, controls: true, play } as unknown as HTMLVideoElement;
-    playAwakeningVideo(video);
+    playAwakeningAudio(video);
     expect(play).toHaveBeenCalledTimes(1);
     expect(video.muted).toBe(false);
     expect(video.volume).toBe(1);
