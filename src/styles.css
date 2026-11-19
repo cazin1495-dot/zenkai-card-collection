@@ -144,6 +144,9 @@
   --shadow-cinema-player: 0 0 22px color-mix(in oklab, var(--aura-ui) 25%, transparent), 0 0 55px color-mix(in oklab, var(--rarity-transcendance) 12%, transparent);
   --shadow-divine-aura: 0 0 26px color-mix(in oklab, var(--flash) 85%, transparent), 0 0 65px color-mix(in oklab, var(--rarity-transcendance) 65%, transparent), 0 0 105px color-mix(in oklab, var(--flash) 35%, transparent);
   --gradient-divine-sheen: linear-gradient(110deg, transparent 35%, color-mix(in oklab, var(--flash) 65%, transparent) 48%, color-mix(in oklab, var(--rarity-transcendance) 80%, transparent) 50%, transparent 63%);
+  --gradient-prismatic: repeating-linear-gradient(115deg, var(--rarity-transcendance) 0%, var(--accent) 12%, var(--rarity-epique) 24%, var(--rarity-legendaire) 36%, var(--rarity-transcendance) 48%);
+  --gradient-glitter: radial-gradient(circle, var(--flash) 0 0.7px, transparent 1.4px);
+  --gradient-speed-lines: repeating-conic-gradient(from 15deg, transparent 0deg 8deg, var(--flash) 8.2deg 8.6deg, transparent 9deg 15deg);
   --gradient-awakening-blue: radial-gradient(ellipse, color-mix(in oklab, var(--aura-ui) 75%, transparent), color-mix(in oklab, var(--rarity-rare) 40%, transparent) 45%, transparent 72%);
   --gradient-awakening-silver: radial-gradient(ellipse, color-mix(in oklab, var(--rarity-transcendance) 45%, transparent), transparent 70%);
   --gradient-awakening-rays: repeating-conic-gradient(from 0deg, transparent 0deg 13deg, color-mix(in oklab, var(--aura-ui) 65%, transparent) 14deg 16deg, transparent 17deg 30deg);
@@ -426,13 +429,16 @@
 }
 
 .cinema-player {
-  width: 90vw;
+  width: 85vw;
   aspect-ratio: 1280 / 716;
   max-height: 76dvh;
   box-shadow: var(--shadow-cinema-player);
+  border: 1px solid color-mix(in oklab, var(--rarity-transcendance) 20%, transparent);
+  border-radius: 4px;
+  overflow: hidden;
 }
 @media (min-width: 768px) {
-  .cinema-player { width: 70vw; }
+  .cinema-player { width: 55vw; }
 }
 .divine-card-aura {
   box-shadow: var(--shadow-divine-aura);
@@ -441,7 +447,7 @@
 .divine-card-sheen {
   background-image: var(--gradient-divine-sheen);
   background-size: 300% 100%;
-  animation: divine-sweep 3.4s ease-in-out infinite;
+  animation: divine-sweep 3s ease-in-out infinite;
   mix-blend-mode: screen;
 }
 .divine-card-mote { animation: divine-float 3.5s ease-in-out infinite; }
@@ -514,7 +520,80 @@
   50% { opacity: 1; transform: translate(var(--px), calc(var(--py) - 24px)); }
 }
 
+.holo-tilt {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --holo-x: 50%;
+  --holo-y: 50%;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 180ms ease-out;
+}
+.holo-prism {
+  background-image: var(--gradient-prismatic);
+  background-size: 300% 300%;
+  background-position: var(--holo-x) var(--holo-y);
+  mix-blend-mode: color-dodge;
+  opacity: 0.23;
+}
+.holo-glitter {
+  background-image: var(--gradient-glitter), var(--gradient-glitter);
+  background-size: 11px 13px, 19px 23px;
+  background-position: var(--holo-x) var(--holo-y), var(--holo-y) var(--holo-x);
+  mix-blend-mode: screen;
+  opacity: 0.25;
+}
+.holo-tilt[data-active="true"] .divine-card-sheen {
+  animation: none;
+  background-position: var(--holo-x) var(--holo-y);
+}
+.holo-tilt[data-active="true"] .holo-prism { opacity: 0.4; }
+.cinema-fade-in { animation: cinema-fade-in 400ms ease-out both; }
+.anime-speed-lines {
+  background-image: var(--gradient-speed-lines);
+  mask-image: radial-gradient(ellipse, transparent 25%, var(--letterbox) 75%);
+  animation: anime-speed 800ms ease-in both;
+}
+.anime-card-launch { animation: anime-launch 800ms ease-in both; }
+.anime-impact { animation: anime-impact 800ms linear both; }
+.anime-card-arrival {
+  transform-style: preserve-3d;
+  animation: anime-arrival 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.anime-outro-flash { animation: anime-outro-flash 900ms ease-out both; }
+@keyframes cinema-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes anime-speed {
+  from { opacity: 0; scale: 1.3; }
+  to { opacity: 0.7; scale: 1; }
+}
+@keyframes anime-launch {
+  0% { transform: scale(0.6) translateY(60px); }
+  30% { transform: scale(1) translateX(-5px); }
+  45% { transform: scale(1.1) translateX(5px); }
+  60% { transform: scale(1.2) translateX(-4px); opacity: 1; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes anime-impact {
+  0%, 65% { background: transparent; }
+  72% { background: var(--flash); }
+  80% { background: var(--letterbox); }
+  87% { background: var(--flash); }
+  100% { background: transparent; }
+}
+@keyframes anime-arrival {
+  from { transform: perspective(1200px) rotateY(-270deg) rotateZ(-12deg) scale(0.65); opacity: 0; }
+  35% { opacity: 1; }
+  to { transform: perspective(1200px) rotateY(0) rotateZ(0) scale(1); opacity: 1; }
+}
+@keyframes anime-outro-flash {
+  0%, 12% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .anime-speed-lines, .anime-impact, .anime-outro-flash { display: none; }
+  .anime-card-launch, .anime-card-arrival, .cinema-fade-in { animation: none; }
+  .holo-tilt { transform: none; }
   .divine-card-aura, .divine-card-sheen, .divine-card-mote { animation: none; }
   .awakening-charge, .awakening-rays, .awakening-rise, .awakening-flash,
   .awakening-shockwave, .awakening-reveal, .awakening-mote {

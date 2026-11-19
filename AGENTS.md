@@ -36,3 +36,4 @@ use the editor.
 - Rarity colors are semantic tokens (`--rarity-*`) with matching `glow-*` utilities in `src/styles.css`; components pick them via the `RARITY` map.
 - Resolve evolved card identity centrally in `cardIdentity`; keep original metadata and per-copy evolution separate so collection and booster views agree.
 - Start the original awakening video unmuted inside the click gesture; reveal evolution only after playback ends or is explicitly skipped and confirmed RPC success, and refresh collection on close to avoid interrupting playback.
+- Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.

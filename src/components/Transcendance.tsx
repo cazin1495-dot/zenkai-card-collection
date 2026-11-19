@@ -26,6 +26,19 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [ended, setEnded] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
+  const [intro, setIntro] = useState(true);
+  const introActive = useRef(true);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      introActive.current = false;
+      setIntro(false);
+      const video = videoRef.current;
+      if (video) { video.currentTime = 0; void playAwakeningVideo(video).catch(() => setPlaybackError(true)); }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -38,18 +51,22 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
     const video = videoRef.current;
     if (!video) return;
     setPlaybackError(false);
-    void playAwakeningVideo(video).catch(() => setPlaybackError(true));
+    void playAwakeningVideo(video).then(() => {
+      if (introActive.current) video.pause();
+    }).catch(() => setPlaybackError(true));
   }
 
   async function attempt() {
     if (running.current) return;
     running.current = true;
+    introActive.current = true;
     // Mount the video synchronously so play() remains inside the user's click gesture.
     flushSync(() => {
       setResult(null);
       setEnded(false);
       setPlaybackError(false);
       setOpen(true);
+      setIntro(true);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -72,6 +89,8 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   }
 
   function skip() {
+    introActive.current = false;
+    setIntro(false);
     videoRef.current?.pause();
     setEnded(true);
   }
@@ -83,15 +102,20 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       <Sparkles /> Tenter la Transcendance · {TRANSCEND_CHANCE_LABEL}
     </Button>
     {open && createPortal(
-      <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "video"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
+      <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : intro ? "intro" : "video"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
           <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[12dvh] bg-letterbox" />
           <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[12dvh] bg-letterbox" />
-          <div className="cinema-player relative">
+          <div className={cn("cinema-player relative", intro ? "invisible" : "cinema-fade-in")}>
             <video ref={videoRef} src={AWAKENING_VIDEO_URL} playsInline preload="auto" controls={false}
               className="block size-full object-contain" aria-label="Transformation de Son Goku"
               onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
           </div>
+          {intro && <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
+            <div aria-hidden className="anime-speed-lines absolute inset-0" />
+            <div className="anime-card-launch w-[min(15rem,40dvh,60vw)]"><AnimeCard card={card} /></div>
+            <div aria-hidden className="anime-impact absolute inset-0" />
+          </div>}
           <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
             Passer <SkipForward className="size-3.5" />
           </Button>
@@ -103,7 +127,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {evolved && <div aria-hidden className="awakening-aura awakening-divine pointer-events-none absolute" />}
           {result ? <>
-            <div className="relative w-[min(17rem,42dvh,65vw)] animate-in fade-in duration-700">
+            <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "anime-card-arrival" : "animate-in fade-in duration-700")}>
               <AnimeCard card={card} transcended={evolved} />
             </div>
             <div className="relative flex flex-col items-center gap-3 text-center">
@@ -112,6 +136,10 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
               <Button variant="hero" onClick={close}>{evolved ? "Continuer" : <><X /> Fermer</>}</Button>
             </div>
           </> : <p className="text-sm text-muted-foreground">Éveil en cours…</p>}
+        </div>}
+        {evolved && <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
+          <div aria-hidden className="awakening-shockwave absolute" />
+          <div aria-hidden className="anime-outro-flash absolute inset-0 bg-flash" />
         </div>}
       </div>, document.body,
     )}

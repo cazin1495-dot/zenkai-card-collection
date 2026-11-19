@@ -1,3 +1,4 @@
+import { useRef, type PointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import { cardArt, cardIdentity, RARITY, type Card, type Rarity } from "@/lib/cards";
 
@@ -49,8 +50,32 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
   const identity = cardIdentity(card, transcended);
+  const tiltRef = useRef<HTMLDivElement | null>(null);
+  const interactive = rarity === "transcendance" && flipped && !locked;
+  function tilt(event: PointerEvent<HTMLDivElement>) {
+    if (!interactive || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+    const target = tiltRef.current;
+    if (!target) return;
+    target.style.setProperty("--tilt-x", `${(0.5 - y) * 24}deg`);
+    target.style.setProperty("--tilt-y", `${(x - 0.5) * 24}deg`);
+    target.style.setProperty("--holo-x", `${x * 100}%`);
+    target.style.setProperty("--holo-y", `${y * 100}%`);
+    target.dataset["active"] = "true";
+  }
+  function resetTilt() {
+    const target = tiltRef.current;
+    if (!target) return;
+    target.style.setProperty("--tilt-x", "0deg");
+    target.style.setProperty("--tilt-y", "0deg");
+    target.dataset["active"] = "false";
+  }
   return (
-    <div className={cn("flip-scene relative aspect-[2/3] w-full", className)}>
+    <div onPointerMove={tilt} onPointerDown={tilt} onPointerLeave={resetTilt} onPointerUp={resetTilt} onPointerCancel={resetTilt}
+      className={cn("flip-scene relative aspect-[2/3] w-full", interactive && "holo-interactive", className)}>
+      <div ref={tiltRef} className={cn("relative size-full", interactive && "holo-tilt")}>
       {!locked && flipped && rarity === "mythique" && <div aria-hidden className="flame-aura" />}
       {!locked && flipped && rarity === "transcendance" && <TranscendFrame />}
       <div className={cn("flip-inner size-full", flipped && "flipped")}>
@@ -69,6 +94,8 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
             <>
               <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-rarity-transcendance/40 via-transparent to-rarity-transcendance/20 mix-blend-screen" />
               <div aria-hidden className="divine-card-sheen pointer-events-none absolute inset-0" />
+              <div aria-hidden className="holo-prism pointer-events-none absolute inset-0" />
+              <div aria-hidden className="holo-glitter pointer-events-none absolute inset-0" />
             </>
           )}
           <div className={cn("absolute inset-x-0 top-0 flex items-center justify-between", compact ? "p-1" : "p-2.5")}>
@@ -96,6 +123,7 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

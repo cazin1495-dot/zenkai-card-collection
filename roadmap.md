@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Cinéma compact 55 % / 85 %, transitions anime avant/après et holographie 3D interactive sur toutes les Transcendances (lecture réelle, Passer, souris et gestes tactiles vérifiés)
 - [x] Vidéo centrée format cinéma avec Passer, lueur divine renforcée et clic direct pour avancer dans le booster (ordinateur, téléphone et ouverture réelle vérifiés)
 - [x] Remplacer voix et sous-titres par la vidéo originale avec son, puis révéler Goku Ultra Instinct avec le portrait couleur (lecture et sauvegarde vérifiées sur ordinateur et téléphone)
 - [x] Voix française dès le clic, sous-titre synchronisé et transformation en trois étapes sur quatre secondes ; test à 100 % conservé (lecture audible à vérifier sur le navigateur de l'utilisateur, aucune voix française disponible dans le navigateur de contrôle)
