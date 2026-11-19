@@ -12,6 +12,8 @@ type Props = {
   /** This copy evolved into Transcendance. */
   transcended?: boolean | undefined;
   compact?: boolean | undefined;
+  comparisonForm?: "base" | "awakened" | undefined;
+  transformationKey?: number | undefined;
 };
 
 export function displayRarity(card: Card, transcended?: boolean): Rarity {
@@ -30,7 +32,7 @@ export function TranscendFrame() {
 }
 
 /** Trading card with a flip animation and a rarity-coloured frame. */
-export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact }: Props) {
+export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0 }: Props) {
   const rarity = displayRarity(card, transcended);
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
@@ -69,7 +71,12 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
         </div>
 
         <div className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-surface", locked ? "border border-border" : rarity === "transcendance" ? "reverse-card" : r.glow)}>
-          {art ? (
+          {comparisonForm ? (
+            <div className="form-portrait-stack absolute inset-0 overflow-hidden" data-form={comparisonForm}>
+              <img src={cardArt(card, false)} alt={comparisonForm === "base" ? cardIdentity(card, false).name : ""} aria-hidden={comparisonForm !== "base"} loading="eager" className="form-portrait form-portrait-base absolute inset-0 size-full object-cover" />
+              <img src={cardArt(card, true)} alt={comparisonForm === "awakened" ? cardIdentity(card, true).name : ""} aria-hidden={comparisonForm !== "awakened"} loading="eager" className="form-portrait form-portrait-awakened absolute inset-0 size-full object-cover" />
+            </div>
+          ) : art ? (
             <img src={art} alt={identity.name} loading="lazy" className={cn("object-cover", rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")} />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique") && !locked && (
@@ -104,6 +111,11 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
           </div>
         </div>
       </div>
+      {comparisonForm === "awakened" && transformationKey > 0 && <div key={transformationKey} aria-hidden className="form-energy-transition pointer-events-none absolute inset-0 z-20">
+        <div className="premium-form-flash absolute inset-0 rounded-2xl" />
+        <div className="premium-form-sweep absolute inset-0 overflow-hidden rounded-2xl" />
+        <div className="premium-form-ring absolute" />
+      </div>}
       </div>
     </div>
   );

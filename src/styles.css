@@ -153,7 +153,9 @@
   --gradient-premium-label: linear-gradient(to top, color-mix(in oklab, var(--letterbox) 88%, transparent), color-mix(in oklab, var(--letterbox) 45%, transparent) 65%, transparent);
   --shadow-premium-aura: 0 0 0 1px var(--rarity-transcendance), -4px 0 22px color-mix(in oklab, var(--accent) 35%, transparent), 5px 3px 24px color-mix(in oklab, var(--rarity-legendaire) 24%, transparent);
   --shadow-premium-badge: inset 0 0 0 1px color-mix(in oklab, var(--rarity-transcendance) 60%, transparent), 0 0 8px color-mix(in oklab, var(--accent) 22%, transparent);
-  --gradient-form-flash: linear-gradient(120deg, transparent 10%, color-mix(in oklab, var(--rarity-transcendance) 80%, transparent) 48%, var(--flash) 50%, transparent 85%);
+  --gradient-form-flash: radial-gradient(ellipse at 50% 45%, color-mix(in oklab, var(--flash) 92%, transparent), color-mix(in oklab, var(--accent) 55%, transparent) 55%, transparent 95%);
+  --gradient-form-sweep: linear-gradient(125deg, transparent 35%, color-mix(in oklab, var(--accent) 25%, transparent) 43%, color-mix(in oklab, var(--flash) 80%, transparent) 50%, color-mix(in oklab, var(--accent) 35%, transparent) 55%, transparent 65%);
+  --shadow-form-ring: 0 0 10px color-mix(in oklab, var(--accent) 55%, transparent), inset 0 0 6px color-mix(in oklab, var(--flash) 40%, transparent);
   --foil-base: oklch(0.25 0.012 260);
   --foil-edge: oklch(0.56 0.02 260);
   --shadow-reverse-card: 0 0 0 1px var(--foil-edge), 0 6px 16px color-mix(in oklab, var(--letterbox) 40%, transparent);
@@ -685,7 +687,15 @@
   box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 55%, transparent);
   animation: premium-spark-rise 4s linear infinite;
 }
-.premium-form-flash { background: var(--gradient-form-flash); background-size: 250% 100%; animation: premium-form-flash 550ms ease-out both; }
+.form-portrait-stack { isolation: isolate; }
+.form-portrait { transition: opacity 600ms ease-out, transform 600ms ease-out; }
+.form-portrait-base { opacity: 1; }
+.form-portrait-awakened { opacity: 0; transform: scale(1.08); }
+.form-portrait-stack[data-form="awakened"] .form-portrait-base { opacity: 0; }
+.form-portrait-stack[data-form="awakened"] .form-portrait-awakened { opacity: 1; transform: scale(1); }
+.premium-form-flash { background: var(--gradient-form-flash); animation: premium-form-flash 180ms ease-out both; }
+.premium-form-sweep::after { content: ""; position: absolute; inset: -60% -40%; background: var(--gradient-form-sweep); animation: premium-form-sweep 480ms ease-out both; }
+.premium-form-ring { left: 50%; top: 50%; width: 140%; aspect-ratio: 1; border: 1px solid var(--accent); border-radius: 50%; box-shadow: var(--shadow-form-ring); animation: premium-form-ring 600ms ease-out both; }
 @keyframes premium-aura-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.9; } }
 @keyframes premium-spark-rise {
   0% { opacity: 0; transform: translateY(20px); }
@@ -693,9 +703,18 @@
   100% { opacity: 0; transform: translate(5px, -95px); }
 }
 @keyframes premium-form-flash {
-  0% { opacity: 0; background-position: 150% 0; }
-  18% { opacity: 0.75; }
-  100% { opacity: 0; background-position: -100% 0; }
+  0% { opacity: 0; }
+  18% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+@keyframes premium-form-sweep {
+  from { opacity: 0; transform: translate(-20%, 65%); }
+  18% { opacity: 0.85; }
+  to { opacity: 0; transform: translate(20%, -65%); }
+}
+@keyframes premium-form-ring {
+  from { opacity: 0.85; transform: translate(-50%, -50%) scale(0.5); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
 }
 .holo-prism {
   background-image: var(--gradient-prismatic);
@@ -815,7 +834,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .premium-awakened-aura { animation: none; }
-  .premium-form-flash, .premium-energy-spark { display: none; }
+  .form-portrait { transition: opacity 150ms ease-out; transform: none; }
+  .form-energy-transition, .premium-form-flash, .premium-energy-spark { display: none; }
   .awakening-orbit, .awakening-dust, .awakening-central-card, .awakening-settle { animation: none; }
   .awakening-clean-flash, .awakening-silver-column { display: none; }
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }

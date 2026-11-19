@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
-import { cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
+import { cardArt, cardIdentity, TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
 import { AWAKENING_AUDIO_URL, AWAKENING_PHRASES, AWAKENING_PHRASE_WINDOWS, awakeningPhraseIndex, awakeningSpinProgress, canRevealEvolution, playAwakeningAudio } from "@/lib/awakening";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,15 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [audioTime, setAudioTime] = useState(0);
   const [form, setForm] = useState<"base" | "awakened">("awakened");
   const [formTransition, setFormTransition] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    // Warm both portraits during the cinematic, before comparison is available.
+    for (const awakened of [false, true]) {
+      const image = new Image();
+      image.src = cardArt(card, awakened);
+    }
+  }, [open, card]);
 
   useEffect(() => {
     if (!open) return;
@@ -132,8 +141,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {result ? <>
             <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "awakening-settle" : "animate-in fade-in duration-700")}>
-              <AnimeCard card={card} transcended={showingEvolved} />
-              {formTransition > 0 && <div key={formTransition} aria-hidden className="premium-form-flash pointer-events-none absolute inset-0 z-20 rounded-2xl" />}
+              <AnimeCard card={card} transcended={showingEvolved} comparisonForm={evolved ? form : undefined} transformationKey={formTransition} />
             </div>
             <div className="relative flex flex-col items-center gap-3 text-center">
               <p className="text-sm font-medium text-rarity-transcendance">{evolved ? cardIdentity(card, showingEvolved).name : "Éveil échoué"}</p>

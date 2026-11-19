@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Transition de comparaison : portraits superposés préchargés, fondu/zoom de 0,6 s, flash blanc/cyan, onde circulaire et balayage diagonal ; deux sens, clics rapides, ordinateur, téléphone et mouvement réduit vérifiés sur une carte réelle.
 - [x] Carte Full Art premium : verre discret, bordure argent/cyan/or, badge étoilé, foil interactif, particules et flash au changement de forme (ordinateur, téléphone, comparaison et sauvegarde vérifiés).
 - [x] Éveil avec anneaux fins, particules, rotation accélérée sur les deux dernières secondes et sous-titres bas ; comparaison base/éveillée sans voile sur le portrait (audio original à 100 %, téléphone, inclinaison et sauvegarde vérifiés).
 - [x] Holo Reverse : illustration sans voile, cadre métallisé sombre et reflet diagonal réactif uniquement à l’inclinaison (collection connectée, souris et toucher vérifiés).
