@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Remplacer voix et sous-titres par la vidéo originale avec son, puis révéler Goku Ultra Instinct avec le portrait couleur (lecture et sauvegarde vérifiées sur ordinateur et téléphone)
 - [x] Voix française dès le clic, sous-titre synchronisé et transformation en trois étapes sur quatre secondes ; test à 100 % conservé (lecture audible à vérifier sur le navigateur de l'utilisateur, aucune voix française disponible dans le navigateur de contrôle)
 
 - [x] Test Goku Mythique garanti dans Shonen Mix, éveil garanti et transformation Ultra Instinct visible (portrait existant argenté ; génération du nouveau portrait refusée)

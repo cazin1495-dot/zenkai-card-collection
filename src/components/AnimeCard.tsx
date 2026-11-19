@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { cardArt, cardIdentity, GOKU_CARD_ID, RARITY, type Card, type Rarity } from "@/lib/cards";
+import { cardArt, cardIdentity, RARITY, type Card, type Rarity } from "@/lib/cards";
 
 type Props = {
   card: Card;
@@ -42,7 +42,7 @@ export function TranscendFrame() {
 export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact }: Props) {
   const rarity = displayRarity(card, transcended);
   const r = RARITY[rarity];
-  const art = cardArt(card);
+  const art = cardArt(card, transcended);
   const identity = cardIdentity(card, transcended);
   return (
     <div className={cn("flip-scene relative aspect-[2/3] w-full", className)}>
@@ -55,7 +55,7 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
 
         <div className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-surface", locked ? "border border-border" : r.glow)}>
           {art ? (
-            <img src={art} alt={identity.name} loading="lazy" className={cn("size-full object-cover", locked && "silhouette", transcended && card.id === GOKU_CARD_ID && "ultra-instinct-art")} />
+            <img src={art} alt={identity.name} loading="lazy" className={cn("size-full object-cover", locked && "silhouette")} />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />

@@ -8,6 +8,7 @@ import sora from "@/assets/characters/sora.jpg";
 import akira from "@/assets/characters/akira.jpg";
 import lyra from "@/assets/characters/lyra.jpg";
 import ryujin from "@/assets/characters/ryujin.jpg";
+import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 /** Rarities stored on cards. "transcendance" only exists as an evolved copy of a mythique card. */
 export type BaseRarity = "commune" | "rare" | "epique" | "legendaire" | "mythique";
@@ -66,7 +67,8 @@ export const CARD_ART: Record<string, string> = {
   riku, mei, taro, hana, kaito, yuki, sora, akira, lyra, ryujin,
 };
 
-export function cardArt(card: Pick<Card, "id" | "image_url">) {
+export function cardArt(card: Pick<Card, "id" | "image_url">, transcended = false) {
+  if (transcended && card.id === GOKU_CARD_ID) return ultraInstinct.url;
   return card.image_url || CARD_ART[card.id] || "";
 }
 
