@@ -29,6 +29,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
   const [playbackError, setPlaybackError] = useState(false);
   const [audioTime, setAudioTime] = useState(0);
   const [form, setForm] = useState<"base" | "awakened">("awakened");
+  const [formTransition, setFormTransition] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +68,7 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
       setOpen(true);
       setAudioTime(0);
       setForm("awakened");
+      setFormTransition(0);
     });
     play();
     const { data, error } = await supabase.rpc("attempt_transcendance", { _user_card_id: userCardId });
@@ -131,10 +133,11 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
           {result ? <>
             <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "awakening-settle" : "animate-in fade-in duration-700")}>
               <AnimeCard card={card} transcended={showingEvolved} />
+              {formTransition > 0 && <div key={formTransition} aria-hidden className="premium-form-flash pointer-events-none absolute inset-0 z-20 rounded-2xl" />}
             </div>
             <div className="relative flex flex-col items-center gap-3 text-center">
               <p className="text-sm font-medium text-rarity-transcendance">{evolved ? cardIdentity(card, showingEvolved).name : "Éveil échoué"}</p>
-              {evolved && <ToggleGroup type="single" value={form} onValueChange={(value) => { if (value === "base" || value === "awakened") setForm(value); }} aria-label="Forme de Son Goku" className="rounded-md border border-border bg-surface/70 p-1">
+              {evolved && <ToggleGroup type="single" value={form} onValueChange={(value) => { if ((value === "base" || value === "awakened") && value !== form) { setForm(value); setFormTransition((n) => n + 1); } }} aria-label="Forme de Son Goku" className="rounded-md border border-border bg-surface/70 p-1">
                 <ToggleGroupItem value="base" size="sm" className="px-3 text-xs">Forme de base</ToggleGroupItem>
                 <ToggleGroupItem value="awakened" size="sm" className="px-3 text-xs">Forme Éveillée</ToggleGroupItem>
               </ToggleGroup>}

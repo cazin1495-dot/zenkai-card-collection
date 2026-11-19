@@ -39,5 +39,5 @@ use the editor.
 - Drive awakening phrases and their animation progress from audio.currentTime, and finish on the audio ended event; centralize phrase windows in the timeline helper to keep pauses, buffering and seeks synchronized.
 - Map pack seam rarity cues in a shared helper, separate from card frame colors, so common and rare openings can share a neutral cue without changing card identity.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
-- Mask reverse-foil layers to the frame and isolate the opaque metadata band from the portrait; only pointer tilt activates foil reflections, never idle animations over artwork.
+- Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.
