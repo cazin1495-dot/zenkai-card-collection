@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Revue des halos : boosters x1/x5/x10, révélations, récapitulatifs et miniatures, collection, éveil et comparaison inspectés ; pulsation Épique limitée à la préparation pour préserver l’intensification de déchirure, halo fixe conservé avec mouvement réduit. Échanges/connexion sans cartes ; règles et données inchangées.
 - [x] Corriger l’aura du booster : halo permanent, ombre détourée, débordement visible, noms bilingues normalisés et flash de déchirure pour toutes les raretés ; repos ordinateur/téléphone, ouverture réelle et 32 tests vérifiés.
 - [x] Remplacer le fondu de comparaison par deux faces 3D : préparation 0,3 s, passage invisible sur la tranche, rebond et impact éveillé ; retour sans explosion, ordinateur, téléphone et mouvement réduit vérifiés sur une carte réelle.
 - [x] Remplacer le nom affiché Non Commune par Peu Commune, en conservant le vert émeraude, les effets progressifs et le taux de 10 %.
