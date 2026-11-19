@@ -81,7 +81,7 @@ export function rarityRank(r: Rarity) {
 
 export const RARITY: Record<Rarity, { label: string; text: string; border: string; glow: string; bg: string }> = {
   commune: { label: "Commune", text: "text-rarity-commune", border: "border-rarity-commune", glow: "glow-commune", bg: "bg-rarity-commune" },
-  non_commune: { label: "Non Commune", text: "text-rarity-non-commune", border: "border-rarity-non-commune", glow: "glow-non-commune", bg: "bg-rarity-non-commune" },
+  non_commune: { label: "Peu Commune", text: "text-rarity-non-commune", border: "border-rarity-non-commune", glow: "glow-non-commune", bg: "bg-rarity-non-commune" },
   rare: { label: "Rare", text: "text-rarity-rare", border: "border-rarity-rare", glow: "glow-rare", bg: "bg-rarity-rare" },
   epique: { label: "Épique", text: "text-rarity-epique", border: "border-rarity-epique", glow: "glow-epique", bg: "bg-rarity-epique" },
   legendaire: { label: "Légendaire", text: "text-rarity-legendaire", border: "border-rarity-legendaire", glow: "glow-legendaire", bg: "bg-rarity-legendaire" },

@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Remplacer le nom affiché Non Commune par Peu Commune, en conservant le vert émeraude, les effets progressifs et le taux de 10 %.
 - [x] Aura d’ouverture progressive, maximum réel avant déchirure, effets de fente et halos individuels ; ouverture Mythique réelle, cinq retournements et récapitulatif mobile vérifiés.
 - [x] Ajouter Non Commune aux tirages et aux collections : 10 %, Commune 47,3 %, autres taux inchangés ; personnages disponibles dans les six packs, seuil SQL et collection vérifiés, test Goku garanti conservé. Tirage aléatoire Non Commune non observé (stock insuffisant pour x5).
 - [x] Transition de comparaison : portraits superposés préchargés, fondu/zoom de 0,6 s, flash blanc/cyan, onde circulaire et balayage diagonal ; deux sens, clics rapides, ordinateur, téléphone et mouvement réduit vérifiés sur une carte réelle.
