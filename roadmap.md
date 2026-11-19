@@ -7,3 +7,4 @@
 - [ ] Comptes joueurs (inscription / connexion) avec collection sauvegardée en ligne
 - [ ] Page Ma Collection
 - [ ] Page Échanges (base)
+- [ ] Connexion avec Discord — non disponible (fournisseur non pris en charge) ; alternatives possibles : Apple, Microsoft
