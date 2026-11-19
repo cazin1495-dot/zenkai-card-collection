@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Booster opening runs only through the `public.open_booster()` security-definer DB function (randomness, cooldown, inserts); clients have no insert rights on `user_cards`, so rules can't be bypassed.
+- Card metadata lives in `public.cards`; card art is mapped by card id in `src/lib/cards.ts` (`CARD_ART`) — add both when adding a character.
+- Rarity colors are semantic tokens (`--rarity-*`) with matching `glow-*` utilities in `src/styles.css`; components pick them via the `RARITY` map.
