@@ -41,5 +41,6 @@ use the editor.
 - Keep opening aura colors, maximum-rarity detection and effect tiers in the shared opening helper, independent from card identity and database rarity rules; resolve beam-dependent CSS tokens on the opening wrapper rather than the root.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
+- Keep ornamental TCG framing, engraved foil and collector metadata inside the shared Transcendance card face, with subtle overlays and reduced-motion fallbacks so all views share the physical finish without altering card identity.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.
 - Keep form comparison as two preloaded backface-hidden card faces in a dedicated perspective rotor; their visibility switches geometrically at 90 degrees, and disable the selector until landing to prevent interrupted rotations.

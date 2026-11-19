@@ -165,6 +165,11 @@
   --shadow-awakening-ring: 0 0 6px color-mix(in oklab, var(--rarity-transcendance) 18%, transparent);
   --gradient-awakening-column: linear-gradient(90deg, transparent, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 40%, color-mix(in oklab, var(--flash) 34%, transparent) 50%, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 60%, transparent);
   --gradient-premium-frame: linear-gradient(135deg, var(--rarity-transcendance) 3%, var(--accent) 24%, var(--rarity-transcendance) 43%, var(--rarity-legendaire) 68%, var(--accent) 88%, var(--rarity-transcendance));
+  --texture-tcg-metal: repeating-linear-gradient(115deg, transparent 0 2px, color-mix(in oklab, var(--letterbox) 30%, transparent) 2px 3px), var(--gradient-premium-frame);
+  --texture-tcg-engraving: repeating-linear-gradient(125deg, transparent 0 14px, var(--accent) 14px 14.5px, transparent 14.5px 28px), repeating-linear-gradient(55deg, transparent 0 14px, var(--rarity-legendaire) 14px 14.5px, transparent 14.5px 28px), var(--gradient-reverse-reflection);
+  --gradient-tcg-plaque: linear-gradient(115deg, color-mix(in oklab, var(--letterbox) 82%, transparent), color-mix(in oklab, var(--surface-raised) 80%, transparent));
+  --gradient-tcg-sweep: linear-gradient(125deg, transparent 40%, color-mix(in oklab, var(--accent) 15%, transparent) 47%, color-mix(in oklab, var(--flash) 40%, transparent) 50%, color-mix(in oklab, var(--rarity-legendaire) 15%, transparent) 53%, transparent 60%);
+  --shadow-tcg-ornament: 0 0 3px color-mix(in oklab, var(--rarity-legendaire) 35%, transparent);
   --gradient-premium-label: linear-gradient(to top, color-mix(in oklab, var(--letterbox) 88%, transparent), color-mix(in oklab, var(--letterbox) 45%, transparent) 65%, transparent);
   --shadow-premium-aura: 0 0 0 1px var(--rarity-transcendance), -4px 0 22px color-mix(in oklab, var(--accent) 35%, transparent), 5px 3px 24px color-mix(in oklab, var(--rarity-legendaire) 24%, transparent);
   --shadow-premium-badge: inset 0 0 0 1px color-mix(in oklab, var(--rarity-transcendance) 60%, transparent), 0 0 8px color-mix(in oklab, var(--accent) 22%, transparent);
@@ -716,7 +721,7 @@
   z-index: 4;
   border-radius: inherit;
   padding: 2px;
-  background: var(--gradient-premium-frame);
+  background: var(--texture-tcg-metal);
   mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0);
   mask-composite: exclude;
 }
@@ -732,6 +737,22 @@
   transition: opacity 180ms ease-out;
 }
 .holo-tilt[data-active="true"] .reverse-foil { opacity: 0.16; }
+.tcg-inner-frame { inset: 6px; z-index: 5; border-radius: 10px; padding: 1px; background: var(--texture-tcg-metal); mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0); mask-composite: exclude; opacity: 0.85; }
+.tcg-corners { z-index: 6; }
+.tcg-corner { position: absolute; width: 25px; height: 25px; background: var(--gradient-premium-frame); clip-path: polygon(0 0,100% 0,100% 8%,30% 8%,8% 30%,8% 100%,0 100%); filter: drop-shadow(var(--shadow-tcg-ornament)); }
+.tcg-corner[data-corner="0"] { top: 6px; left: 6px; }
+.tcg-corner[data-corner="1"] { top: 6px; right: 6px; transform: rotate(90deg); }
+.tcg-corner[data-corner="2"] { bottom: 6px; right: 6px; transform: rotate(180deg); }
+.tcg-corner[data-corner="3"] { bottom: 6px; left: 6px; transform: rotate(270deg); }
+.tcg-engraving { z-index: 2; background: var(--texture-tcg-engraving); background-size: 180% 180%; background-position: var(--holo-x, 50%) var(--holo-y, 50%); mix-blend-mode: color-dodge; opacity: 0.025; transition: opacity 180ms ease-out; }
+.holo-tilt[data-active="true"] .tcg-engraving { opacity: 0.12; }
+.tcg-light-sweep { z-index: 2; background: var(--gradient-tcg-sweep); background-size: 300% 300%; mix-blend-mode: color-dodge; animation: tcg-light-sweep 4s ease-in-out infinite; }
+.tcg-nameplate { padding: 7px 8px; border: 1px solid transparent; border-radius: 3px; background: var(--gradient-tcg-plaque) padding-box, var(--gradient-premium-frame) border-box; backdrop-filter: blur(3px); text-wrap: balance; letter-spacing: 0; font-size: 11px; }
+.tcg-universe-emblem { color: var(--rarity-legendaire); background: var(--gradient-tcg-plaque); border: 1px solid var(--rarity-legendaire); border-radius: 50%; box-shadow: var(--shadow-tcg-ornament); }
+.tcg-collector-number { color: var(--rarity-transcendance); letter-spacing: 0; }
+.reverse-card[data-compact="true"] .tcg-nameplate { padding: 3px; font-family: var(--font-sans); }
+.reverse-card[data-compact="true"] .tcg-corner { width: 14px; height: 14px; }
+@keyframes tcg-light-sweep { 0%, 65% { background-position: 150% 150%; opacity: 0; } 72% { opacity: 0.13; } 92% { background-position: -50% -50%; opacity: 0.13; } 100% { background-position: -50% -50%; opacity: 0; } }
 .premium-glass-label {
   background: var(--gradient-premium-label);
   backdrop-filter: blur(2px);
@@ -754,6 +775,9 @@
   box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 55%, transparent);
   animation: premium-spark-rise 4s linear infinite;
 }
+.premium-energy-spark:nth-child(3n + 1) { background: var(--accent); }
+.premium-energy-spark:nth-child(3n + 2) { background: var(--flash); }
+.premium-energy-spark:nth-child(3n) { background: var(--rarity-legendaire); }
 .form-flip-scene {
   perspective: 1000px;
   --shadow-form-charge: 0 0 0 2px var(--rarity-transcendance), 0 0 28px color-mix(in oklab, var(--accent) 55%, transparent);
@@ -947,7 +971,7 @@
   .card-reveal-flip .flip-inner { transition-duration: 150ms; }
   .premium-awakened-aura { animation: none; }
   .form-portrait { transition: opacity 150ms ease-out; transform: none; }
-  .form-energy-transition, .premium-form-flash, .premium-energy-spark { display: none; }
+  .form-energy-transition, .premium-form-flash, .premium-energy-spark, .tcg-light-sweep { display: none; }
   .awakening-orbit, .awakening-dust, .awakening-central-card, .awakening-settle { animation: none; }
   .awakening-clean-flash, .awakening-silver-column { display: none; }
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }

@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Finition TCG Transcendance : double cadre à 6 px, coins métalliques, gravure foil réactive, plaque de nom, emblème et numéro collector, étincelles tricolores et balayage toutes les 4 s ; collection réelle, inclinaison, téléphone et mouvement réduit vérifiés ; règles de jeu inchangées.
+
 - [x] Mode test temporaire : cinq Goku Mythiques dans chaque booster de tous les packs, éveil à 100 %, taux affichés honnêtes ; pack Seinen réel, audio original à 100 %, cinématique, Ultra Instinct sauvegardé et affichage téléphone vérifiés, 57 tests réussis. Stock du demandeur rechargé à cinq pour ses tests ; pas de bouton optionnel, taux normaux conservés pour rétablissement ultérieur.
 
 - [x] Nouveaux taux par carte, fin du test Goku garanti, Pity globale par joueur à 200 boosters (x1/x5/x10), encadré et progression sous le paquet ; ouverture réelle 0→1 et sauvegarde vérifiées, règles de garantie/remise à zéro couvertes par tests. Scénario réel à 199 non exercé (création du joueur de test refusée). Paliers manquants du pack Protagoniste complétés avec alliés de même rareté.
