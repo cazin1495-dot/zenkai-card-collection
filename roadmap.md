@@ -1,7 +1,7 @@
 # Zenkai — roadmap
 
 - [x] Design sombre + barre de navigation (Boosters, Ma Collection, Échanges)
-- [x] Page Boosters : paquet, ouverture de 3 cartes avec retournement, contour par rareté
+- [x] Page Boosters : paquet, cartes révélées une par une (clic ou glisser), récapitulatif final, contour par rareté
 - [x] 10 personnages de test avec illustrations
 - [x] Compte à rebours de 10 min entre deux boosters (vérifié côté serveur)
 - [x] Comptes joueurs (e-mail, Google, Lovable) avec collection sauvegardée en ligne
