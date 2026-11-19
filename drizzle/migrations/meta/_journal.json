@@ -15,6 +15,13 @@
       "when": 1795117782889,
       "tag": "0001_booster_stock_mythique_transcendance",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795120887434,
+      "tag": "0002_temporary_goku_guaranteed_tests",
+      "breakpoints": true
     }
   ]
 }

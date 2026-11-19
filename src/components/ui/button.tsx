@@ -18,6 +18,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         hero: "bg-gradient-primary text-primary-foreground font-display font-semibold tracking-wide shadow-glow hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all",
         glass: "border border-border bg-surface/60 text-foreground backdrop-blur hover:bg-surface-raised",
+        transcend: "transcend-cta border border-rarity-transcendance text-background font-semibold hover:brightness-110",
       },
       size: {
         default: "h-9 px-4 py-2",

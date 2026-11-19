@@ -33,7 +33,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "antagoniste", label: "Antagonistes" },
 ];
 
-type Owned = { count: number; transcended: boolean; pendingCopy: string | null };
+type Owned = { count: number; transcendedCount: number; pendingCopy: string | null };
 
 function CollectionPage() {
   const { userId } = Route.useRouteContext();
@@ -45,9 +45,9 @@ function CollectionPage() {
     const m = new Map<string, Owned>();
     const rarity = new Map((cards.data ?? []).map((c) => [c.id, c.rarity]));
     owned.data?.forEach((row) => {
-      const o = m.get(row.card_id) ?? { count: 0, transcended: false, pendingCopy: null };
+      const o = m.get(row.card_id) ?? { count: 0, transcendedCount: 0, pendingCopy: null };
       o.count++;
-      if (row.transcended) o.transcended = true;
+      if (row.transcended) o.transcendedCount++;
       if (!o.pendingCopy && rarity.get(row.card_id) === "mythique" && !row.awaken_attempted) o.pendingCopy = row.id;
       m.set(row.card_id, o);
     });
@@ -115,13 +115,14 @@ function CollectionPage() {
                   <span className="shrink-0 text-xs text-muted-foreground">{got} / {items.length}</span>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-8">
+               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
                 {items.map((card) => {
                   const o = byCard.get(card.id);
                   return (
                     <div key={card.id} className="flex flex-col items-center gap-2">
-                      <AnimeCard card={card} count={o?.count} locked={!o} transcended={o?.transcended} />
+                       {(!o || o.count > o.transcendedCount) && <AnimeCard card={card} count={o ? o.count - o.transcendedCount : undefined} locked={!o} />}
                       {o?.pendingCopy && <TranscendButton size="xs" userCardId={o.pendingCopy} card={card} />}
+                       {!!o?.transcendedCount && <AnimeCard card={card} count={o.transcendedCount} transcended />}
                     </div>
                   );
                 })}

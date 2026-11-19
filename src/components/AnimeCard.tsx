@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { cardArt, RARITY, type Card, type Rarity } from "@/lib/cards";
+import { cardArt, cardIdentity, GOKU_CARD_ID, RARITY, type Card, type Rarity } from "@/lib/cards";
 
 type Props = {
   card: Card;
@@ -43,6 +43,7 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
   const rarity = displayRarity(card, transcended);
   const r = RARITY[rarity];
   const art = cardArt(card);
+  const identity = cardIdentity(card, transcended);
   return (
     <div className={cn("flip-scene relative aspect-[2/3] w-full", className)}>
       {!locked && flipped && rarity === "mythique" && <div aria-hidden className="flame-aura" />}
@@ -54,7 +55,7 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
 
         <div className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-surface", locked ? "border border-border" : r.glow)}>
           {art ? (
-            <img src={art} alt={card.name} loading="lazy" className={cn("size-full object-cover", locked && "silhouette")} />
+            <img src={art} alt={identity.name} loading="lazy" className={cn("size-full object-cover", locked && "silhouette", transcended && card.id === GOKU_CARD_ID && "ultra-instinct-art")} />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />
@@ -78,11 +79,11 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
           </div>
           <div className={cn("absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/85 to-transparent", compact ? "p-1.5 pt-5" : "p-3 pt-10")}>
             <p className={cn("font-display font-bold leading-tight", compact ? "truncate text-[9px]" : "text-sm sm:text-base")}>
-              {locked ? "???" : card.name}
+              {locked ? "???" : identity.name}
             </p>
             {!compact && (
-              <p className={cn("truncate text-[11px] font-medium", locked ? "text-muted-foreground" : r.text)}>
-                {locked ? card.series ?? "Non obtenue" : card.title}
+              <p className={cn("text-[11px] font-medium", locked ? "text-muted-foreground" : r.text)}>
+                {locked ? card.series ?? "Non obtenue" : identity.title}
               </p>
             )}
           </div>

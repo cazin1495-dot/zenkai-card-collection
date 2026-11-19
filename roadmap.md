@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Test Goku Mythique garanti dans Shonen Mix, éveil garanti et transformation Ultra Instinct visible (portrait existant argenté ; génération du nouveau portrait refusée)
+
 - [x] Design sombre + barre de navigation (Boosters, Ma Collection, Échanges)
 - [x] Page Boosters : paquet, cartes révélées une par une (clic ou glisser), récapitulatif final, contour par rareté
 - [x] 10 personnages de test avec illustrations

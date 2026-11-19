@@ -39,7 +39,18 @@ export const STOCK_CAP = 15;
 export const STOCK_REGEN_MINUTES = 10;
 export const STOCK_REGEN_MS = STOCK_REGEN_MINUTES * 60 * 1000;
 export const OPEN_COUNTS = [1, 5, 10] as const;
-export const TRANSCEND_CHANCE_LABEL = "1 %";
+/** Temporary test values; restore normal probabilities after testing. */
+export const GOKU_TEST_DROP_PERCENT = 100;
+export const TRANSCEND_CHANCE_PERCENT = 100;
+export const TRANSCEND_CHANCE_LABEL = `${TRANSCEND_CHANCE_PERCENT} %`;
+export const GOKU_CARD_ID = "al-246";
+
+export function cardIdentity(card: Card, transcended = false) {
+  if (transcended && card.id === GOKU_CARD_ID) {
+    return { name: "Son Goku (Ultra Instinct)", title: "Ultra Instinct · Guerrier Saiyan" };
+  }
+  return { name: card.name, title: card.title };
+}
 
 /** Drop chance per card, in percent (mirrors the SQL thresholds). */
 export const DROP_RATES: Record<BaseRarity, number> = {

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { supabase } from "@/integrations/supabase/client";
-import { TRANSCEND_CHANCE_LABEL, type Card } from "@/lib/cards";
+import { cardIdentity, type Card } from "@/lib/cards";
 import { playCharge, playExplosion, playFizzle } from "@/lib/sfx";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,7 @@ export function TranscendButton({
   const [open, setOpen] = useState(false);
 
   async function attempt() {
+    if (open) return;
     setOpen(true);
     setResult(null);
     const [{ data, error }] = await Promise.all([
@@ -62,13 +63,13 @@ export function TranscendButton({
     <>
       <Button
         type="button"
-        variant="hero"
+        variant="transcend"
         size="sm"
         onClick={attempt}
         disabled={open}
-        className={cn("rounded-full", size === "xs" && "h-7 px-2 text-[10px]", className)}
+        className={cn("h-auto min-h-9 w-full max-w-64 whitespace-normal rounded-lg px-3 py-2 text-center leading-snug", size === "xs" && "gap-1 px-2 text-[10px]", className)}
       >
-        <Sparkles /> Tenter la Transcendance ({TRANSCEND_CHANCE_LABEL})
+        <Sparkles /> Tenter la Transcendance
       </Button>
       {open && <AwakeningScene card={card} result={result} onClose={close} />}
     </>
@@ -119,7 +120,7 @@ function AwakeningScene({ card, result, onClose }: { card: Card; result: Result 
         </>
       )}
 
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex max-h-[76dvh] w-full flex-col items-center justify-center">
         {/* Aura */}
         {cinematic && stage !== "done" && (
           <>
@@ -152,7 +153,7 @@ function AwakeningScene({ card, result, onClose }: { card: Card; result: Result 
 
         <div className={cn(cinematic && (stage === "charge" || stage === "quote") && "animate-ascend")}>
           <div className={cn(shaking && "animate-quake")}>
-            <div className={cn("flip-scene w-56 sm:w-64", stage === "spin" && "animate-spin-3d")} style={{ transformStyle: "preserve-3d" }}>
+            <div className={cn("flip-scene w-[min(15rem,40dvh)]", stage === "spin" && "animate-spin-3d")} style={{ transformStyle: "preserve-3d" }}>
               <AnimeCard card={card} transcended={transcended} />
             </div>
           </div>
@@ -166,7 +167,7 @@ function AwakeningScene({ card, result, onClose }: { card: Card; result: Result 
           {stage === "done" && (
             <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in-90 duration-700">
               <p className="font-display text-3xl font-black uppercase text-gradient-transcend sm:text-4xl">Transcendance</p>
-              <p className="text-sm text-muted-foreground">{card.name} a dépassé ses limites pour toujours.</p>
+               <p className="text-sm text-muted-foreground">{cardIdentity(card, true).name} a dépassé ses limites pour toujours.</p>
               <Button variant="hero" className="rounded-full" onClick={onClose}>Continuer</Button>
             </div>
           )}

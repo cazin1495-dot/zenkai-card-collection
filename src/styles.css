@@ -139,6 +139,8 @@
   --pack-protagoniste: oklch(0.8 0.13 215);
 
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-transcend-cta: linear-gradient(115deg, var(--rarity-legendaire), var(--rarity-transcendance) 50%, var(--rarity-legendaire));
+  --shadow-divine-frame: 0 0 0 2px var(--rarity-transcendance), 0 0 32px color-mix(in oklab, var(--rarity-transcendance) 65%, transparent);
   --gradient-pack: linear-gradient(160deg, oklch(0.32 0.12 25) 0%, oklch(0.2 0.08 290) 55%, oklch(0.14 0.04 260) 100%);
   --gradient-holo: linear-gradient(115deg, transparent 20%, oklch(0.9 0.12 200 / 45%) 38%, oklch(0.9 0.15 330 / 40%) 48%, oklch(0.95 0.12 90 / 45%) 58%, transparent 75%);
   --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--primary) 60%, transparent);
@@ -236,6 +238,13 @@
   background-image: var(--gradient-rainbow);
   animation: var(--animate-rainbow);
   filter: blur(0.5px) saturate(1.3);
+  box-shadow: var(--shadow-divine-frame);
+}
+@utility transcend-cta {
+  background-image: var(--gradient-transcend-cta);
+}
+@utility ultra-instinct-art {
+  filter: grayscale(0.85) contrast(1.15) brightness(1.2);
 }
 @utility flame-aura {
   position: absolute;
@@ -411,4 +420,11 @@
   0% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.4); }
   30% { opacity: 1; }
   100% { opacity: 0; transform: translate(0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-quake, .animate-ascend, .animate-swirl, .animate-spin-3d,
+  .animate-particle, .animate-flash, .animate-twinkle, .frame-transcend {
+    animation: none;
+  }
 }

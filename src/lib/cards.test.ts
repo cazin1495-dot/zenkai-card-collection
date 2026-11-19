@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { boosterStock, bestRarity, CARDS_PER_BOOSTER, DROP_RATES, STOCK_CAP, formatCountdown, inPack, type Card } from "./cards";
+import { boosterStock, bestRarity, cardIdentity, GOKU_CARD_ID, GOKU_TEST_DROP_PERCENT, TRANSCEND_CHANCE_PERCENT, CARDS_PER_BOOSTER, DROP_RATES, STOCK_CAP, formatCountdown, inPack, type Card } from "./cards";
+import { readFileSync } from "node:fs";
 
 const t0 = new Date("2026-11-19T12:00:00Z");
 const min = 60_000;
@@ -12,13 +13,35 @@ describe("booster stock", () => {
     expect(boosterStock(3, t0, t0.getTime() + 35 * min).count).toBe(6);
   });
   it("shows time left before the next booster", () => {
-    expect(formatCountdown(boosterStock(3, t0, t0.getTime() + 1 * min).nextInMs!)).toBe("09:00");
+    const remaining = boosterStock(3, t0, t0.getTime() + 1 * min).nextInMs;
+    expect(remaining).not.toBeNull();
+    if (remaining === null) throw new Error("Expected countdown");
+    expect(formatCountdown(remaining)).toBe("09:00");
   });
   it("never exceeds 15 boosters", () => {
     expect(STOCK_CAP).toBe(15);
     const s = boosterStock(14, t0, t0.getTime() + 300 * min);
     expect(s.count).toBe(15);
     expect(s.nextInMs).toBeNull();
+  });
+});
+
+describe("temporary Goku test rules", () => {
+  const migration = readFileSync("drizzle/migrations/0002_temporary_goku_guaranteed_tests.sql", "utf8");
+  it("guarantees Goku in Shonen Mix only", () => {
+    expect(GOKU_TEST_DROP_PERCENT).toBe(100);
+    expect(GOKU_CARD_ID).toBe("al-246");
+    expect(migration).toContain("IF _category = ''shonen'' THEN");
+    expect(migration).toContain("c.id = ''al-246'' AND c.active AND c.rarity = ''mythique''");
+  });
+  it("guarantees successful transcendence during testing", () => {
+    expect(TRANSCEND_CHANCE_PERCENT).toBe(100);
+    expect(migration).toContain("'_ok := true;");
+  });
+  it("evolves Goku into Ultra Instinct without renaming the base card", () => {
+    const card = { id: "al-246", name: "Son Goku", title: "Guerrier Saiyan" } as Card;
+    expect(cardIdentity(card, true).name).toBe("Son Goku (Ultra Instinct)");
+    expect(cardIdentity(card, false).name).toBe("Son Goku");
   });
 });
 

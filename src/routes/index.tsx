@@ -22,6 +22,7 @@ import {
   RARITY,
   rarityRank,
   STOCK_CAP,
+  TRANSCEND_CHANCE_LABEL,
   type BaseRarity,
   type Card,
   type PackId,
@@ -74,7 +75,8 @@ function BoostersPage() {
       ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now)
       : null;
   const busy = phase === "opening" || phase === "tearing" || phase === "reveal" || (!!userId && profile.isLoading);
-  const packInfo = PACKS.find((p) => p.id === pack)!;
+  const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
+  if (!packInfo) return null;
   const best = bestRarity(pulled.map((p) => (awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity)));
 
   async function open(count: number) {
@@ -213,7 +215,7 @@ function BoostersPage() {
             <div>
               <p className={cn("text-sm font-semibold", RARITY[r].text)}>{RARITY[r].label}</p>
               <p className="text-xs text-muted-foreground">
-                {r === "transcendance" ? "Évolution d'une Mythique (1 %)" : `${String(DROP_RATES[r as BaseRarity]).replace(".", ",")} % par carte`}
+                {r === "transcendance" ? `Évolution d'une Mythique (${TRANSCEND_CHANCE_LABEL}, test)` : pack === "shonen" ? (r === "mythique" ? "Son Goku garanti · test 100 %" : "0 % · test Shonen Mix") : `${String(DROP_RATES[r as BaseRarity]).replace(".", ",")} % par carte`}
               </p>
             </div>
           </li>
