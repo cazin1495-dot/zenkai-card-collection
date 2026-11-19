@@ -24,6 +24,7 @@ export function displayRarity(card: Card, transcended?: boolean): Rarity {
 export function TranscendFrame() {
   return (
     <>
+      <div aria-hidden className="divine-card-aura pointer-events-none absolute -inset-4 rounded-2xl" />
       <div aria-hidden className="frame-transcend" />
       <div aria-hidden className="pointer-events-none absolute -inset-6 z-20">
         {SPARKS.map(([x, y], i) => (
@@ -32,6 +33,10 @@ export function TranscendFrame() {
             className="absolute size-2.5 animate-twinkle rounded-[2px] bg-rarity-transcendance"
             style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.2}s`, clipPath: "polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)" }}
           />
+        ))}
+        {SPARKS.map(([x, y], i) => (
+          <span key={`mote-${i}`} aria-hidden className="divine-card-mote absolute size-1 rounded-full bg-flash"
+            style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.35}s` }} />
         ))}
       </div>
     </>
@@ -61,7 +66,10 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />
           )}
           {rarity === "transcendance" && !locked && (
-            <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-rarity-transcendance/40 via-transparent to-rarity-transcendance/20 mix-blend-screen" />
+            <>
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-rarity-transcendance/40 via-transparent to-rarity-transcendance/20 mix-blend-screen" />
+              <div aria-hidden className="divine-card-sheen pointer-events-none absolute inset-0" />
+            </>
           )}
           <div className={cn("absolute inset-x-0 top-0 flex items-center justify-between", compact ? "p-1" : "p-2.5")}>
             <span

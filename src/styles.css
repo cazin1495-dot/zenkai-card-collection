@@ -141,6 +141,9 @@
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
   --gradient-transcend-cta: linear-gradient(115deg, var(--rarity-legendaire), var(--rarity-transcendance) 50%, var(--rarity-legendaire));
   --shadow-divine-frame: 0 0 0 2px var(--rarity-transcendance), 0 0 32px color-mix(in oklab, var(--rarity-transcendance) 65%, transparent);
+  --shadow-cinema-player: 0 0 22px color-mix(in oklab, var(--aura-ui) 25%, transparent), 0 0 55px color-mix(in oklab, var(--rarity-transcendance) 12%, transparent);
+  --shadow-divine-aura: 0 0 26px color-mix(in oklab, var(--flash) 85%, transparent), 0 0 65px color-mix(in oklab, var(--rarity-transcendance) 65%, transparent), 0 0 105px color-mix(in oklab, var(--flash) 35%, transparent);
+  --gradient-divine-sheen: linear-gradient(110deg, transparent 35%, color-mix(in oklab, var(--flash) 65%, transparent) 48%, color-mix(in oklab, var(--rarity-transcendance) 80%, transparent) 50%, transparent 63%);
   --gradient-awakening-blue: radial-gradient(ellipse, color-mix(in oklab, var(--aura-ui) 75%, transparent), color-mix(in oklab, var(--rarity-rare) 40%, transparent) 45%, transparent 72%);
   --gradient-awakening-silver: radial-gradient(ellipse, color-mix(in oklab, var(--rarity-transcendance) 45%, transparent), transparent 70%);
   --gradient-awakening-rays: repeating-conic-gradient(from 0deg, transparent 0deg 13deg, color-mix(in oklab, var(--aura-ui) 65%, transparent) 14deg 16deg, transparent 17deg 30deg);
@@ -422,6 +425,40 @@
   100% { opacity: 0; transform: translate(0, 0) scale(1); }
 }
 
+.cinema-player {
+  width: 90vw;
+  aspect-ratio: 1280 / 716;
+  max-height: 76dvh;
+  box-shadow: var(--shadow-cinema-player);
+}
+@media (min-width: 768px) {
+  .cinema-player { width: 70vw; }
+}
+.divine-card-aura {
+  box-shadow: var(--shadow-divine-aura);
+  animation: divine-pulse 2.6s ease-in-out infinite;
+}
+.divine-card-sheen {
+  background-image: var(--gradient-divine-sheen);
+  background-size: 300% 100%;
+  animation: divine-sweep 3.4s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+.divine-card-mote { animation: divine-float 3.5s ease-in-out infinite; }
+@keyframes divine-pulse {
+  0%, 100% { opacity: 0.65; scale: 0.98; }
+  50% { opacity: 1; scale: 1.03; }
+}
+@keyframes divine-sweep {
+  0%, 15% { background-position: 150% 0; }
+  70%, 100% { background-position: -150% 0; }
+}
+@keyframes divine-float {
+  0%, 100% { opacity: 0; translate: 0 10px; }
+  40% { opacity: 1; }
+  80% { opacity: 0.5; translate: 6px -28px; }
+}
+
 .awakening-aura {
   width: min(36rem, 95vw);
   height: min(42rem, 72dvh);
@@ -478,6 +515,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .divine-card-aura, .divine-card-sheen, .divine-card-mote { animation: none; }
   .awakening-charge, .awakening-rays, .awakening-rise, .awakening-flash,
   .awakening-shockwave, .awakening-reveal, .awakening-mote {
     animation: none;

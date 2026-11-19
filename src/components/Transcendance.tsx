@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { Play, Sparkles, X } from "lucide-react";
+import { Play, SkipForward, Sparkles, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,11 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
     if (result) onResult?.(result);
   }
 
+  function skip() {
+    videoRef.current?.pause();
+    setEnded(true);
+  }
+
   const evolved = canRevealEvolution(ended, result);
   return <>
     <Button type="button" variant="transcend" size="sm" onClick={attempt} disabled={open}
@@ -80,13 +85,20 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
     {open && createPortal(
       <div role="dialog" aria-modal aria-label="Éveil Transcendance" data-stage={ended ? "done" : "video"} className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-letterbox">
         {!ended ? <>
-          <video ref={videoRef} src={AWAKENING_VIDEO_URL} playsInline preload="auto" controls={false}
-            className="absolute inset-0 size-full object-contain" aria-label="Transformation de Son Goku"
-            onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[12dvh] bg-letterbox" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[12dvh] bg-letterbox" />
+          <div className="cinema-player relative">
+            <video ref={videoRef} src={AWAKENING_VIDEO_URL} playsInline preload="auto" controls={false}
+              className="block size-full object-contain" aria-label="Transformation de Son Goku"
+              onEnded={() => setEnded(true)} onError={() => setPlaybackError(true)} />
+          </div>
+          <Button variant="ghost" size="sm" onClick={skip} className="absolute bottom-5 right-5 z-20 gap-1 text-xs text-muted-foreground hover:text-foreground">
+            Passer <SkipForward className="size-3.5" />
+          </Button>
           {playbackError && <div className="relative z-10 flex flex-col items-center gap-4 bg-background/90 p-6">
             <p className="text-sm text-foreground">La vidéo n’a pas pu démarrer.</p>
             <Button variant="transcend" onClick={play}><Play /> Relancer la vidéo</Button>
-            <Button variant="glass" onClick={() => setEnded(true)}>Continuer</Button>
+            <Button variant="glass" onClick={skip}>Continuer</Button>
           </div>}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
           {evolved && <div aria-hidden className="awakening-aura awakening-divine pointer-events-none absolute" />}

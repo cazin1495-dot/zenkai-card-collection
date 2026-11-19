@@ -16,12 +16,13 @@ type Props = {
   onAwaken?: (userCardId: string, r: "transcended" | "failed") => void;
 };
 
-/** Reveals booster cards one at a time: tap or swipe to flip, then "Carte suivante". */
+/** Tap once to reveal, tap again to advance; swipe reveals without also advancing. */
 export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [dragX, setDragX] = useState(0);
   const startX = useRef<number | null>(null);
+  const swiped = useRef(false);
 
   const item = cards[index];
   if (!item) return null;
@@ -47,6 +48,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
   }
 
   function onPointerDown(e: PointerEvent<HTMLButtonElement>) {
+    swiped.current = false;
     if (flipped) return;
     startX.current = e.clientX;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -56,6 +58,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
     const dx = e.clientX - startX.current;
     setDragX(dx);
     if (Math.abs(dx) > SWIPE_DISTANCE) {
+      swiped.current = true;
       startX.current = null;
       flip();
     }
@@ -64,7 +67,15 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
     if (startX.current === null) return;
     startX.current = null;
     setDragX(0);
-    flip();
+  }
+
+  function activateCard() {
+    if (swiped.current) {
+      swiped.current = false;
+      return;
+    }
+    if (flipped) next();
+    else flip();
   }
 
   return (
@@ -103,9 +114,10 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
         )}
 
         <div key={`card-${index}`} className="animate-card-in">
-          <button
+          <Button
             type="button"
-            onClick={flip}
+            variant="ghost"
+            onClick={activateCard}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -115,8 +127,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
             }}
             aria-label={flipped ? `${card.name}, ${r.label}` : "Retourner la carte"}
             className={cn(
-              "relative block w-52 touch-none select-none transition-transform sm:w-60",
-              !flipped && "cursor-pointer",
+              "relative block h-auto w-52 cursor-pointer touch-none select-none rounded-none p-0 transition-transform hover:bg-transparent sm:w-60",
             )}
             style={{
               transform: dragX
@@ -127,7 +138,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
             <div className={cn(!flipped && "animate-suspense")}>
               <AnimeCard card={card} flipped={flipped} transcended={transcended} />
             </div>
-          </button>
+          </Button>
         </div>
       </div>
 

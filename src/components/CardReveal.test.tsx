@@ -11,6 +11,27 @@ const cards: PulledCard[] = [
 ].map((card, i) => ({ userCardId: `uc-${i}`, card }));
 
 describe("booster reveal one card at a time", () => {
+  it("reveals on the first card click and advances only on the second click", () => {
+    render(<CardReveal cards={cards} onDone={() => {}} />);
+    const hidden = screen.getByRole("button", { name: "Retourner la carte" });
+    hidden.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(hidden, { clientX: 0, pointerId: 1 });
+    fireEvent.pointerUp(hidden);
+    fireEvent.click(hidden);
+    fireEvent.click(screen.getByRole("button", { name: "Riku Tanaka, Commune" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("button", { name: "Kaito Ren, Rare" })).toBeTruthy();
+  });
+  it("opens the summary by clicking the last revealed card", () => {
+    const onDone = vi.fn();
+    render(<CardReveal cards={cards} onDone={onDone} />);
+    for (const item of cards) {
+      fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+      const rarity = item.card.rarity === "commune" ? "Commune" : item.card.rarity === "rare" ? "Rare" : "Légendaire";
+      fireEvent.click(screen.getByRole("button", { name: `${item.card.name}, ${rarity}` }));
+    }
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
   it("starts with a single face-down card and no next button", () => {
     render(<CardReveal cards={cards} onDone={() => {}} />);
     expect(screen.getAllByRole("button", { name: "Retourner la carte" })).toHaveLength(1);
