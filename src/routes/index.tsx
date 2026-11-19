@@ -6,24 +6,22 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { BoosterPack } from "@/components/BoosterPack";
+import { BoosterOdds } from "@/components/BoosterOdds";
 import { CardReveal } from "@/components/CardReveal";
 import { TranscendButton } from "@/components/Transcendance";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { cardsQuery, profileQuery } from "@/lib/queries";
+import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
 import {
   bestRarity,
   boosterStock,
   CARDS_PER_BOOSTER,
-  DROP_RATES,
   formatCountdown,
   OPEN_COUNTS,
   PACKS,
   RARITY,
   rarityRank,
   STOCK_CAP,
-  TRANSCEND_CHANCE_LABEL,
-  type BaseRarity,
   type Card,
   type PackId,
   type PulledCard,
@@ -57,6 +55,7 @@ function BoostersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profile = useQuery({ ...profileQuery(userId ?? ""), enabled: !!userId });
+  const pity = useQuery({ ...pityQuery(userId ?? ""), enabled: !!userId });
 
   const [now, setNow] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -114,6 +113,7 @@ function BoostersPage() {
       old && data[0] ? { ...old, boosters_stored: data[0].boosters_left, stock_updated_at: data[0].stock_updated_at } : old,
     );
     queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
+    await queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] });
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     // Show the actual draw's maximum aura before splitting the seam.
@@ -178,6 +178,8 @@ function BoostersPage() {
         )}
       </section>
 
+      {phase !== "reveal" && <BoosterOdds counter={userId ? pity.data : 0} failed={!!userId && pity.isError} />}
+
       <div className={cn("mt-6 flex flex-col items-center gap-3", phase === "reveal" && "hidden")}>
         {session && stock && (
           <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-4 py-1.5 text-xs text-muted-foreground">
@@ -208,19 +210,6 @@ function BoostersPage() {
         {ready && !session && <p className="text-xs text-muted-foreground">Connecte-toi pour ouvrir des boosters et garder tes cartes.</p>}
       </div>
 
-      <ul className="mt-14 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
-        {(["commune", "non_commune", "rare", "epique", "legendaire", "mythique", "transcendance"] as const).map((r) => (
-          <li key={r} className="flex items-center gap-3 rounded-xl border border-border bg-surface/60 px-4 py-3">
-            <span className={cn("size-3 rounded-full", r === "transcendance" ? "bg-gradient-rainbow" : RARITY[r].bg, RARITY[r].glow)} />
-            <div>
-              <p className={cn("text-sm font-semibold", RARITY[r].text)}>{RARITY[r].label}</p>
-              <p className="text-xs text-muted-foreground">
-                {r === "transcendance" ? `Évolution d'une Mythique (${TRANSCEND_CHANCE_LABEL}, test)` : pack === "shonen" ? (r === "mythique" ? "Son Goku garanti · test 100 %" : "0 % · test Shonen Mix") : `${String(DROP_RATES[r as BaseRarity]).replace(".", ",")} % par carte`}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

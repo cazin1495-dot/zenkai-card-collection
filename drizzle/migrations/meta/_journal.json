@@ -36,6 +36,13 @@
       "when": 1795125275976,
       "tag": "0004_non_commune_drop_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795125975547,
+      "tag": "0005_booster_rates_and_mythic_pity",
+      "breakpoints": true
     }
   ]
 }

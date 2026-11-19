@@ -152,6 +152,8 @@
   --pack-protagoniste: oklch(0.8 0.13 215);
 
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-pity: linear-gradient(90deg, var(--opening-mythique), var(--rarity-mythique-flame) 40%, var(--rarity-legendaire) 60%, var(--accent) 80%, var(--rarity-epique));
+  --shadow-pity: 0 0 10px color-mix(in oklab, var(--opening-mythique) 50%, transparent);
   --gradient-transcend-cta: linear-gradient(115deg, var(--rarity-legendaire), var(--rarity-transcendance) 50%, var(--rarity-legendaire));
   --shadow-divine-frame: 0 0 0 2px var(--rarity-transcendance), 0 0 32px color-mix(in oklab, var(--rarity-transcendance) 65%, transparent);
   --shadow-cinema-player: 0 0 22px color-mix(in oklab, var(--aura-ui) 25%, transparent), 0 0 55px color-mix(in oklab, var(--rarity-transcendance) 12%, transparent);
@@ -228,6 +230,9 @@
 }
 
 /* ---------- Utilities ---------- */
+
+.pity-progress { background-image: var(--gradient-pity); box-shadow: var(--shadow-pity); transition: width 600ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .pity-progress { transition: none; } }
 
 @utility text-gradient-primary {
   background-image: var(--gradient-primary);

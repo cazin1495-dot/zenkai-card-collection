@@ -14,6 +14,29 @@ export type Database = {
   }
   public: {
     Tables: {
+      booster_pity: {
+        Row: {
+          counter: number
+          user_id: string
+        }
+        Insert: {
+          counter?: number
+          user_id: string
+        }
+        Update: {
+          counter?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booster_pity_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cards: {
         Row: {
           active: boolean
@@ -135,6 +158,14 @@ export type Database = {
       attempt_transcendance: {
         Args: { _user_card_id: string }
         Returns: boolean
+      }
+      booster_pity_after: {
+        Args: { _counter: number; _mythic: boolean }
+        Returns: number
+      }
+      booster_rarity_for_roll: {
+        Args: { _roll: number }
+        Returns: Database["public"]["Enums"]["card_rarity"]
       }
       open_booster: {
         Args: never

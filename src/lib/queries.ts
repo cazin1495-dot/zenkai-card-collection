@@ -35,3 +35,12 @@ export const collectionQuery = (userId: string) =>
       return data ?? [];
     },
   });
+
+export const pityQuery = (userId: string) => queryOptions({
+  queryKey: ["pity", userId],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("booster_pity").select("counter").eq("user_id", userId).maybeSingle();
+    if (error) throw error;
+    return data?.counter ?? 0;
+  },
+});
