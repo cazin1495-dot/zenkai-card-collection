@@ -113,7 +113,6 @@ export function TranscendButton({ userCardId, card, onResult, className, size = 
             <Button variant="glass" onClick={skip}>Continuer</Button>
           </div>}
         </> : <div className="relative flex max-h-[90dvh] w-full flex-col items-center justify-center gap-6 px-5">
-          {evolved && <div aria-hidden className="awakening-aura awakening-divine pointer-events-none absolute" />}
           {result ? <>
             <div className={cn("relative w-[min(17rem,42dvh,65vw)]", evolved ? "anime-card-arrival" : "animate-in fade-in duration-700")}>
               <AnimeCard card={card} transcended={evolved} />

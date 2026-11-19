@@ -1,5 +1,6 @@
 # Zenkai — roadmap
 
+- [x] Holo Reverse : illustration sans voile, cadre métallisé sombre et reflet diagonal réactif uniquement à l’inclinaison (collection connectée, souris et toucher vérifiés).
 - [x] Soudure lumineuse par rareté, déchirure gauche-droite et pile 3D ; phrases synchronisées sur le temps audio à 0,4–3,8 s et 4–7 s (ouverture réelle, pauses, recherche audio, fin du son et évolution sauvegardée vérifiées).
 - [x] Ouverture métallisée épurée et deux phrases sur 0–3,5 s puis 3,5–7 s (ouverture réelle, audio à 100 %, évolution sauvegardée, ordinateur et téléphone vérifiés).
 - [x] Son seul sur fond noir, réplique progressive sur sept secondes et fissure réaliste du booster avec rayons et braises (audio, carte évoluée, téléphone et ouverture réelle vérifiés)
