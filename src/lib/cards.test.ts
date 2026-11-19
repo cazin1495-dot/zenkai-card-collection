@@ -46,6 +46,21 @@ describe("temporary Goku test rules", () => {
 });
 
 describe("booster content", () => {
+  const nonCommuneMigration = readFileSync("drizzle/migrations/0004_non_commune_drop_rules.sql", "utf8");
+  const thresholds = [...nonCommuneMigration.matchAll(/WHEN _roll < ([\d.]+) THEN '(\w+)'/g)].map((match) => ({ upper: Number(match[1]), rarity: match[2] }));
+  it("uses a 10 percent Non Commune interval in the actual opening function", () => {
+    const index = thresholds.findIndex((t) => t.rarity === "non_commune");
+    expect(index).toBe(4);
+    expect((thresholds[index]?.upper ?? 0) - (thresholds[index - 1]?.upper ?? 0)).toBeCloseTo(10);
+  });
+  it("leaves exactly 47.3 percent for Commune in the opening function", () => expect(100 - (thresholds.at(-1)?.upper ?? 0)).toBeCloseTo(47.3));
+  it("gives Non Commune 10 percent per card", () => expect(DROP_RATES.non_commune).toBe(10));
+  it("reduces Commune to 47.3 percent", () => expect(DROP_RATES.commune).toBe(47.3));
+  it("keeps the other drop rates unchanged", () => expect([DROP_RATES.rare, DROP_RATES.epique, DROP_RATES.legendaire, DROP_RATES.mythique]).toEqual([27, 10, 3, 2.7]));
+  it("ranks Non Commune between Commune and Rare", () => {
+    expect(bestRarity(["commune", "non_commune"])).toBe("non_commune");
+    expect(bestRarity(["non_commune", "rare"])).toBe("rare");
+  });
   it("contains 5 cards", () => expect(CARDS_PER_BOOSTER).toBe(5));
   it("gives 2.7 % mythique per card and never transcendance", () => {
     expect(DROP_RATES.mythique).toBe(2.7);

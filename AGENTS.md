@@ -37,7 +37,7 @@ use the editor.
 - Resolve evolved card identity centrally in `cardIdentity`; keep original metadata and per-copy evolution separate so collection and booster views agree.
 - Start the original awakening audio unmuted inside the click gesture; reveal evolution only after the quote timeline ends or is explicitly skipped and confirmed RPC success, and refresh collection on close to avoid interrupting playback.
 - Drive awakening phrases and their animation progress from audio.currentTime, and finish on the audio ended event; centralize phrase windows in the timeline helper to keep pauses, buffering and seeks synchronized.
-- Map pack seam rarity cues in a shared helper, separate from card frame colors, so common and rare openings can share a neutral cue without changing card identity.
+- Keep opening aura colors, maximum-rarity detection and effect tiers in the shared opening helper, independent from card identity and database rarity rules; resolve beam-dependent CSS tokens on the opening wrapper rather than the root.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.

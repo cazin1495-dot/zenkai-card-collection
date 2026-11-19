@@ -1,0 +1,1 @@
+ALTER TYPE public.card_rarity ADD VALUE IF NOT EXISTS 'non_commune' AFTER 'commune';

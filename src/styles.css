@@ -45,6 +45,7 @@
   --color-surface-raised: var(--surface-raised);
 
   --color-rarity-commune: var(--rarity-commune);
+  --color-rarity-non-commune: var(--rarity-non-commune);
   --color-rarity-rare: var(--rarity-rare);
   --color-rarity-epique: var(--rarity-epique);
   --color-rarity-legendaire: var(--rarity-legendaire);
@@ -119,6 +120,7 @@
   --ring: oklch(0.66 0.23 28);
 
   --rarity-commune: oklch(0.72 0.01 260);
+  --rarity-non-commune: #10B981;
   --rarity-rare: oklch(0.66 0.18 250);
   --rarity-epique: oklch(0.63 0.25 305);
   --rarity-legendaire: oklch(0.83 0.16 85);
@@ -128,6 +130,17 @@
   --gradient-rainbow: conic-gradient(from var(--spin, 0deg), oklch(0.8 0.18 20), oklch(0.88 0.16 90), oklch(0.85 0.17 150), oklch(0.82 0.14 220), oklch(0.75 0.18 300), oklch(0.95 0.02 260), oklch(0.8 0.18 20));
   --letterbox: oklch(0 0 0);
   --flash: oklch(1 0 0);
+  --opening-commune: var(--rarity-transcendance);
+  --opening-non_commune: #10B981;
+  --opening-rare: #3B82F6;
+  --opening-epique: #9333EA;
+  --opening-legendaire: #F59E0B;
+  --opening-mythique: #EF4444;
+  --opening-transcendance: var(--rarity-transcendance);
+  --gradient-opening-aura: radial-gradient(ellipse, color-mix(in oklab, var(--beam) 36%, transparent), transparent 70%);
+  --gradient-opening-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 70%, transparent), transparent);
+  --gradient-opening-flash: radial-gradient(ellipse at 50% 16%, var(--flash), color-mix(in oklab, var(--beam) 70%, transparent) 25%, transparent 70%);
+  --shadow-opening-halo: 0 0 0 1px color-mix(in oklab, var(--beam) 75%, transparent), 0 0 24px color-mix(in oklab, var(--beam) 40%, transparent), 0 0 65px color-mix(in oklab, var(--beam) 20%, transparent);
   --smoke: oklch(0.2 0.01 270);
   --aura-ui: oklch(0.82 0.12 230);
 
@@ -237,6 +250,7 @@
 @utility glow-rare {
   box-shadow: 0 0 0 2px var(--rarity-rare), 0 0 32px -4px var(--rarity-rare);
 }
+@utility glow-non-commune { box-shadow: 0 0 0 2px var(--rarity-non-commune), 0 0 28px -5px var(--rarity-non-commune); }
 @utility glow-epique {
   box-shadow: 0 0 0 2px var(--rarity-epique), 0 0 40px -2px var(--rarity-epique);
 }
@@ -486,8 +500,7 @@
   box-shadow: var(--shadow-pack-seal);
   animation: pack-seal-light 900ms ease-in-out both;
 }
-.pack-opening-scene[data-rarity="commune"] .pack-seal-light,
-.pack-opening-scene[data-rarity="rare"] .pack-seal-light { height: 4px; opacity: 0.55; }
+.pack-opening-scene[data-rarity="commune"] .pack-seal-light { height: 3px; opacity: 0.55; }
 .pack-opening-scene[data-rarity="mythique"] .pack-seal-light::after {
   content: "";
   position: absolute;
@@ -541,6 +554,46 @@
   0%, 100% { opacity: 0; }
   30% { opacity: 1; }
 }
+.rarity-opening {
+  --aura-strength: 0.3; --shake-distance: 0px; --shake-angle: 0deg;
+  /* Resolve these semantic tokens locally, where the actual draw sets --beam. */
+  --gradient-opening-aura: radial-gradient(ellipse, color-mix(in oklab, var(--beam) 36%, transparent), transparent 70%);
+  --gradient-opening-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 70%, transparent), transparent);
+  --gradient-opening-flash: radial-gradient(ellipse at 50% 16%, var(--flash), color-mix(in oklab, var(--beam) 70%, transparent) 25%, transparent 70%);
+  --shadow-opening-halo: 0 0 0 1px color-mix(in oklab, var(--beam) 75%, transparent), 0 0 24px color-mix(in oklab, var(--beam) 40%, transparent), 0 0 65px color-mix(in oklab, var(--beam) 20%, transparent);
+  --gradient-pack-reflection: radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--beam) 15%, transparent), transparent 68%);
+  --gradient-pack-seal: linear-gradient(180deg, transparent, color-mix(in oklab, var(--beam) 85%, var(--flash)) 45%, var(--beam) 65%, transparent);
+  --shadow-pack-seal: 0 0 5px color-mix(in oklab, var(--beam) 65%, transparent);
+}
+.rarity-opening[data-rarity="non_commune"] { --aura-strength: 0.5; }
+.rarity-opening[data-rarity="rare"] { --aura-strength: 0.7; }
+.rarity-opening[data-rarity="epique"] { --aura-strength: 0.85; }
+.rarity-opening[data-rarity="legendaire"] { --aura-strength: 1; --shake-distance: 1px; --shake-angle: 0.3deg; }
+.rarity-opening[data-rarity="mythique"] { --aura-strength: 1; --shake-distance: 3px; --shake-angle: 0.8deg; }
+.pack-dynamic-aura { inset: 5% 8%; border-radius: 12px; background: var(--gradient-opening-aura); box-shadow: var(--shadow-opening-halo); opacity: var(--aura-strength); animation: pack-aura-arrive 350ms ease-out both; }
+.pack-opening-scene[data-rarity="epique"] .pack-dynamic-aura { animation: pack-aura-pulse 650ms ease-in-out infinite alternate; }
+.pack-opening-scene[data-rarity="mythique"] .pack-dynamic-aura::after { content: ""; position: absolute; inset: -10%; border-radius: inherit; background: var(--gradient-rainbow); opacity: 0.28; filter: blur(16px); animation: pack-aura-pulse 350ms ease-in-out infinite alternate; }
+.pack-rarity-vibration { transform-style: preserve-3d; animation: pack-rarity-vibration 80ms linear infinite; }
+.pack-opening-scene[data-state="tearing"] .pack-rarity-vibration { animation-iteration-count: 10; }
+.pack-seam-effects { inset: var(--tear-position) 0 auto; z-index: 8; }
+.pack-seam-spark { width: 2px; height: 4px; border-radius: 50%; background: var(--beam); box-shadow: 0 0 6px var(--beam); animation: pack-seam-spark 750ms ease-out both; }
+.pack-seam-ray { left: 50%; bottom: 0; width: 15px; height: 170px; transform-origin: center bottom; background: var(--gradient-opening-ray); animation: pack-seam-ray 800ms ease-out 450ms both; }
+.pack-jackpot-flash { z-index: 9; background: var(--gradient-opening-flash); animation: pack-jackpot-flash 350ms ease-out 450ms both; }
+.pack-opening-scene[data-rarity="rare"] .pack-seal-light,
+.pack-opening-scene[data-rarity="epique"] .pack-seal-light,
+.pack-opening-scene[data-rarity="legendaire"] .pack-seal-light,
+.pack-opening-scene[data-rarity="mythique"] .pack-seal-light { height: 5px; animation: pack-tear-glow 1100ms ease-out both; }
+.card-personal-halo { box-shadow: var(--shadow-opening-halo); opacity: var(--aura-strength); animation: card-personal-halo 850ms ease-out both; }
+.card-reveal-flip .flip-inner { transition: transform 650ms cubic-bezier(0.22, 0.7, 0.3, 1); }
+.card-reveal-premium .card-reveal-flip .flip-inner { transition-duration: 950ms; transition-timing-function: cubic-bezier(0.45, 0.03, 0.2, 1); }
+@keyframes pack-aura-arrive { from { opacity: 0; scale: 0.97; } to { opacity: var(--aura-strength); scale: 1; } }
+@keyframes pack-aura-pulse { from { opacity: 0.5; scale: 0.98; } to { opacity: var(--aura-strength); scale: 1.03; } }
+@keyframes pack-rarity-vibration { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(calc(-1 * var(--shake-distance))) rotate(calc(-1 * var(--shake-angle))); } 75% { transform: translateX(var(--shake-distance)) rotate(var(--shake-angle)); } }
+@keyframes pack-seam-spark { from { opacity: 0; transform: translate(0, 0) scale(0.5); } 10% { opacity: 1; } to { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0.2); } }
+@keyframes pack-seam-ray { from { opacity: 0; transform: rotate(var(--ray-angle)) scaleY(0.1); } 25% { opacity: 0.85; } to { opacity: 0; transform: rotate(var(--ray-angle)) scaleY(1.3); } }
+@keyframes pack-jackpot-flash { from { opacity: 0; } 15% { opacity: 0.9; } to { opacity: 0; } }
+@keyframes pack-tear-glow { from { opacity: 0; transform: scaleX(0.7); } 40% { opacity: 0.6; } 55%, 70% { opacity: 1; transform: scaleX(1.03); } to { opacity: 0; transform: scaleX(1); } }
+@keyframes card-personal-halo { from { opacity: 0; scale: 0.97; } 55% { opacity: var(--aura-strength); scale: 1.02; } to { opacity: var(--aura-strength); scale: 1; } }
 .cinema-player {
   width: 85vw;
   aspect-ratio: 1280 / 716;
@@ -833,6 +886,9 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .pack-rarity-vibration, .pack-dynamic-aura, .card-personal-halo { animation: none; }
+  .pack-dynamic-aura::after, .pack-seam-effects, .pack-jackpot-flash { display: none; }
+  .card-reveal-flip .flip-inner { transition-duration: 150ms; }
   .premium-awakened-aura { animation: none; }
   .form-portrait { transition: opacity 150ms ease-out; transform: none; }
   .form-energy-transition, .premium-form-flash, .premium-energy-spark { display: none; }

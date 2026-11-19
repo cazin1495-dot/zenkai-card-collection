@@ -22,6 +22,20 @@
       "when": 1795120887434,
       "tag": "0002_temporary_goku_guaranteed_tests",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795125220707,
+      "tag": "0003_add_non_commune_rarity",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795125275976,
+      "tag": "0004_non_commune_drop_rules",
+      "breakpoints": true
     }
   ]
 }

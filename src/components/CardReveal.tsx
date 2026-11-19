@@ -1,10 +1,11 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { ChevronRight, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
 import { TranscendButton } from "@/components/Transcendance";
 import { RARITY, type PulledCard } from "@/lib/cards";
 import { cn } from "@/lib/utils";
+import { openingEffects, packSealToken } from "@/lib/pack-opening";
 
 const SWIPE_DISTANCE = 50;
 
@@ -99,16 +100,14 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
         ))}
       </div>
 
-      <div className="relative">
+      <div data-rarity={transcended ? "transcendance" : card.rarity} data-revealed={flipped} className={cn("rarity-opening card-reveal-energy relative", openingEffects(card.rarity).suspense && "card-reveal-premium")} style={{ "--beam": packSealToken(transcended ? "transcendance" : card.rarity) } as CSSProperties}>
         {/* Rarity burst behind the card once it's revealed */}
         {flipped && (
           <div
             key={`burst-${index}`}
             aria-hidden
             className={cn(
-              "pointer-events-none absolute left-1/2 top-1/2 size-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-rarity-burst",
-              r.bg,
-              (card.rarity === "legendaire" || card.rarity === "mythique") && "size-96",
+              "card-personal-halo pointer-events-none absolute inset-0 rounded-2xl",
             )}
           />
         )}
@@ -135,7 +134,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
                 : undefined,
             }}
           >
-            <div className={cn(!flipped && "animate-suspense")}>
+            <div className={cn(!flipped && "animate-suspense", "card-reveal-flip")}>
               <AnimeCard card={card} flipped={flipped} transcended={transcended} />
             </div>
           </Button>

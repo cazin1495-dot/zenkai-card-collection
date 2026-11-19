@@ -30,6 +30,7 @@ import {
   type Rarity,
 } from "@/lib/cards";
 import { cn } from "@/lib/utils";
+import { bestOpeningRarity } from "@/lib/pack-opening";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -86,6 +87,7 @@ function BoostersPage() {
     }
     if (busy || (stock && stock.count < count)) return;
     setPhase("opening");
+    setPulled([]);
     setAwake({});
     const started = Date.now();
     const { data, error } = await supabase.rpc("open_boosters", { _category: pack, _count: count });
@@ -114,12 +116,14 @@ function BoostersPage() {
     queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
     window.scrollTo({ top: 0, behavior: "smooth" });
 
+    // Show the actual draw's maximum aura before splitting the seam.
+    await new Promise((r) => setTimeout(r, 600));
     setPhase("tearing");
     await new Promise((r) => setTimeout(r, 2000));
     setPhase(count === 1 ? "reveal" : "summary");
   }
 
-  const tearBeam = useMemo(() => bestRarity(pulled.map((p) => p.card.rarity)), [pulled]);
+  const tearBeam = useMemo(() => bestOpeningRarity(pulled.map((p) => p.card.rarity)), [pulled]);
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
@@ -168,7 +172,7 @@ function BoostersPage() {
           <BoosterPack
             state={phase === "tearing" ? "tearing" : phase === "opening" ? "opening" : "idle"}
             accent={packInfo.accent}
-            beam={phase === "tearing" ? tearBeam : null}
+            beam={phase === "opening" || phase === "tearing" ? tearBeam : null}
           />
           </Button>
         )}
@@ -205,7 +209,7 @@ function BoostersPage() {
       </div>
 
       <ul className="mt-14 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
-        {(["commune", "rare", "epique", "legendaire", "mythique", "transcendance"] as const).map((r) => (
+        {(["commune", "non_commune", "rare", "epique", "legendaire", "mythique", "transcendance"] as const).map((r) => (
           <li key={r} className="flex items-center gap-3 rounded-xl border border-border bg-surface/60 px-4 py-3">
             <span className={cn("size-3 rounded-full", r === "transcendance" ? "bg-gradient-rainbow" : RARITY[r].bg, RARITY[r].glow)} />
             <div>

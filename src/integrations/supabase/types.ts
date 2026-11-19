@@ -154,7 +154,13 @@ export type Database = {
       }
     }
     Enums: {
-      card_rarity: "commune" | "rare" | "epique" | "legendaire" | "mythique"
+      card_rarity:
+        | "commune"
+        | "non_commune"
+        | "rare"
+        | "epique"
+        | "legendaire"
+        | "mythique"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -282,7 +288,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      card_rarity: ["commune", "rare", "epique", "legendaire", "mythique"],
+      card_rarity: [
+        "commune",
+        "non_commune",
+        "rare",
+        "epique",
+        "legendaire",
+        "mythique",
+      ],
     },
   },
 } as const

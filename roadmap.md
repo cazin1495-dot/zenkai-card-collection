@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [x] Aura d’ouverture progressive, maximum réel avant déchirure, effets de fente et halos individuels ; ouverture Mythique réelle, cinq retournements et récapitulatif mobile vérifiés.
+- [x] Ajouter Non Commune aux tirages et aux collections : 10 %, Commune 47,3 %, autres taux inchangés ; personnages disponibles dans les six packs, seuil SQL et collection vérifiés, test Goku garanti conservé. Tirage aléatoire Non Commune non observé (stock insuffisant pour x5).
 - [x] Transition de comparaison : portraits superposés préchargés, fondu/zoom de 0,6 s, flash blanc/cyan, onde circulaire et balayage diagonal ; deux sens, clics rapides, ordinateur, téléphone et mouvement réduit vérifiés sur une carte réelle.
 - [x] Carte Full Art premium : verre discret, bordure argent/cyan/or, badge étoilé, foil interactif, particules et flash au changement de forme (ordinateur, téléphone, comparaison et sauvegarde vérifiés).
 - [x] Éveil avec anneaux fins, particules, rotation accélérée sur les deux dernières secondes et sous-titres bas ; comparaison base/éveillée sans voile sur le portrait (audio original à 100 %, téléphone, inclinaison et sauvegarde vérifiés).
