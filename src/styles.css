@@ -740,6 +740,45 @@
   box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 55%, transparent);
   animation: premium-spark-rise 4s linear infinite;
 }
+.form-flip-scene {
+  perspective: 1000px;
+  --shadow-form-charge: 0 0 0 2px var(--rarity-transcendance), 0 0 28px color-mix(in oklab, var(--accent) 55%, transparent);
+  --shadow-form-impact: 0 0 0 2px var(--flash), -8px 0 35px color-mix(in oklab, var(--accent) 80%, transparent), 8px 0 35px color-mix(in oklab, var(--rarity-legendaire) 65%, transparent);
+}
+.form-flip-rotor { transform-style: preserve-3d; }
+.form-flip-scene[data-form="awakened"] .form-flip-rotor { transform: rotateY(180deg); }
+.form-flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform-style: preserve-3d; }
+.form-flip-base { transform: rotateY(0deg); }
+.form-flip-awakened { transform: rotateY(180deg); }
+.form-flip-scene[data-direction="idle"][data-form="awakened"] .form-flip-base,
+.form-flip-scene[data-direction="idle"][data-form="base"] .form-flip-awakened { visibility: hidden; }
+.form-flip-scene[data-direction="forward"] .form-flip-rotor { animation: form-flip-forward 950ms linear both; }
+.form-flip-scene[data-direction="reverse"] .form-flip-rotor { animation: form-flip-reverse 950ms linear both; }
+.form-flip-scene:not([data-direction="idle"]) .holo-tilt { transform: none; }
+.form-flip-scene .form-flip-face .flame-aura { display: none; }
+.form-flip-scene:not([data-direction="idle"]) .premium-awakened-aura,
+.form-flip-scene:not([data-direction="idle"]) .premium-energy-particles { visibility: hidden; }
+.form-flip-charge { box-shadow: var(--shadow-form-charge); animation: form-flip-charge 950ms ease-out both; }
+.form-flip-impact { box-shadow: var(--shadow-form-impact); animation: form-flip-impact 250ms ease-out 800ms both; }
+.form-flip-impact-ring { left: 50%; top: 50%; width: 130%; aspect-ratio: 1; border: 1px solid var(--accent); border-radius: 50%; box-shadow: var(--shadow-form-impact); animation: premium-form-ring 500ms ease-out 800ms both; }
+@keyframes form-flip-forward {
+  0% { transform: rotateY(0deg) scale(1); }
+  12% { transform: rotateY(0deg) translateX(-1px) scale(0.98); }
+  22% { transform: rotateY(0deg) translateX(1px) scale(0.96); }
+  31.58% { transform: rotateY(0deg) scale(0.95); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  57.9% { transform: rotateY(90deg) scale(0.95); }
+  84.2% { transform: rotateY(180deg) scale(1.035); animation-timing-function: ease-out; }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+@keyframes form-flip-reverse {
+  0% { transform: rotateY(180deg) scale(1); }
+  31.58% { transform: rotateY(180deg) scale(0.95); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  57.9% { transform: rotateY(90deg) scale(0.95); }
+  84.2% { transform: rotateY(0deg) scale(1.025); animation-timing-function: ease-out; }
+  100% { transform: rotateY(0deg) scale(1); }
+}
+@keyframes form-flip-charge { 0% { opacity: 0; scale: 1; } 31% { opacity: 0.9; scale: 0.95; } 50%, 100% { opacity: 0; scale: 0.95; } }
+@keyframes form-flip-impact { from { opacity: 0.95; scale: 1.035; } to { opacity: 0; scale: 1.07; } }
 .form-portrait-stack { isolation: isolate; }
 .form-portrait { transition: opacity 600ms ease-out, transform 600ms ease-out; }
 .form-portrait-base { opacity: 1; }
@@ -886,6 +925,8 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .form-flip-energy { display: none; }
+  .form-flip-scene .form-flip-rotor { animation: none; }
   .pack-rarity-vibration, .pack-dynamic-aura, .card-personal-halo { animation: none; }
   .pack-dynamic-aura::after, .pack-seam-effects, .pack-jackpot-flash { display: none; }
   .card-reveal-flip .flip-inner { transition-duration: 150ms; }

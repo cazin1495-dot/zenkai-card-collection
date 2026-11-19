@@ -41,4 +41,4 @@ use the editor.
 - Keep interactive holographic tilt in a separate wrapper from the card flip transform so evolved cards share pointer effects without breaking booster reveals.
 - Render premium cards full-art with a subtle glass metadata overlay; isolate the masked energy border from the pointer-reactive low-opacity portrait varnish to preserve illustration contrast at rest.
 - Keep the post-awakening form comparison local to the dialog; switching portraits must never change the persisted per-copy evolution state.
-- Keep comparison portraits mounted in the same card with complementary opacity transitions; preload both during awakening to avoid blank frames and keep energy effects inside the tilt wrapper.
+- Keep form comparison as two preloaded backface-hidden card faces in a dedicated perspective rotor; their visibility switches geometrically at 90 degrees, and disable the selector until landing to prevent interrupted rotations.
