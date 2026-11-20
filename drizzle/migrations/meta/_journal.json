@@ -57,6 +57,27 @@
       "when": 1795126222507,
       "tag": "0007_temporary_all_packs_goku_test",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795178460479,
+      "tag": "0008_packable_transcendance",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795178507694,
+      "tag": "0009_zenkai_economy_progression",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795178575802,
+      "tag": "0010_secure_duplicate_recycling",
+      "breakpoints": true
     }
   ]
 }

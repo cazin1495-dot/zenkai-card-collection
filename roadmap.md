@@ -1,5 +1,12 @@
 # Zenkai — roadmap
 
+- [ ] Nouvelles règles : sept raretés packables, retrait du mode test et de la fusion, Pity Mythique conservée.
+- [ ] Cinéma local sur tirage/inspection Transcendance et ouverture faisceau/éclats triangulaires.
+- [ ] Coins, achats à 100, XP, missions 24h et niveaux 150 avec récompenses sécurisées.
+- [ ] Recyclage : coefficients 0,1 / 0,25 / 0,5 / 1,5 / 4 / 10 / 50 × popularité bornée 1–100, arrondi supérieur ; garder le dernier exemplaire.
+- [ ] Récompenses spéciales et personnalisation profil/vitrine.
+- [ ] Vérification des parcours et sauvegarde des changements.
+
 - [ ] Refonte globale ZENKAI : navigation cinq onglets, profil avec stock réel et niveau/Coins non disponibles, ambiance bleu/or et grille, hub compact, atelier d’éveil et boutique sans fausses transactions ; vérifier ordinateur/téléphone et fonctions existantes.
 - [ ] Définir les gains de Zenkai Coins et la progression des niveaux avant activation — en attente des règles du joueur.
 

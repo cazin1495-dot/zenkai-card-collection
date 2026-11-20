@@ -2,7 +2,7 @@ import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { ChevronRight, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimeCard } from "@/components/AnimeCard";
-import { TranscendButton } from "@/components/Transcendance";
+import { CardCinema } from "@/components/Transcendance";
 import { RARITY, type PulledCard } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 import { openingEffects, packSealToken } from "@/lib/pack-opening";
@@ -22,6 +22,8 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [dragX, setDragX] = useState(0);
+  const [cinema, setCinema] = useState(false);
+  const [flash, setFlash] = useState(false);
   const startX = useRef<number | null>(null);
   const swiped = useRef(false);
 
@@ -36,6 +38,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
   function flip() {
     if (flipped) return;
     setFlipped(true);
+    setCinema(card.rarity === "transcendance");
     setDragX(0);
   }
 
@@ -45,6 +48,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
       return;
     }
     setFlipped(false);
+    setCinema(false); setFlash(false);
     setIndex((i) => i + 1);
   }
 
@@ -75,6 +79,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
       swiped.current = false;
       return;
     }
+    if (cinema) return;
     if (flipped) next();
     else flip();
   }
@@ -113,7 +118,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
         )}
 
         <div key={`card-${index}`} className="animate-card-in">
-          <Button
+          {cinema ? <div className="w-52 sm:w-60"><CardCinema card={card} onDone={() => { setCinema(false); setFlash(true); }} /></div> : <Button
             type="button"
             variant="ghost"
             onClick={activateCard}
@@ -137,7 +142,8 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
             <div className={cn(!flipped && "animate-suspense", "card-reveal-flip")}>
               <AnimeCard card={card} flipped={flipped} transcended={transcended} />
             </div>
-          </Button>
+          </Button>}
+          {flash && <div aria-hidden className="card-cinema-flash pointer-events-none absolute inset-0" />}
         </div>
       </div>
 
@@ -147,11 +153,7 @@ export function CardReveal({ cards, onDone, awakened = {}, onAwaken }: Props) {
             <p className={cn("font-display text-xs font-bold uppercase tracking-[0.3em]", r.text)}>
               {r.label}
             </p>
-            {card.rarity === "mythique" && !state && (
-              <TranscendButton userCardId={item.userCardId} card={card} onResult={(res) => onAwaken?.(item.userCardId, res)} />
-            )}
-            {state === "failed" && <p className="text-xs text-muted-foreground">Éveil échoué — reste Mythique</p>}
-            <Button variant="hero" size="lg" className="rounded-full" onClick={next}>
+            <Button variant="hero" size="lg" className="rounded-full" onClick={next} disabled={cinema}>
               {isLast ? "Voir le récapitulatif" : "Carte suivante"}
               <ChevronRight />
             </Button>

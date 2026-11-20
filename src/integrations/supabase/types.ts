@@ -52,7 +52,9 @@ export type Database = {
           role: string | null
           series: string | null
           sort_order: number
+          subtitle_text: string | null
           title: string
+          voice_audio_url: string | null
         }
         Insert: {
           active?: boolean
@@ -68,7 +70,9 @@ export type Database = {
           role?: string | null
           series?: string | null
           sort_order?: number
+          subtitle_text?: string | null
           title: string
+          voice_audio_url?: string | null
         }
         Update: {
           active?: boolean
@@ -84,34 +88,66 @@ export type Database = {
           role?: string | null
           series?: string | null
           sort_order?: number
+          subtitle_text?: string | null
           title?: string
+          voice_audio_url?: string | null
         }
         Relationships: []
       }
       profiles: {
         Row: {
+          bonus_boosters: number
           boosters_stored: number
+          coins: number
+          cosmetics: Json
           created_at: string
           id: string
           last_booster_at: string | null
+          level: number
+          mission_claims: string[]
+          mission_opened: number
+          mission_recycled: number
+          mission_started_at: string
+          reward_packs: Json
           stock_updated_at: string
           username: string
+          xp: number
         }
         Insert: {
+          bonus_boosters?: number
           boosters_stored?: number
+          coins?: number
+          cosmetics?: Json
           created_at?: string
           id: string
           last_booster_at?: string | null
+          level?: number
+          mission_claims?: string[]
+          mission_opened?: number
+          mission_recycled?: number
+          mission_started_at?: string
+          reward_packs?: Json
           stock_updated_at?: string
           username: string
+          xp?: number
         }
         Update: {
+          bonus_boosters?: number
           boosters_stored?: number
+          coins?: number
+          cosmetics?: Json
           created_at?: string
           id?: string
           last_booster_at?: string | null
+          level?: number
+          mission_claims?: string[]
+          mission_opened?: number
+          mission_recycled?: number
+          mission_started_at?: string
+          reward_packs?: Json
           stock_updated_at?: string
           username?: string
+          xp?: number
         }
         Relationships: []
       }
@@ -159,6 +195,7 @@ export type Database = {
         Args: { _user_card_id: string }
         Returns: boolean
       }
+      award_xp: { Args: { _amount: number; _uid: string }; Returns: undefined }
       booster_pity_after: {
         Args: { _counter: number; _mythic: boolean }
         Returns: number
@@ -167,6 +204,9 @@ export type Database = {
         Args: { _roll: number }
         Returns: Database["public"]["Enums"]["card_rarity"]
       }
+      buy_boosters: { Args: { _count: number }; Returns: Json }
+      claim_mission: { Args: { _mission: string }; Returns: Json }
+      game_state: { Args: never; Returns: Json }
       open_booster: {
         Args: never
         Returns: {
@@ -183,6 +223,16 @@ export type Database = {
           user_card_id: string
         }[]
       }
+      recycle_copy: { Args: { _copy: string }; Returns: number }
+      recycle_value: {
+        Args: {
+          _popularity: number
+          _rarity: Database["public"]["Enums"]["card_rarity"]
+        }
+        Returns: number
+      }
+      sync_daily: { Args: { _uid: string }; Returns: undefined }
+      xp_required: { Args: { _level: number }; Returns: number }
     }
     Enums: {
       card_rarity:
@@ -192,6 +242,7 @@ export type Database = {
         | "epique"
         | "legendaire"
         | "mythique"
+        | "transcendance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -326,6 +377,7 @@ export const Constants = {
         "epique",
         "legendaire",
         "mythique",
+        "transcendance",
       ],
     },
   },

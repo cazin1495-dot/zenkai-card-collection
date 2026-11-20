@@ -9,7 +9,9 @@ import { BoosterPack } from "@/components/BoosterPack";
 import { BoosterOdds } from "@/components/BoosterOdds";
 import { OpeningAura } from "@/components/OpeningAura";
 import { CardReveal } from "@/components/CardReveal";
-import { TranscendButton } from "@/components/Transcendance";
+import { InspectableCard } from "@/components/Transcendance";
+import { gameQuery } from "@/lib/game";
+import { REWARD_LABELS } from "@/lib/economy";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
@@ -56,6 +58,7 @@ function BoostersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profile = useQuery({ ...profileQuery(userId ?? ""), enabled: !!userId });
+  const game = useQuery({ ...gameQuery(userId ?? ""), enabled: !!userId });
   const pity = useQuery({ ...pityQuery(userId ?? ""), enabled: !!userId });
 
   const [now, setNow] = useState<number | null>(null);
@@ -80,17 +83,17 @@ function BoostersPage() {
   if (!packInfo) return null;
   const best = bestRarity(pulled.map((p) => (awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity)));
 
-  async function open(count: number) {
+  async function open(count: number, category: string = pack) {
     if (!session) {
       navigate({ to: "/auth" });
       return;
     }
-    if (busy || (stock && stock.count < count)) return;
+    if (busy || (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:"))) return;
     setPhase("opening");
     setPulled([]);
     setAwake({});
     const started = Date.now();
-    const { data, error } = await supabase.rpc("open_boosters", { _category: pack, _count: count });
+    const { data, error } = await supabase.rpc("open_boosters", { _category: category, _count: count });
     await new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started))));
 
     if (error || !data?.length) {
@@ -114,6 +117,7 @@ function BoostersPage() {
       old && data[0] ? { ...old, boosters_stored: data[0].boosters_left, stock_updated_at: data[0].stock_updated_at } : old,
     );
     queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
+    queryClient.invalidateQueries({ queryKey: ["game", session.user.id] });
     await queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] });
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -171,7 +175,7 @@ function BoostersPage() {
         ) : phase === "summary" ? (
           <Summary items={pulled} opened={opened} awake={awake} onAwaken={onAwaken} best={best} signedIn={!!session} />
         ) : (
-          <Button variant="ghost" aria-label="Ouvrir ce booster" disabled={!ready || busy || (!!stock && stock.count < 1)} onClick={() => open(1)} className="h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100">
+          <Button variant="ghost" aria-label="Ouvrir ce booster" disabled={!ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < 1)} onClick={() => open(1)} className="h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100">
           <BoosterPack
             state={phase === "tearing" ? "tearing" : phase === "opening" ? "opening" : "idle"}
             accent={packInfo.accent}
@@ -187,7 +191,7 @@ function BoostersPage() {
         {session && stock && (
           <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-4 py-1.5 text-xs text-muted-foreground">
             <Package className="size-3.5 text-primary" />
-            <span className="font-semibold text-foreground">{stock.count} / {STOCK_CAP}</span> boosters
+            <span className="font-semibold text-foreground">{stock.count} / {STOCK_CAP}</span> boosters gratuits · {game.data?.bonus_boosters ?? 0} bonus
             <span aria-hidden>·</span>
             {stock.nextInMs === null ? "Stock plein" : (<><Clock className="size-3.5" /> +1 dans {formatCountdown(stock.nextInMs)}</>)}
           </p>
@@ -201,12 +205,13 @@ function BoostersPage() {
               size="lg"
               className="rounded-full"
               onClick={() => open(n)}
-              disabled={!ready || busy || (!!stock && stock.count < n)}
+              disabled={!ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < n)}
             >
               {phase === "opening" ? <Sparkles className="animate-spin" /> : <Layers />} Ouvrir x{n}
             </Button>
           ))}
         </div>
+        {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
         {phase === "summary" && (
           <Button variant="link" size="sm" onClick={() => setPhase("idle")}>Changer de pack</Button>
         )}
@@ -266,11 +271,7 @@ function SummaryCard({ item, delay, state, onAwaken }: { item: PulledCard; delay
   const card: Card = item.card;
   return (
     <div className="flex animate-card-in flex-col items-center gap-2" style={{ animationDelay: `${delay}ms` }}>
-      <AnimeCard card={card} transcended={state === "transcended"} />
-      {card.rarity === "mythique" && !state && (
-        <TranscendButton size="xs" userCardId={item.userCardId} card={card} onResult={(r) => onAwaken(item.userCardId, r)} />
-      )}
-      {state === "failed" && <p className="text-[11px] text-muted-foreground">Éveil échoué</p>}
+      <InspectableCard card={card} transcended={state === "transcended"} />
     </div>
   );
 }

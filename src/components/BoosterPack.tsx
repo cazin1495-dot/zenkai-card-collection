@@ -24,12 +24,12 @@ export function BoosterPack({
   const style = { "--accent": accent, "--beam": beamColor, "--tear-position": `${TEAR}%` } as CSSProperties;
   const tearing = state === "tearing";
   const effects = openingEffects(beam);
-  const img = <img src={packArt.url} alt="" draggable={false} className="pack-art absolute inset-0 size-full object-contain mix-blend-screen" />;
+  const img = <img src={packArt.url} alt="" draggable={false} className="pack-art absolute inset-0 size-full object-contain mix-blend-lighten" />;
 
   return (
     <div data-rarity={rarity} data-state={state} className={cn("pack-opening-scene rarity-opening relative overflow-visible", className)} style={style}>
       <div aria-hidden className="pack-dynamic-aura pointer-events-none absolute" />
-      {tearing && <div aria-hidden className="pack-reflection pointer-events-none absolute" />}
+      {tearing && <><div aria-hidden className="pack-reflection pointer-events-none absolute" /><div aria-hidden className="pack-god-ray pointer-events-none absolute" /></>}
       <div className={cn("pack-body relative aspect-[1170/1532] w-60 overflow-visible sm:w-72", beam && (state === "opening" || tearing) && "pack-rarity-vibration")}>
         {tearing ? (
           <>

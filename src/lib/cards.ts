@@ -11,7 +11,7 @@ import ryujin from "@/assets/characters/ryujin.jpg";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 /** Rarities stored on cards. "transcendance" only exists as an evolved copy of a mythique card. */
-export type BaseRarity = "commune" | "non_commune" | "rare" | "epique" | "legendaire" | "mythique";
+export type BaseRarity = "commune" | "non_commune" | "rare" | "epique" | "legendaire" | "mythique" | "transcendance";
 export type Rarity = BaseRarity | "transcendance";
 
 export type Genre = "shonen" | "seinen" | "shojo" | "sport";
@@ -29,6 +29,9 @@ export type Card = {
   role?: CardRole | null;
   image_url?: string | null;
   quote?: string | null;
+  voiceAudioUrl?: string | null;
+  subtitleText?: string | null;
+  popularity?: number;
 };
 
 /** One owned copy coming out of a booster. */
@@ -41,8 +44,8 @@ export const STOCK_REGEN_MINUTES = 10;
 export const STOCK_REGEN_MS = STOCK_REGEN_MINUTES * 60 * 1000;
 export const OPEN_COUNTS = [1, 5, 10] as const;
 /** Temporary test values; restore normal probabilities after testing. */
-export const GOKU_TEST_DROP_PERCENT = 100;
-export const TRANSCEND_CHANCE_PERCENT = 100;
+export const GOKU_TEST_DROP_PERCENT = 0;
+export const TRANSCEND_CHANCE_PERCENT = 0;
 export const TRANSCEND_CHANCE_LABEL = `${TRANSCEND_CHANCE_PERCENT} %`;
 export const GOKU_CARD_ID = "al-246";
 
@@ -55,7 +58,8 @@ export function cardIdentity(card: Card, transcended = false) {
 
 /** Drop chance per card, in percent (mirrors the SQL thresholds). */
 export const DROP_RATES: Record<BaseRarity, number> = {
-  mythique: 0.6,
+  transcendance: 0.02,
+  mythique: 0.58,
   legendaire: 2.4,
   epique: 6,
   rare: 15,
@@ -66,7 +70,6 @@ export const DROP_RATES: Record<BaseRarity, number> = {
 export const PITY_LIMIT = 200;
 
 export function effectiveDropRate(rarity: BaseRarity) {
-  if (GOKU_TEST_DROP_PERCENT === 100) return rarity === "mythique" ? 100 : 0;
   return DROP_RATES[rarity];
 }
 

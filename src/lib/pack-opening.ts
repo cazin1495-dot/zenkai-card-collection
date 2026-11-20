@@ -20,5 +20,5 @@ export function packSealToken(rarity?: string | null) {
 }
 export function openingEffects(value?: string | null) {
   const rarity = normalizeOpeningRarity(value);
-  return { sparks: rarity === "rare" ? 8 : rarity === "epique" ? 14 : rarity === "mythique" ? 30 : 0, rays: rarity === "legendaire" ? 7 : 0, jackpot: rarity === "mythique", suspense: rarity === "epique" || rarity === "legendaire" || rarity === "mythique" };
+  return { sparks: rarity === "rare" ? 8 : rarity === "epique" ? 14 : rarity === "mythique" || rarity === "transcendance" ? 30 : 0, rays: rarity === "legendaire" ? 7 : 0, jackpot: rarity === "mythique" || rarity === "transcendance", suspense: rarity === "epique" || rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance" };
 }

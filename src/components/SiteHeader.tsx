@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, profileQuery } from "@/lib/queries";
+import { gameQuery } from "@/lib/game";
 import { boosterStock } from "@/lib/cards";
 
 const tabs = [
   { to: "/", label: "Boosters", icon: Layers },
   { to: "/collection", label: "Ma Collection", icon: Package },
-  { to: "/eveil", label: "Éveil & Fusion", icon: Sparkles },
+  { to: "/eveil", label: "Missions & Niveaux", icon: Sparkles },
   { to: "/echanges", label: "Échanges", icon: Repeat2 },
   { to: "/boutique", label: "Boutique", icon: ShoppingBag },
 ] as const;
@@ -22,6 +23,7 @@ export function SiteHeader() {
   const queryClient = useQueryClient();
   const profile = useQuery({ ...profileQuery(session?.user.id ?? ""), enabled: !!session });
   const cards = useQuery(cardsQuery);
+  const game = useQuery({ ...gameQuery(session?.user.id ?? ""), enabled: !!session });
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   const stock = profile.data && now !== null ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now).count : null;
@@ -41,7 +43,7 @@ export function SiteHeader() {
       <div className="col-start-2 row-start-1 min-w-0 lg:col-start-3">
         {session ? <div aria-label="Profil joueur" className="player-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-border bg-foreground/5 p-2">
           {avatar ? <img src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
-          <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{profile.data?.username ?? "Joueur"}</p><div className="mt-1 flex items-center gap-2 text-[9px] text-muted-foreground"><span title="Niveau non disponible">Niv. —</span><span title="Zenkai Coins non disponibles" className="flex items-center gap-1"><Coins className="size-3 text-rarity-legendaire" /> —</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock ?? "…"}</span></div></div>
+          <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{profile.data?.username ?? "Joueur"}</p><div className="mt-1 flex items-center gap-2 text-[9px] text-muted-foreground"><span>Niv. {game.data?.level ?? "…"}</span><span title="Zenkai Coins" className="flex items-center gap-1"><Coins className="size-3 text-rarity-legendaire" /> {game.data?.coins ?? "…"}</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock === null ? "…" : stock + (game.data?.bonus_boosters ?? 0)}</span></div></div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter" className="size-7"><LogOut className="size-3.5" /></Button>
         </div> : <Button variant="glass" size="sm" asChild><Link to="/auth">Connexion</Link></Button>}
       </div>
