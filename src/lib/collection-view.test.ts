@@ -1,12 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { collectionEntries, sortCollectionEntries } from "./collection-view";
-import type { Card, CatalogRarity } from "./cards";
+import { normalizeCatalogCard, type Card, type CatalogRarity } from "./cards";
 
 function card(id: string, rarity: CatalogRarity): Card {
   return { id, name: id, title: "", description: "", rarity, sort_order: 0 };
 }
 
 describe("collection view", () => {
+  it("separates the updated base rarity from an already awakened copy", () => {
+    const nami = normalizeCatalogCard({ ...card("nami", "rare"), name: "Nami" });
+    const entries = collectionEntries([nami], [
+      { card_id: "nami", obtained_at: "2025-01-01", transcended: false },
+      { card_id: "nami", obtained_at: "2025-01-02", transcended: true },
+    ], new Set());
+    expect(entries.map((entry) => [entry.rarity, entry.count])).toEqual([
+      ["mythique", 1], ["transcendance", 1],
+    ]);
+  });
   it("separates base, awakened and custom forms while retaining copy counts and dates", () => {
     const cards = [card("goku", "mythique"), card("custom", "mythique"), card("missing", "rare")];
     const copies = [

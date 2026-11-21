@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getCardMarketPrice, rarityRank, type Card } from "./cards";
+import { characterRarity, getCardMarketPrice, rarityRank, type Card } from "./cards";
 import { getGuestState, updateGuestState, type GuestOwnedRow } from "./guest-collection";
 
 const rowSchema = z.object({
@@ -54,7 +54,14 @@ function readMarket(raw: unknown): Market {
     )
   )
     throw new Error("Données du marché local incohérentes.");
-  return parsed.data;
+  return {
+    listings: parsed.data.listings.map((item) => ({
+      ...item,
+      rarity: item.copy?.transcended || item.copy?.customTranscendance
+        ? "transcendance"
+        : characterRarity(item.cardName, item.rarity, item.cardId),
+    })),
+  };
 }
 
 function checkedPrice(price: number) {

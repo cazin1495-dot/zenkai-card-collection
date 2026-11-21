@@ -1,7 +1,9 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity } from "./cards";
+import { getUserRarityOverrides, inPack, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
 import { getCards } from "./cards.functions";
+
+export { CUSTOM_RARITY } from "./cards";
 
 const parseIds = (str: string) => str.split(",").map(Number);
 
@@ -10,7 +12,7 @@ const JJK_MYTHIC_IDS = parseIds("127691,133701,162722,129571,133699,133704,12721
 // JJK — Antagonistes : Sukuna, Geto, Mahito, Toji, Jogo, Hanami
 const JJK_ANTAGONIST_IDS = parseIds("133701,133699,133702,162722,156847,156846");
 
-// One Piece — Mythique : Luffy, Zoro, Law, Ace, Shanks, Sanji, Robin, Barbe Blanche, Hancock, Kaido, Barbe Noire, Sabo
+// One Piece — Mythique : Luffy, Zoro, Law, Ace, Shanks, Sanji, Robin, Barbe Blanche, Hancock, Kaido, Barbe Noire
 const OP_MYTHIC_IDS = parseIds("40,62,13767,2072,727,305,61,16448,14756,125667,14251,36757");
 // One Piece — Légendaire (Or) : Vivi Nefertari
 const OP_LEGENDARY_IDS = parseIds("729");
@@ -176,23 +178,22 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v19"],
+  queryKey: ["cards-v20"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
     const op = await fetchAnimeCharacters(21, "One Piece", OP_MYTHIC_IDS, OP_LEGENDARY_IDS, OP_ANTAGONIST_IDS, 1000, "Pirate / Antagoniste", "Pirate / Protagoniste");
     const hsr = await fetchHsrFromBrowser();
-    const cleaned = base
-      .filter((card) => !isTranscendanceCatalogCard(card))
-      .map(normalizeCatalogCard);
+    const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
+    const overrides = getUserRarityOverrides();
     return [
       ...cleaned,
       ...jjk.filter((card) => !existingIds.has(card.id)),
       ...op.filter((card) => !existingIds.has(card.id)),
       ...hsr.filter((card) => !existingIds.has(card.id)),
-    ];
+    ].map((card) => normalizeCatalogCard(card, overrides));
   },
   staleTime: Infinity,
 });
@@ -238,3 +239,19 @@ export const pityQuery = (userId: string) =>
       return data?.counter ?? 0;
     },
   });
+
+export function useCards() {
+  return useQuery(cardsQuery);
+}
+
+export function useCardsByPack(pack: PackId) {
+  return useQuery({ ...cardsQuery, select: (cards) => cards.filter((card) => inPack(card, pack)) });
+}
+
+export function useUserCards(userId?: string | null) {
+  return useQuery({ ...collectionQuery(userId ?? ""), enabled: !!userId });
+}
+
+export function useProfile(userId?: string | null) {
+  return useQuery({ ...profileQuery(userId ?? ""), enabled: !!userId });
+}

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import type { Card } from "@/lib/cards";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { normalizeCatalogCard, type Card } from "@/lib/cards";
 import { CollectionPage } from "./collection";
 
 const cards: Card[] = [
@@ -81,6 +81,40 @@ vi.mock("@/components/Transcendance", () => ({
 }));
 
 describe("collection filters and sorting", () => {
+  afterEach(() => localStorage.removeItem("zenkai:favorite-cards"));
+
+  it("shows favorites and combines the favorites filter with pack and rarity", () => {
+    localStorage.setItem("zenkai:favorite-cards", JSON.stringify(["common", "mythic"]));
+    render(<CollectionPage />);
+    expect(screen.getAllByRole("img", { name: "Carte favorite" })).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "★ Favoris uniquement" }));
+    expect(screen.getAllByTestId("collection-card").map((element) => element.textContent)).toEqual(["Common", "Mythic awakened"]);
+    fireEvent.click(screen.getByRole("button", { name: "Sport" }));
+    expect(screen.getAllByTestId("collection-card").map((element) => element.textContent)).toEqual(["Common"]);
+    fireEvent.click(within(screen.getByRole("group", { name: "Filtrer par rareté" })).getByRole("button", { name: "Rare 0" }));
+    expect(screen.queryAllByTestId("collection-card")).toHaveLength(0);
+  });
+
+  it("uses the server rarity for account recycling when display rarity is overridden", () => {
+    cards.push(normalizeCatalogCard({
+      id: "nami", name: "Nami", rarity: "rare", title: "", description: "", sort_order: 3,
+      popularity: 100,
+    }));
+    copies.push(
+      { id: "nami-1", card_id: "nami", obtained_at: "2025-01-01", transcended: false, awaken_attempted: false },
+      { id: "nami-2", card_id: "nami", obtained_at: "2025-01-02", transcended: false, awaken_attempted: false },
+    );
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    try {
+      render(<CollectionPage />);
+      fireEvent.click(screen.getByRole("button", { name: /Recycler · \+50 Coins/ }));
+      expect(confirm).toHaveBeenCalledWith("Recycler un doublon de Nami pour 50 Coins ?");
+    } finally {
+      cards.pop();
+      copies.splice(-2);
+      confirm.mockRestore();
+    }
+  });
   it("sorts globally and combines rarity and pack filters with owned-form counts", () => {
     render(<CollectionPage />);
     const names = () =>
@@ -107,9 +141,15 @@ describe("collection filters and sorting", () => {
     expect(names()).toEqual(["Rare card", "Common"]);
   });
 
+  it("keeps the Shonen collection filter restricted to the genre", () => {
+    render(<CollectionPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Shonen" }));
+    expect(screen.getAllByTestId("collection-card").map((element) => element.textContent)).toEqual(["Mythic awakened"]);
+  });
+
   it("shows popularity and local estimates, and orders the catalogue by value", () => {
     render(<CollectionPage />);
-    const common = screen.getByText("Common").parentElement!;
+    const common = screen.getByText("Common").parentElement!.parentElement!;
     expect(within(common).getByText("Populaire 🔥")).toBeTruthy();
     expect(within(common).getByText("Valeur locale : 15 Zen")).toBeTruthy();
     expect(within(common).getByText("Recyclage local : 6 Zen")).toBeTruthy();

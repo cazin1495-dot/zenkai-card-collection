@@ -6,11 +6,12 @@ import { CardCinema } from "@/components/Transcendance";
 import { RARITY, RARITY_ORDER, rarityRank, type PulledCard } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 import { openingEffects, RARITY_GLOW_CONFIG } from "@/lib/pack-opening";
+import { useFavoriteCards } from "@/lib/favorites";
 
 const SWIPE_DISTANCE = 50;
 
-export function NewCardBadge() {
-  return <span className="absolute right-0 top-0 z-30 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider text-black shadow-md">NOUVEAU</span>;
+export function NewCardBadge({ inRow = false }: { inRow?: boolean }) {
+  return <span className={cn("rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider text-black shadow-md", !inRow && "absolute right-0 top-0 z-30")}>NOUVEAU</span>;
 }
 
 type Props = {
@@ -35,6 +36,7 @@ export function CardReveal({
   const [dragX, setDragX] = useState(0);
   const [cinema, setCinema] = useState(false);
   const [flash, setFlash] = useState(false);
+  const { favoriteCardIds } = useFavoriteCards();
   const startX = useRef<number | null>(null);
   const swiped = useRef(false);
 
@@ -217,7 +219,12 @@ export function CardReveal({
             {isTranscendence && flipped && <div aria-hidden className="transcendence-reveal-flash pointer-events-none absolute inset-0 z-20 rounded-2xl" />}
           </Button>}
           {flash && <div aria-hidden className="card-cinema-flash pointer-events-none absolute inset-0" />}
-          {flipped && item.isNew && <NewCardBadge />}
+          {flipped && (item.isNew || favoriteCardIds.includes(card.id)) && (
+            <div className="pointer-events-none absolute right-0 top-0 z-30 flex gap-1">
+              {item.isNew && <NewCardBadge inRow />}
+              {favoriteCardIds.includes(card.id) && <span className="rounded-full border border-amber-300/70 bg-violet-950 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider text-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.7)]">★ FAVORI</span>}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Card } from "./cards";
+import { CUSTOM_RARITY, setUserRarityOverride, type Card } from "./cards";
 import {
   addGuestCollectionCards,
   getGuestBalance,
@@ -117,5 +117,55 @@ describe("guest market", () => {
     expect(listing.price).toBe(5000);
     expect(() => buyGuestListing(listing.id, now)).toThrow("insuffisant");
     expect(getGuestCollection()).toEqual([]);
+  });
+
+  it("updates old listing rarities without changing prices or awakened copies", () => {
+    const nami: Card = { ...cards[0]!, id: "nami", name: "Nami" };
+    addGuestCollectionCards([
+      { userCardId: "base", card: nami },
+      { userCardId: "awake", card: nami, transcended: true },
+    ]);
+    const base = listGuestCopy("base", nami, "fixed", 80, 2, now);
+    const awake = listGuestCopy("awake", nami, "fixed", 90, 2, now);
+    const listings = getGuestMarket().listings;
+    expect(listings.find((item) => item.id === base.id)).toMatchObject({ rarity: "mythique", price: 80 });
+    expect(listings.find((item) => item.id === awake.id)).toMatchObject({ rarity: "transcendance", price: 90 });
+    cancelGuestListing(awake.id, now + 1);
+    expect(getGuestCollection()[0]).toMatchObject({ id: "awake", transcended: true });
+  });
+
+  it("applies custom overrides to existing listings but not awakened copies", () => {
+    const card: Card = { ...cards[0]!, id: "test", name: "Test" };
+    addGuestCollectionCards([
+      { userCardId: "base", card },
+      { userCardId: "awake", card, transcended: true },
+    ]);
+    const base = listGuestCopy("base", card, "fixed", 80, 2, now);
+    const awake = listGuestCopy("awake", card, "fixed", 90, 2, now);
+    CUSTOM_RARITY["test"] = "mythique";
+    try {
+      const listings = getGuestMarket().listings;
+      expect(listings.find((item) => item.id === base.id)?.rarity).toBe("mythique");
+      expect(listings.find((item) => item.id === awake.id)?.rarity).toBe("transcendance");
+    } finally {
+      delete CUSTOM_RARITY["test"];
+    }
+  });
+
+  it("applies id-based local overrides to existing listings without changing prices or awakened copies", () => {
+    const card: Card = { ...cards[0]!, id: "test-id", name: "Test" };
+    addGuestCollectionCards([{ userCardId: "base", card }, { userCardId: "awake", card, transcended: true }]);
+    const base = listGuestCopy("base", card, "fixed", 80, 2, now);
+    const awake = listGuestCopy("awake", card, "fixed", 90, 2, now);
+    setUserRarityOverride("test-id", "mythique");
+    expect(getGuestMarket().listings.find((item) => item.id === base.id)).toMatchObject({ rarity: "mythique", price: 80 });
+    expect(getGuestMarket().listings.find((item) => item.id === awake.id)?.rarity).toBe("transcendance");
+  });
+
+  it("applies fixed id rarities to existing market listings without changing their price", () => {
+    const card: Card = { ...cards[0]!, id: "hsr-20", name: "Test" };
+    addGuestCollectionCards([{ userCardId: "base", card }]);
+    const listing = listGuestCopy("base", card, "fixed", 80, 2, now);
+    expect(getGuestMarket().listings.find((item) => item.id === listing.id)).toMatchObject({ rarity: "legendaire", price: 80 });
   });
 });

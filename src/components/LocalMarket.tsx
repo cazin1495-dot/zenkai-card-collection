@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MarketSaleDialog } from "@/components/MarketSaleDialog";
 import { cardsQuery } from "@/lib/queries";
-import { getCardMarketPrice, getCardPopularityFactor, RARITY } from "@/lib/cards";
+import { getCardMarketPrice, getCardPopularityFactor, RARITY, subscribeUserRarityOverrides } from "@/lib/cards";
 import { getGuestCollection, getGuestState } from "@/lib/guest-collection";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
@@ -74,10 +74,12 @@ export function LocalMarket() {
     };
     window.addEventListener("zenkai:guest-updated", onUpdate);
     window.addEventListener("storage", onUpdate);
+    const unsubscribeRarity = subscribeUserRarityOverrides(refresh);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("zenkai:guest-updated", onUpdate);
       window.removeEventListener("storage", onUpdate);
+      unsubscribeRarity();
     };
   }, [queryClient, refresh]);
 

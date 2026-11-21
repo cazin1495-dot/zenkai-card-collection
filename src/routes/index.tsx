@@ -13,6 +13,7 @@ import { InspectableCard } from "@/components/Transcendance";
 import { gameQuery } from "@/lib/game";
 import { REWARD_LABELS } from "@/lib/economy";
 import { useAuth } from "@/hooks/use-auth";
+import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, collectionQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
@@ -24,6 +25,7 @@ import {
   CARDS_PER_BOOSTER,
   formatCountdown,
   effectiveDropRate,
+  normalizeCatalogCard,
   OPEN_COUNTS,
   PACK_ARTWORK_BY_PACK,
   CARD_BACK_BY_PACK,
@@ -82,9 +84,14 @@ export function BoostersPage() {
   const [quantity, setQuantity] = useState<(typeof OPEN_COUNTS)[number]>(1);
   const [localZen, setLocalZen] = useState<number | null>(null);
   const [localZenError, setLocalZenError] = useState(false);
+  const rarityOverrides = useRarityOverrides();
+  const displayedPulled = useMemo(
+    () => pulled.map((item) => ({ ...item, card: normalizeCatalogCard(item.card, rarityOverrides) })),
+    [pulled, rarityOverrides],
+  );
   const tearBeam = useMemo(
-    () => bestOpeningRarity(pulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
-    [pulled],
+    () => bestOpeningRarity(displayedPulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
+    [displayedPulled],
   );
 
   useEffect(() => {
@@ -127,7 +134,7 @@ export function BoostersPage() {
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
   const best = bestRarity(
-    pulled.map((p) =>
+    displayedPulled.map((p) =>
       awake[p.userCardId] === "transcended" || p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity,
     ),
   );
@@ -416,7 +423,7 @@ export function BoostersPage() {
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
           <CardReveal
-            cards={pulled}
+            cards={displayedPulled}
             awakened={awake}
             onAwaken={onAwaken}
             onDone={() => setPhase("summary")}
@@ -424,7 +431,7 @@ export function BoostersPage() {
           />
         ) : phase === "summary" ? (
           <Summary
-            items={pulled}
+            items={displayedPulled}
             opened={opened}
             awake={awake}
             onAwaken={onAwaken}

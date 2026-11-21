@@ -1,5 +1,5 @@
 import { CARDS_PER_BOOSTER, inPack, isTranscendanceCatalogCard, rarityFromRoll, type Card, type PackId, type PulledCard } from "./cards";
-import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, type CustomTranscendanceCard } from "./transcendance-cards";
+import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscendanceInPack, type CustomTranscendanceCard } from "./transcendance-cards";
 
 /** Unpersisted visual-only draws for development guest sessions. */
 export function createLocalGuestDraw(
@@ -22,7 +22,7 @@ export function createLocalGuestDraw(
       let customTranscendance = false;
 
       if (rarity === "transcendance") {
-        const customPool = customTranscendanceCards.filter((candidate) => candidate.pack_ids.includes(pack) && !usedIds.has(candidate.id));
+        const customPool = customTranscendanceCards.filter((candidate) => customTranscendanceInPack(candidate, pack) && !usedIds.has(candidate.id));
         const selectedCustom = customPool.length > 0
           ? customPool[Math.floor(Math.random() * customPool.length)]
           : undefined;

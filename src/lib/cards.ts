@@ -16,6 +16,115 @@ export type BaseRarity = "commune" | "non_commune" | "rare" | "epique" | "legend
 export type CatalogRarity = Exclude<BaseRarity, "transcendance">;
 export type Rarity = BaseRarity;
 
+export const CATALOG_RARITIES = ["commune", "non_commune", "rare", "epique", "legendaire", "mythique"] as const satisfies readonly CatalogRarity[];
+export const USER_RARITY_OVERRIDES: Record<string, CatalogRarity> = {
+  "al-64771": "mythique",
+  "al-162969": "mythique",
+  "al-162213": "mythique",
+  "al-245": "mythique",
+  "al-907": "mythique",
+  "al-906": "mythique",
+  "al-1080": "mythique",
+  "al-7": "mythique",
+  "al-85": "mythique",
+  "al-13": "mythique",
+  "al-2423": "mythique",
+  "al-88412": "mythique",
+  "al-87277": "mythique",
+  "al-309": "mythique",
+  "al-167444": "legendaire",
+  "al-169395": "legendaire",
+  "al-169401": "mythique",
+  "al-914": "legendaire",
+  "al-67321": "legendaire",
+  "al-67333": "legendaire",
+  "al-67323": "legendaire",
+  "al-36820": "mythique",
+  "al-845": "legendaire",
+  "al-42038": "mythique",
+  "al-21332": "mythique",
+  "al-18770": "mythique",
+  "al-145": "legendaire",
+  "al-2367": "legendaire",
+  "al-88411": "legendaire",
+  "al-137974": "legendaire",
+  "al-158154": "legendaire",
+  "hsr-20": "legendaire",
+  "al-162214": "legendaire",
+  "al-169394": "epique",
+  "al-169397": "legendaire",
+  "al-186875": "mythique",
+  "al-187546": "epique",
+  "al-187524": "epique",
+  "al-22253": "legendaire",
+  "al-53563": "legendaire",
+  "al-22254": "legendaire",
+  "al-45975": "legendaire",
+  "al-307": "legendaire",
+  "al-2767": "mythique",
+  "al-2455": "mythique",
+  "al-728": "legendaire",
+  "al-124077": "legendaire",
+  "al-2064": "legendaire",
+  "al-120536": "legendaire",
+  "al-187523": "epique",
+  "al-2093": "epique",
+  "al-169403": "legendaire",
+  "al-191409": "legendaire",
+  "al-169400": "epique",
+  "al-196502": "legendaire",
+  "al-42804": "legendaire",
+};
+export const USER_RARITY_OVERRIDES_KEY = "zenkai_admin_rarity_overrides";
+export const USER_RARITY_OVERRIDES_UPDATED = "zenkai:rarity-overrides-updated";
+
+export function isCatalogRarity(value: unknown): value is CatalogRarity {
+  return CATALOG_RARITIES.some((rarity) => rarity === value);
+}
+
+export function parseUserRarityOverrides(raw: string | null): Record<string, CatalogRarity> {
+  if (raw === null) return {};
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Configuration des raretés locales invalide.");
+  }
+  const entries: [string, CatalogRarity][] = [];
+  for (const [key, rarity] of Object.entries(parsed)) {
+    if (!key.trim() || !isCatalogRarity(rarity)) throw new Error("Configuration des raretés locales invalide.");
+    entries.push([key, rarity]);
+  }
+  return Object.fromEntries(entries);
+}
+
+export function getUserRarityOverridesSnapshot(): string | null {
+  return typeof window === "undefined" ? null : window.localStorage.getItem(USER_RARITY_OVERRIDES_KEY);
+}
+
+export function getUserRarityOverrides(): Record<string, CatalogRarity> {
+  return parseUserRarityOverrides(getUserRarityOverridesSnapshot());
+}
+
+export function setUserRarityOverride(cardIdOrName: string, rarity: CatalogRarity) {
+  const key = cardIdOrName.trim();
+  if (!key || !isCatalogRarity(rarity)) throw new Error("Rareté locale invalide.");
+  if (typeof window === "undefined") throw new Error("Stockage local indisponible.");
+  const next = { ...getUserRarityOverrides(), [key]: rarity };
+  window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(next));
+  window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
+}
+
+export function subscribeUserRarityOverrides(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === USER_RARITY_OVERRIDES_KEY || event.key === null) onChange();
+  };
+  window.addEventListener(USER_RARITY_OVERRIDES_UPDATED, onChange);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    window.removeEventListener(USER_RARITY_OVERRIDES_UPDATED, onChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 export type Genre = "shonen" | "seinen" | "shojo" | "sport";
 export type CardRole = "protagoniste" | "antagoniste";
 
@@ -24,6 +133,7 @@ export type Card = {
   name: string;
   title: string;
   rarity: CatalogRarity;
+  serverRarity?: CatalogRarity;
   description: string;
   sort_order: number;
   transcendance_series_number?: string;
@@ -49,10 +159,144 @@ export function isTranscendanceCatalogCard(card: { id: string; name?: string; ra
     || name === "goku ultra instinct";
 }
 
+export const CHARACTER_RARITY_OVERRIDES: Readonly<Record<string, CatalogRarity>> = {
+  hancock: "mythique", "boa hancock": "mythique", "hancock boa": "mythique",
+  whitebeard: "mythique", "edward newgate": "mythique", "newgate edward": "mythique", "barbe blanche": "mythique",
+  pain: "mythique", nagato: "mythique",
+  shikamaru: "mythique", "shikamaru nara": "mythique",
+  yamato: "mythique", nami: "mythique",
+  hinata: "mythique", "hinata hyuga": "mythique", "hinata hyuuga": "mythique",
+  trunks: "mythique", "mirai trunks": "mythique", "future trunks": "mythique",
+  hashirama: "mythique", "hashirama senju": "mythique",
+  "mei mei": "mythique",
+  tobirama: "mythique", "tobirama senju": "mythique",
+  kawaki: "mythique", kenjaku: "mythique",
+  minato: "mythique", "minato namikaze": "mythique",
+  grimmjow: "legendaire", "grimmjow jaegerjaquez": "legendaire",
+  zaraki: "legendaire", "kenpachi zaraki": "legendaire",
+  orihime: "legendaire", "orihime inoue": "legendaire",
+  hitsugaya: "legendaire", "toshiro hitsugaya": "legendaire", "toushirou hitsugaya": "legendaire",
+  byakuya: "legendaire", "byakuya kuchiki": "legendaire",
+  "rock lee": "legendaire", lee: "legendaire", tobi: "legendaire",
+  choso: "legendaire", chousou: "legendaire", mahito: "legendaire",
+  doflamingo: "legendaire", "donquixote doflamingo": "legendaire", "doflamingo donquixote": "legendaire",
+  franky: "legendaire", jinbe: "legendaire", jinbei: "legendaire",
+  renji: "legendaire", "renji abarai": "legendaire",
+  beerus: "legendaire", neji: "legendaire", "neji hyuga": "legendaire", "neji hyuuga": "legendaire",
+  kurama: "legendaire", kyubi: "legendaire", kyuubi: "legendaire",
+  sabo: "legendaire", bardock: "legendaire", whis: "legendaire",
+  sarada: "legendaire", "sarada uchiha": "legendaire", mitsuki: "legendaire",
+  "killer bee": "legendaire", "killer b": "legendaire",
+};
+
+export const CUSTOM_RARITY: Record<string, "mythique" | "legendaire"> = {
+  // === MYTHIQUES (14) ===
+  "hancock": "mythique",
+  "boa hancock": "mythique",
+  "whitebeard": "mythique",
+  "edward newgate": "mythique",
+  "barbe blanche": "mythique",
+  "pain": "mythique",
+  "nagato": "mythique",
+  "shikamaru": "mythique",
+  "shikamaru nara": "mythique",
+  "yamato": "mythique",
+  "nami": "mythique",
+  "hinata": "mythique",
+  "hinata hyuga": "mythique",
+  "trunks": "mythique",
+  "mirai trunks": "mythique",
+  "future trunks": "mythique",
+  "hashirama": "mythique",
+  "hashirama senju": "mythique",
+  "mei mei": "mythique",
+  "tobirama": "mythique",
+  "tobirama senju": "mythique",
+  "kawaki": "mythique",
+  "kenjaku": "mythique",
+  "minato": "mythique",
+  "minato namikaze": "mythique",
+
+  // === OR / LÉGENDAIRES (22) ===
+  "grimmjow": "legendaire",
+  "grimmjow jaegerjaquez": "legendaire",
+  "zaraki": "legendaire",
+  "kenpachi zaraki": "legendaire",
+  "orihime": "legendaire",
+  "orihime inoue": "legendaire",
+  "hitsugaya": "legendaire",
+  "toshiro hitsugaya": "legendaire",
+  "byakuya": "legendaire",
+  "byakuya kuchiki": "legendaire",
+  "rock lee": "legendaire",
+  "lee": "legendaire",
+  "tobi": "legendaire",
+  "choso": "legendaire",
+  "chousou": "legendaire",
+  "mahito": "legendaire",
+  "doflamingo": "legendaire",
+  "donquixote doflamingo": "legendaire",
+  "franky": "legendaire",
+  "jinbe": "legendaire",
+  "jinbei": "legendaire",
+  "renji": "legendaire",
+  "renji abarai": "legendaire",
+  "beerus": "legendaire",
+  "neji": "legendaire",
+  "neji hyuga": "legendaire",
+  "kurama": "legendaire",
+  "kyubi": "legendaire",
+  "sabo": "legendaire",
+  "bardock": "legendaire",
+  "whis": "legendaire",
+  "sarada": "legendaire",
+  "sarada uchiha": "legendaire",
+  "mitsuki": "legendaire",
+  "killer bee": "legendaire",
+  "killer b": "legendaire",
+};
+
+
+export function characterRarity(
+  name: string,
+  rarity: BaseRarity,
+  cardId?: string,
+  overrides = getUserRarityOverrides(),
+): BaseRarity {
+  if (rarity === "transcendance") return rarity;
+  const normalizedName = name.trim().toLowerCase();
+  const override = (cardId && Object.hasOwn(overrides, cardId) ? overrides[cardId] : undefined)
+    ?? (Object.hasOwn(overrides, normalizedName) ? overrides[normalizedName] : undefined)
+    ?? Object.entries(overrides).find(([key]) => key.trim().toLowerCase() === normalizedName)?.[1];
+  if (override) return override;
+  const fixedOverride = cardId && Object.hasOwn(USER_RARITY_OVERRIDES, cardId) ? USER_RARITY_OVERRIDES[cardId] : undefined;
+  if (fixedOverride) return fixedOverride;
+  const lowercaseName = name.trim().toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+  if (Object.hasOwn(CUSTOM_RARITY, lowercaseName) && CUSTOM_RARITY[lowercaseName]) return CUSTOM_RARITY[lowercaseName];
+  const words = lowercaseName.split(/[\s\-·()]+/);
+  for (const [key, customR] of Object.entries(CUSTOM_RARITY)) {
+    const cleanKey = key.normalize("NFD").replace(/\p{M}/gu, "");
+    if (cleanKey.includes(" ") ? lowercaseName.includes(cleanKey) : words.includes(cleanKey)) {
+      return customR;
+    }
+  }
+  const key = lowercaseName.replace(/\s+/g, " ");
+  return Object.hasOwn(CHARACTER_RARITY_OVERRIDES, key) ? CHARACTER_RARITY_OVERRIDES[key] ?? rarity : rarity;
+}
+
+
 /** Applies local catalog overrides for known cards without creating duplicate records. */
-export function normalizeCatalogCard(card: Card): Card {
-  if (card.name.trim().toLowerCase() !== "goku black") return card;
-  return { ...card, rarity: "mythique", category: "shonen", role: "antagoniste" };
+export function normalizeCatalogCard(card: Card, overrides = getUserRarityOverrides()): Card {
+  if (isTranscendanceCatalogCard(card) || card.transcendance_series_number) return card;
+  const baseRarity = card.serverRarity ?? card.rarity;
+  if (card.name.trim().toLowerCase() === "goku black") {
+    const rarity = characterRarity(card.name, "mythique", card.id, overrides);
+    return { ...card, serverRarity: baseRarity, rarity: rarity === "transcendance" ? "mythique" : rarity, category: "shonen", role: "antagoniste" };
+  }
+  const rarity = characterRarity(card.name, baseRarity, card.id, overrides);
+  return rarity === baseRarity || rarity === "transcendance"
+    ? { ...card, rarity: baseRarity }
+    : { ...card, serverRarity: baseRarity, rarity };
 }
 
 /** Booster rules — mirror public.open_boosters(). */
@@ -164,7 +408,7 @@ export const CARD_BACK_BY_PACK: Record<PackId, string> = {
 };
 
 export const PACKS: { id: PackId; label: string; hint: string; accent: string }[] = [
-  { id: "shonen", label: "Shonen Mix", hint: "Dragon Ball, Naruto, Bleach, JJK, Honkai: Star Rail", accent: "var(--pack-shonen)" },
+  { id: "shonen", label: "Shonen Mix", hint: "All-Star · Toutes les cartes de toutes les catégories réunies", accent: "var(--pack-shonen)" },
   { id: "seinen", label: "Seinen", hint: "Berserk, Vinland Saga, Tokyo Ghoul, Monster", accent: "var(--pack-seinen)" },
   { id: "shojo", label: "Shojo", hint: "Fruits Basket, Nana, Sailor Moon, Sakura", accent: "var(--pack-shojo)" },
   { id: "sport", label: "Sport", hint: "Blue Lock, Haikyuu!!, Kuroko, Ippo", accent: "var(--pack-sport)" },
@@ -175,7 +419,7 @@ export const PACKS: { id: PackId; label: string; hint: string; accent: string }[
 
 /** Does a card belong to a booster pack / collection filter? */
 export function inPack(card: Card, pack: PackId) {
-  if (pack === "zenkai") return true;
+  if (pack === "shonen" || pack === "zenkai") return true;
   if (pack === "antagoniste" || pack === "protagoniste") return card.role === pack;
   return card.category === pack;
 }

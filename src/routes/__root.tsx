@@ -17,6 +17,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { isOAuthCallbackPath } from "@/lib/auth";
+import { useSyncRarityOverrides } from "@/hooks/use-sync-rarity-overrides";
 
 function NotFoundComponent() {
   return (
@@ -134,6 +135,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useSyncRarityOverrides(queryClient);
 
   return (
     <QueryClientProvider client={queryClient}>

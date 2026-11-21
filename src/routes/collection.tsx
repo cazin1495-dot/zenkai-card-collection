@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { InspectableCard } from "@/components/Transcendance";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Recycle } from "lucide-react";
+import { Heart, Recycle } from "lucide-react";
 import { recycleValue } from "@/lib/economy";
 import { cardsQuery, collectionQuery } from "@/lib/queries";
 import { cardIdentity, getCardMarketPrice, getCardPopularityFactor, getCardRecycleValue, inPack, RARITY, RARITY_ORDER, type Card, type CatalogRarity, type PackId, type Rarity } from "@/lib/cards";
@@ -18,6 +18,7 @@ import { getPlus } from "@/lib/subscription";
 import { getGuestCollection, getGuestPlus, guestDuplicates, guestRecycleGroups, plusRecycleBonus, recycleGuestCollection, type GuestOwnedRow } from "@/lib/guest-collection";
 import { MarketSaleDialog } from "@/components/MarketSaleDialog";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
+import { useFavoriteCards } from "@/lib/favorites";
 
 export const Route = createFileRoute("/collection")({
   head: () => ({
@@ -103,7 +104,7 @@ export function CollectionPage() {
     }
     const copy = ownedRows?.find(row => row.card_id === card.id && !row.transcended);
     if (!userId || !copy || recycling) return;
-    const value = recycleValue(card.rarity, card.popularity ?? 1);
+    const value = recycleValue(card.serverRarity ?? card.rarity, card.popularity ?? 1);
     if (!window.confirm(`Recycler un doublon de ${card.name} pour ${value} Coins ?`)) return;
     setRecycling(copy.id);
     try {
@@ -117,6 +118,9 @@ export function CollectionPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
   const [sort, setSort] = useState<CollectionSort>("recent");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const { favoriteCardIds } = useFavoriteCards();
+  const favoriteIds = new Set(favoriteCardIds);
 
   const catalog = useMemo(() => [
     ...(cards.data ?? []),
@@ -129,12 +133,16 @@ export function CollectionPage() {
     ownedRows ?? [],
     new Set(CUSTOM_TRANSCENDANCE_CARDS.map((card) => card.id)),
   ), [catalog, ownedRows]);
-  const packEntries = entries.filter((entry) => filter === "all" || inPack(entry.card, filter));
+  const packEntries = entries.filter((entry) =>
+    filter === "all" || (filter === "shonen" ? entry.card.category === "shonen" : inPack(entry.card, filter)),
+  );
   const rarityCounts = new Map<Rarity, number>();
   for (const entry of packEntries) {
     if (entry.count) rarityCounts.set(entry.rarity, (rarityCounts.get(entry.rarity) ?? 0) + 1);
   }
-  const filtered = packEntries.filter((entry) => rarityFilter === "all" || entry.rarity === rarityFilter);
+  const filtered = packEntries.filter((entry) =>
+    (rarityFilter === "all" || entry.rarity === rarityFilter) && (!favoritesOnly || favoriteIds.has(entry.card.id)),
+  );
   const list = sortCollectionEntries(filtered, sort);
   const recycleGroups = useMemo(() => guestRecycleGroups(
     guestOwned.data ?? [], cards.data ?? [], localBonus,
@@ -216,6 +224,7 @@ export function CollectionPage() {
           <option value="duplicates">Doublons (×N)</option>
           <option value="recent">Récemment obtenues</option>
         </select>
+        <Button variant={favoritesOnly ? "hero" : "glass"} aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(!favoritesOnly)}>★ Favoris uniquement</Button>
         <Button variant="glass" aria-label="Recycler" disabled={!recycleAvailable} onClick={() => setRecycleOpen(true)}>
           <Recycle className="size-4" /> Recycler <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs text-primary">{recycleAvailable ? duplicateCount > 99 ? "99+" : duplicateCount : "—"}</span>
         </Button>
@@ -245,11 +254,14 @@ export function CollectionPage() {
           const { card, count, rarity } = entry;
           const evolved = rarity === "transcendance";
           return <div key={`${card.id}-${rarity}`} className="flex flex-col items-center gap-2">
-            <InspectableCard card={card} count={count || undefined} locked={!!session && !count} transcended={entry.transcended} customTranscendance={entry.customTranscendance} />
+            <div className="relative w-full">
+              <InspectableCard card={card} count={count || undefined} locked={!!session && !count} transcended={entry.transcended} customTranscendance={entry.customTranscendance} />
+              {favoriteIds.has(card.id) && <span role="img" aria-label="Carte favorite" className="pointer-events-none absolute right-2 top-2 z-40 rounded-full bg-background/80 p-1.5"><Heart aria-hidden className="size-4 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" /></span>}
+            </div>
             <CardValues entry={entry} bonus={localCollection && localBonus} />
             {!!count && <Button variant="glass" size="sm" aria-label={`Détails ${card.name}${evolved ? " transcendée" : ""}`} onClick={() => setDetail(entry)} className="w-full">Détails</Button>}
             {localCollection && !!count && <Button variant="hero" size="sm" aria-label={`Vendre ${card.name}${evolved ? " transcendée" : ""}`} onClick={() => sellCopy(card, evolved)} className="w-full">Vendre</Button>}
-            {count > 1 && !evolved && <Button variant="glass" size="sm" disabled={!!recycling || (localCollection && (!plus.data || plus.isError || (!!session && (!accountPlus.state || accountPlus.error))))} onClick={() => recycle(card)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{localCollection ? getCardRecycleValue(card) + plusRecycleBonus(getCardRecycleValue(card), localBonus) : recycleValue(card.rarity, card.popularity ?? 1)} {localCollection ? "Zen locaux" : "Coins"}</Button>}
+            {count > 1 && !evolved && <Button variant="glass" size="sm" disabled={!!recycling || (localCollection && (!plus.data || plus.isError || (!!session && (!accountPlus.state || accountPlus.error))))} onClick={() => recycle(card)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{localCollection ? getCardRecycleValue(card) + plusRecycleBonus(getCardRecycleValue(card), localBonus) : recycleValue(card.serverRarity ?? card.rarity, card.popularity ?? 1)} {localCollection ? "Zen locaux" : "Coins"}</Button>}
           </div>;
         })}
       </div>

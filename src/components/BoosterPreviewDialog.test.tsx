@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 import { normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
 import { BoosterPreviewDialog } from "./BoosterPreviewDialog";
 import type { CustomTranscendanceCard } from "@/lib/transcendance-cards";
@@ -20,11 +21,11 @@ const cards: Card[] = [
   }),
 ];
 
-function PreviewHarness({ customCards, pack = "shonen" }: { customCards?: readonly CustomTranscendanceCard[]; pack?: PackId }) {
+function PreviewHarness({ customCards, pack = "shonen", catalog = cards }: { customCards?: readonly CustomTranscendanceCard[]; pack?: PackId; catalog?: Card[] }) {
   const [open, setOpen] = useState(false);
   return (
     <BoosterPreviewDialog
-      cards={cards}
+      cards={catalog}
       pack={pack}
       packLabel={pack === "antagoniste" ? "Antagoniste" : pack === "protagoniste" ? "Protagoniste" : "Shonen Mix"}
       {...(customCards === undefined ? {} : { customCards })}
@@ -35,6 +36,116 @@ function PreviewHarness({ customCards, pack = "shonen" }: { customCards?: readon
 }
 
 describe("booster content preview", () => {
+  afterEach(() => {
+    localStorage.removeItem("zenkai:favorite-cards");
+    localStorage.removeItem("zenkai_admin_rarity_overrides");
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("edits and exports local catalogue rarities without altering Transcendance cards", async () => {
+    const success = vi.spyOn(toast, "success");
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const { unmount } = render(<PreviewHarness />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
+    const select = screen.getByRole("combobox", { name: "Rareté de Héros" });
+    expect(within(select).getAllByRole("option")).toHaveLength(6);
+    expect(within(select).queryByRole("option", { name: "Transcendance" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Rareté de Goku Ultra Instinct" })).toBeNull();
+    fireEvent.change(select, { target: { value: "mythique" } });
+    expect(success).toHaveBeenCalledWith("Rareté mise à jour !");
+    expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Mythique");
+    expect(JSON.parse(localStorage.getItem("zenkai_admin_rarity_overrides")!)).toEqual({ common: "mythique" });
+    fireEvent.click(screen.getByRole("button", { name: "Exporter ma config" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(
+      'export const USER_RARITY_OVERRIDES = {\n  "common": "mythique"\n} as const;',
+    ));
+    unmount();
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Mythique");
+  });
+
+  it("allows local editing of a card with a fixed id rarity", () => {
+    const catalog: Card[] = [{ id: "hsr-20", name: "Welt", title: "", description: "", rarity: "rare", sort_order: 0 }];
+    render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
+    const select = screen.getByRole("combobox", { name: "Rareté de Welt" });
+    expect(select).toHaveValue("legendaire");
+    fireEvent.change(select, { target: { value: "mythique" } });
+    expect(select).toHaveValue("mythique");
+  });
+
+  it("reports failed rarity saves and clipboard exports", async () => {
+    const error = vi.spyOn(toast, "error");
+    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("storage"); });
+    fireEvent.change(screen.getByRole("combobox", { name: "Rareté de Héros" }), { target: { value: "mythique" } });
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("Impossible d'enregistrer"));
+    expect(screen.getByRole("combobox", { name: "Rareté de Héros" })).toHaveValue("commune");
+    fireEvent.click(screen.getByRole("button", { name: "Exporter ma config" }));
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining("Impossible de copier")));
+  });
+
+  it("shows other categories and exclusive cards outside Shonen in the universal preview", () => {
+    const sportExclusive: CustomTranscendanceCard = {
+      id: "sport-exclusive", name: "Sport exclusif", anime: "Sport", image_url: "",
+      pack_ids: ["sport"], rarity: "Transcendance", series_number: "SPORT-001",
+    };
+    render(<PreviewHarness customCards={[sportExclusive]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.getByText("Autre")).toBeTruthy();
+    expect(screen.getByText("Sport exclusif")).toBeTruthy();
+    expect(screen.getByText(/règle universelle doit encore être activée/)).toBeTruthy();
+  });
+
+  it("persists favorites and combines the pack and rarity filters", () => {
+    const success = vi.spyOn(toast, "success");
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter Héros aux favoris" }));
+    expect(success).toHaveBeenCalledWith("Ajouté à tes cartes favorites ★");
+    expect(JSON.parse(localStorage.getItem("zenkai:favorite-cards")!)).toEqual(["common"]);
+    expect(screen.getByRole("button", { name: "Retirer Héros des favoris" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (1)" }));
+    expect(screen.getByText("Héros")).toBeTruthy();
+    expect(screen.queryByText("Rival")).toBeNull();
+    expect(screen.queryByText("Carte Transcendance Exclusive à venir")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Mythique.*0,25/ }));
+    expect(screen.getByText(/Aucune carte favorite/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Toutes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retirer Héros des favoris" }));
+    expect(JSON.parse(localStorage.getItem("zenkai:favorite-cards")!)).toEqual([]);
+    expect(screen.getByRole("button", { name: "★ Mes favoris (0)" })).toBeTruthy();
+    expect(screen.getByText("Contenu du pack Shonen Mix")).toBeTruthy();
+  });
+
+  it("reports storage failures without showing a successful favorite", () => {
+    const error = vi.spyOn(toast, "error");
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("storage"); });
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter Héros aux favoris" }));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("Impossible d'enregistrer"));
+    expect(screen.getByRole("button", { name: "Ajouter Héros aux favoris" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("uses the actual card id for exclusive Transcendance favorites", () => {
+    render(<PreviewHarness />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter Goku Ultra Instinct aux favoris" }));
+    expect(JSON.parse(localStorage.getItem("zenkai:favorite-cards")!)).toEqual(["goku-ui-transcendance"]);
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (1)" }));
+    expect(screen.getByText("Goku Ultra Instinct")).toBeTruthy();
+  });
+
   it("shows a locked Transcendance placeholder and filters by rarity with rates", () => {
     render(<PreviewHarness customCards={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));

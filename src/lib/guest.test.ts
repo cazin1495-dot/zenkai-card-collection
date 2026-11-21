@@ -69,7 +69,7 @@ export const cardsQuery = queryOptions({
     const [base, jjk] = await Promise.all([getCards(), fetchJjkFromBrowser()]);
     const cleaned = base
       .filter((card) => !isTranscendanceCatalogCard(card))
-      .map(normalizeCatalogCard);
+      .map((card) => normalizeCatalogCard(card));
     const existingIds = new Set(cleaned.map((c) => c.id));
     return [...cleaned, ...jjk.filter((c) => !existingIds.has(c.id))];
   },

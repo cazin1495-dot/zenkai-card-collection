@@ -10,6 +10,27 @@ La révélation affiche les cartes de la moins rare à la plus rare, puis le ré
 l'ordre inverse. Le badge « NOUVEAU » compare le tirage à la collection avant ouverture.
 En mode invité, l'ouverture reste une simulation non sauvegardée ; le Booster Zenkai nécessite
 une prise en charge sécurisée du Zen par le serveur et n'est pas encore disponible.
+Les raretés de certains personnages sont surchargées dans le catalogue affiché et les
+simulations locales. La table `CUSTOM_RARITY` dans `src/lib/cards.ts` accepte des noms
+complets en minuscules et prend priorité sur les surcharges existantes. Pour les comptes connectés, le serveur reste seul responsable des
+raretés utilisées pour sélectionner les cartes et calculer les gains de recyclage :
+ces règles nécessitent une mise à jour des données dans Lovable pour correspondre à l'affichage.
+Shonen Mix inclut tout le catalogue dans l'aperçu et les tirages invités, avec les taux
+gratuits. La règle universelle des tirages connectés nécessite une mise à jour de
+`public.open_boosters` dans Lovable et l'import côté serveur des cartes manquantes ;
+l'aperçu peut donc montrer des cartes qui ne sont pas encore tirables en ligne.
+
+Les favoris se choisissent dans l'aperçu des packs et sont enregistrés sur cet appareil,
+pas sur le compte. Ils sont partagés entre les onglets et signalés dans la collection et
+à la révélation ; le filtre de favoris se combine aux autres filtres. Un favori suit
+l'identifiant de la carte, y compris ses copies transcendées.
+
+L'éditeur de raretés de l'aperçu enregistre ses réglages dans le navigateur, par identifiant
+de carte. Il modifie l'affichage et les simulations locales, pas les tirages ni les gains
+des comptes connectés. La Transcendance reste un état de copie et ne peut pas être définie
+comme rareté de catalogue. L'export copie une constante TypeScript des réglages locaux.
+Les choix de l'éditeur priment sur les valeurs par identifiant de `USER_RARITY_OVERRIDES`,
+qui priment à leur tour sur les règles de rareté par nom.
 
 ## Marché et amis locaux
 

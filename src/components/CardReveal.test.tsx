@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CardReveal } from "./CardReveal";
 import type { PulledCard } from "@/lib/cards";
@@ -12,6 +12,19 @@ const cards: PulledCard[] = [
 ].map((card, i) => ({ userCardId: `uc-${i}`, card }));
 
 describe("booster reveal one card at a time", () => {
+  afterEach(() => localStorage.removeItem("zenkai:favorite-cards"));
+
+  it("reveals the favorite badge alongside new only after flipping the matching card", () => {
+    localStorage.setItem("zenkai:favorite-cards", JSON.stringify(["riku"]));
+    render(<CardReveal cards={[{ ...cards[0]!, isNew: true }, cards[1]!]} onDone={() => {}} />);
+    expect(screen.queryByText("★ FAVORI")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByText("★ FAVORI")).toBeTruthy();
+    expect(screen.getByText("NOUVEAU")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Carte suivante/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.queryByText("★ FAVORI")).toBeNull();
+  });
   it("reveals on the first card click and advances only on the second click", () => {
     render(<CardReveal cards={cards} onDone={() => {}} />);
     const hidden = screen.getByRole("button", { name: "Retourner la carte" });

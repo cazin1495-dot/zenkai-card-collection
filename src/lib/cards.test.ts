@@ -6,6 +6,7 @@ import {
   effectiveDropRate,
   GOKU_CARD_ID,
   CARDS_PER_BOOSTER,
+  CUSTOM_RARITY,
   DROP_RATES,
   STOCK_CAP,
   PITY_LIMIT,
@@ -91,7 +92,10 @@ describe("booster content", () => {
     expect(Object.values(DROP_RATES).reduce((total, rate) => total + rate, 0)).toBe(100);
     for (const [rarity, rate] of Object.entries(rates)) {
       expect(effectiveDropRate(rarity as keyof typeof rates)).toBe(rate);
+      expect(effectiveDropRate(rarity as keyof typeof rates, "shonen")).toBe(rate);
     }
+    expect(effectiveDropRate("mythique", "zenkai")).toBe(2.5);
+    expect(effectiveDropRate("transcendance", "zenkai")).toBe(0.5);
   });
   it.each([
     [0, "commune"],
@@ -138,6 +142,51 @@ describe("booster content", () => {
     expect(inPack(gokuBlack, "antagoniste")).toBe(true);
     expect(inPack(gokuBlack, "shonen")).toBe(true);
   });
+  it.each([
+    ["Hancock", "Boa Hancock", "Hancock Boa", "Whitebeard", "Edward Newgate", "Newgate Edward", "Barbe Blanche", "Pain", "Nagato",
+      "Shikamaru", "Shikamaru Nara", "Yamato", "Nami", "Hinata", "Hinata Hyuga", "Hinata Hyuuga", "Trunks",
+      "Mirai Trunks", "Future Trunks", "Hashirama", "Hashirama Senju", "Mei Mei", "Tobirama",
+      "Tobirama Senju", "Kawaki", "Kenjaku", "Minato", "Minato Namikaze"],
+    ["Grimmjow", "Grimmjow Jaegerjaquez", "Zaraki", "Kenpachi Zaraki", "Orihime", "Orihime Inoue",
+      "Hitsugaya", "Toshiro Hitsugaya", "Byakuya", "Byakuya Kuchiki", "Rock Lee", "Lee", "Tobi",
+      "Choso", "Chousou", "Mahito", "Doflamingo", "Donquixote Doflamingo", "Doflamingo Donquixote", "Franky", "Jinbe",
+      "Jinbei", "Renji", "Renji Abarai", "Beerus", "Neji", "Neji Hyuga", "Neji Hyuuga", "Kurama", "Kyubi", "Sabo",
+      "Bardock", "Whis", "Sarada", "Sarada Uchiha", "Mitsuki", "Killer Bee", "Killer B"],
+  ])("normalizes every requested name and case variant", (...names) => {
+    const rarity = names[0] === "Hancock" ? "mythique" : "legendaire";
+    for (const name of names) {
+      const card: Card = { id: name, name: `  ${name.toUpperCase()}  `, title: "", description: "", rarity: "rare", sort_order: 0 };
+      expect(normalizeCatalogCard(card).rarity, name).toBe(rarity);
+      expect(card.rarity).toBe("rare");
+    }
+  });
+  it("uses whole names and preserves unrelated and Transcendance cards", () => {
+    const card: Card = { id: "x", name: "Ruan Mei", title: "", description: "", rarity: "rare", sort_order: 0 };
+    for (const name of ["Ruan Mei", "Seele", "Leeann", "Sabo Jr", "constructor"]) {
+      expect(normalizeCatalogCard({ ...card, name }).rarity).toBe("rare");
+    }
+    expect(normalizeCatalogCard({ ...card, name: "Tōshirō Hitsugaya" }).rarity).toBe("legendaire");
+    expect(normalizeCatalogCard({ ...card, name: "Nami", id: "nami-TR" }).rarity).toBe("rare");
+    expect(normalizeCatalogCard({ ...card, name: "Nami", transcendance_series_number: "001" }).rarity).toBe("rare");
+  });
+  it("applies custom lowercase name overrides before existing rules without changing Transcendance", () => {
+    const card: Card = { id: "nami", name: "NAMI", title: "", description: "", rarity: "rare", sort_order: 0 };
+    CUSTOM_RARITY["nami"] = "legendaire";
+    CUSTOM_RARITY["goku black"] = "legendaire";
+    CUSTOM_RARITY["méi"] = "mythique";
+    try {
+      expect(normalizeCatalogCard(card)).toMatchObject({ rarity: "legendaire", serverRarity: "rare" });
+      expect(normalizeCatalogCard({ ...card, id: "goku-black", name: "Goku Black" }))
+        .toMatchObject({ rarity: "legendaire", category: "shonen", role: "antagoniste" });
+      expect(normalizeCatalogCard({ ...card, name: "MÉI" }).rarity).toBe("mythique");
+      expect(normalizeCatalogCard({ ...card, id: "nami-TR" }).rarity).toBe("rare");
+      expect(normalizeCatalogCard({ ...card, name: "Namiko" }).rarity).toBe("rare");
+    } finally {
+      delete CUSTOM_RARITY["nami"];
+      delete CUSTOM_RARITY["goku black"];
+      delete CUSTOM_RARITY["méi"];
+    }
+  });
   it("ranks Non Commune between Commune and Rare", () => {
     expect(bestRarity(["commune", "non_commune"])).toBe("non_commune");
     expect(bestRarity(["non_commune", "rare"])).toBe("rare");
@@ -162,9 +211,14 @@ describe("packs", () => {
       "zenkai",
     ]);
   });
-  it("includes every category in the Zenkai pack", () => {
-    expect(inPack(villain, "zenkai")).toBe(true);
-    expect(inPack({ category: "sport", role: null } as Card, "zenkai")).toBe(true);
+  it("includes all categories and roles in both universal packs", () => {
+    for (const pack of ["shonen", "zenkai"] as const) {
+      for (const category of ["shonen", "seinen", "shojo", "sport", null] as const) {
+        for (const role of ["antagoniste", "protagoniste", null] as const) {
+          expect(inPack({ category, role } as Card, pack)).toBe(true);
+        }
+      }
+    }
   });
   it("puts villains in the Antagoniste and their genre packs only", () => {
     expect(inPack(villain, "antagoniste")).toBe(true);

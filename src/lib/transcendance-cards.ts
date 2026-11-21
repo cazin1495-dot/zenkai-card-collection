@@ -10,6 +10,10 @@ export type CustomTranscendanceCard = {
   series_number: string;
 };
 
+export function customTranscendanceInPack(card: CustomTranscendanceCard, pack: PackId): boolean {
+  return pack === "shonen" || pack === "zenkai" || card.pack_ids.includes(pack);
+}
+
 /** Dedicated Transcendance cards stay outside the standard database catalogue. */
 export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
   {
