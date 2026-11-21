@@ -15,6 +15,8 @@ import { Route as BoutiqueRouteImport } from './routes/boutique'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as EchangesRouteImport } from './routes/echanges'
 import { Route as EveilRouteImport } from './routes/eveil'
+import { Route as FriendsRouteImport } from './routes/friends'
+import { Route as MarketRouteImport } from './routes/market'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,16 @@ const EveilRoute = EveilRouteImport.update({
   path: '/eveil',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FriendsRoute = FriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketRoute = MarketRouteImport.update({
+  id: '/market',
+  path: '/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
+  '/friends': typeof FriendsRoute
+  '/market': typeof MarketRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
+  '/friends': typeof FriendsRoute
+  '/market': typeof MarketRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +87,30 @@ export interface FileRoutesById {
   '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
+  '/friends': typeof FriendsRoute
+  '/market': typeof MarketRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/boutique' | '/collection' | '/echanges' | '/eveil'
+    | '/'
+    | '/auth'
+    | '/boutique'
+    | '/collection'
+    | '/echanges'
+    | '/eveil'
+    | '/friends'
+    | '/market'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/boutique' | '/collection' | '/echanges' | '/eveil'
+  to:
+    | '/'
+    | '/auth'
+    | '/boutique'
+    | '/collection'
+    | '/echanges'
+    | '/eveil'
+    | '/friends'
+    | '/market'
   id:
     | '__root__'
     | '/'
@@ -86,6 +119,8 @@ export interface FileRouteTypes {
     | '/collection'
     | '/echanges'
     | '/eveil'
+    | '/friends'
+    | '/market'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +130,8 @@ export interface RootRouteChildren {
   CollectionRoute: typeof CollectionRoute
   EchangesRoute: typeof EchangesRoute
   EveilRoute: typeof EveilRoute
+  FriendsRoute: typeof FriendsRoute
+  MarketRoute: typeof MarketRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EveilRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/friends': {
+      id: '/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof FriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/market': {
+      id: '/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof MarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   CollectionRoute: CollectionRoute,
   EchangesRoute: EchangesRoute,
   EveilRoute: EveilRoute,
+  FriendsRoute: FriendsRoute,
+  MarketRoute: MarketRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

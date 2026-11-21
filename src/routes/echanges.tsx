@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeftRight, Repeat2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/echanges")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    pseudo: typeof search["pseudo"] === "string" ? search["pseudo"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Échanges — Zenkai" },
@@ -23,6 +27,7 @@ const steps = [
 ];
 
 function TradesPage() {
+  const { pseudo } = Route.useSearch();
   return (
     <div className="mx-auto max-w-4xl px-4 pb-20 pt-10 text-center sm:px-6">
       <span className="inline-flex rounded-full border border-border bg-surface/60 px-3 py-1 text-xs font-semibold text-accent">
@@ -34,6 +39,11 @@ function TradesPage() {
       <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
         Bientôt, tu pourras échanger tes cartes en double pour compléter ta collection.
       </p>
+      {pseudo && <div className="mx-auto mt-6 max-w-sm text-left">
+        <label htmlFor="trade-pseudo" className="text-sm font-semibold">Pseudo du joueur</label>
+        <Input id="trade-pseudo" className="mt-2" value={pseudo} readOnly />
+        <p className="mt-2 text-xs text-muted-foreground">Les échanges réels ne sont pas encore disponibles.</p>
+      </div>}
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
         {steps.map((s) => (
           <div key={s.title} className="rounded-md border border-border bg-foreground/5 p-6 text-left backdrop-blur-xl">

@@ -8,8 +8,8 @@ type Props = {
 };
 
 export function BoosterArtwork({ src, alt, className }: Props) {
-  const [useFallback, setUseFallback] = useState(false);
-  const imageSrc = useFallback || !src ? PACK_ARTWORK : src;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const imageSrc = failedSrc === src || !src ? PACK_ARTWORK : src;
 
   return (
     <img
@@ -17,7 +17,7 @@ export function BoosterArtwork({ src, alt, className }: Props) {
       alt={alt}
       draggable={false}
       onError={() => {
-        if (imageSrc !== PACK_ARTWORK) setUseFallback(true);
+        if (imageSrc !== PACK_ARTWORK) setFailedSrc(src);
       }}
       className={className}
     />

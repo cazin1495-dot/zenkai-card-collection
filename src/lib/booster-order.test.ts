@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PulledCard } from "./cards";
-import { sortBoosterCardsByRarity } from "./booster-order";
+import { markNewBoosterCards, sortBoosterCardsByRarity } from "./booster-order";
 
 function pulled(
   userCardId: string,
@@ -40,19 +40,19 @@ describe("booster reveal order", () => {
 
     expect(sortBoosterCardsByRarity(cards).map(({ userCardId }) => userCardId)).toEqual([
       "commune",
-      "non_commune",
-      "rare",
-      "mythique",
-      "transcendance",
       "commune-2",
+      "non_commune",
       "non_commune-2",
+      "rare",
       "rare-2",
       "epique",
       "legendaire",
+      "mythique",
+      "transcendance",
     ]);
   });
 
-  it("sorts each five-card booster independently in a batch", () => {
+  it("sorts a whole batch by rarity while preserving draw order for ties", () => {
     const cards = [
       pulled("b1-rare", "rare"),
       pulled("b1-commune", "commune"),
@@ -68,15 +68,15 @@ describe("booster reveal order", () => {
 
     expect(sortBoosterCardsByRarity(cards).map(({ userCardId }) => userCardId)).toEqual([
       "b1-commune",
-      "b1-non-commune",
-      "b1-rare",
-      "b1-epique",
-      "b1-mythique",
       "b2-commune",
+      "b1-non-commune",
       "b2-non-commune",
+      "b1-rare",
       "b2-rare",
+      "b1-epique",
       "b2-epique",
       "b2-legendaire",
+      "b1-mythique",
     ]);
   });
 
@@ -90,5 +90,16 @@ describe("booster reveal order", () => {
     ];
 
     expect(sortBoosterCardsByRarity(cards).at(-1)?.userCardId).toBe("transcended");
+  });
+
+  it("marks the first occurrence in draw order only, even when sorting changes reveal order", () => {
+    const first = pulled("first", "mythique", true);
+    const second = { ...pulled("second", "mythique"), card: first.card };
+    const owned = pulled("owned", "rare");
+    const marked = markNewBoosterCards([first, second, owned], ["owned"]);
+    expect(marked.map((item) => item.isNew)).toEqual([true, false, false]);
+    expect(sortBoosterCardsByRarity(marked).map((item) => [item.userCardId, item.isNew])).toEqual([
+      ["owned", false], ["second", false], ["first", true],
+    ]);
   });
 });

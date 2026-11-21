@@ -20,4 +20,11 @@ describe("BoosterArtwork fallback", () => {
 
     expect(getByRole("img")).toHaveAttribute("src", PACK_ARTWORK);
   });
+
+  it("uses a newly selected pack image after the previous image failed", () => {
+    const { getByRole, rerender } = render(<BoosterArtwork src="/missing.jpg" alt="Booster" />);
+    fireEvent.error(getByRole("img"));
+    rerender(<BoosterArtwork src="/pack-sport-2.png" alt="Booster" />);
+    expect(getByRole("img")).toHaveAttribute("src", "/pack-sport-2.png");
+  });
 });

@@ -30,8 +30,8 @@ type Props = {
 
 type RarityFilter = Rarity | "all";
 
-function rateLabel(rarity: Rarity) {
-  return `${String(effectiveDropRate(rarity)).replace(".", ",")} %`;
+function rateLabel(rarity: Rarity, pack: PackId) {
+  return `${String(effectiveDropRate(rarity, pack)).replace(".", ",")} %`;
 }
 
 export function BoosterPreviewDialog({
@@ -43,7 +43,7 @@ export function BoosterPreviewDialog({
   customCards = CUSTOM_TRANSCENDANCE_CARDS,
 }: Props) {
   const [filter, setFilter] = useState<RarityFilter>("all");
-  const customForPack = customCards.filter((card) => card.pack_ids.includes(pack));
+  const customForPack = customCards.filter((card) => pack === "zenkai" || card.pack_ids.includes(pack));
   const entries: PreviewEntry[] = [
     ...cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => ({
       id: card.id,
@@ -93,7 +93,7 @@ export function BoosterPreviewDialog({
               {rarity === "all" ? "Toutes" : (
                 <>
                   {RARITY[rarity].label}
-                  <span className="text-[10px] opacity-75">{rateLabel(rarity)}</span>
+                  <span className="text-[10px] opacity-75">{rateLabel(rarity, pack)}</span>
                 </>
               )}
             </Button>
@@ -104,14 +104,14 @@ export function BoosterPreviewDialog({
           <p className="py-10 text-center text-sm text-muted-foreground">Aucune carte de cette rareté dans ce pack.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
-            {showMystery && <MysteryCard />}
+            {showMystery && <MysteryCard pack={pack} />}
             {visibleEntries.map((entry) => {
               const rarity = entry.customTranscendance ? "transcendance" : entry.card.rarity;
               return (
                 <article key={entry.id} className="mx-auto flex w-full max-w-44 flex-col items-center gap-2">
                   <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact />
                   <p className="w-full text-center text-[10px] font-semibold text-muted-foreground">
-                    {RARITY[rarity].label} · {rateLabel(rarity)}
+                    {RARITY[rarity].label} · {rateLabel(rarity, pack)}
                   </p>
                 </article>
               );
@@ -123,7 +123,7 @@ export function BoosterPreviewDialog({
   );
 }
 
-function MysteryCard() {
+function MysteryCard({ pack }: { pack: PackId }) {
   return (
     <article
       aria-label="??? — Carte Transcendance Exclusive à venir"
@@ -134,7 +134,7 @@ function MysteryCard() {
       <span className="text-[10px] font-semibold leading-relaxed text-muted-foreground">
         Carte Transcendance Exclusive à venir
       </span>
-      <span className="text-[10px] font-bold text-rarity-transcendance">{rateLabel("transcendance")}</span>
+      <span className="text-[10px] font-bold text-rarity-transcendance">{rateLabel("transcendance", pack)}</span>
     </article>
   );
 }

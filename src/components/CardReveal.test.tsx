@@ -170,4 +170,184 @@ describe("booster reveal one card at a time", () => {
     fireEvent.click(screen.getByRole("button", { name: /Voir le récapitulatif/ }));
     expect(onDone).toHaveBeenCalledTimes(1);
   });
+
+  it("displays a dynamic skip button after flipping, showing next rare card (épique+)", () => {
+    render(<CardReveal cards={cards} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("button", { name: "Skip → Prochaine Légendaire" })).toBeTruthy();
+  });
+
+  it("hides the skip button on the last card when no more rare cards remain", () => {
+    render(<CardReveal cards={[cards[2]!]} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+  });
+
+  it("skips to the next rare card when skip button is clicked", () => {
+    render(<CardReveal cards={cards} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Légendaire" }));
+    expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("button", { name: "Ryujin, Légendaire" })).toBeTruthy();
+  });
+
+  it("updates skip button label to next rarity after skipping", () => {
+    const moreCards: PulledCard[] = [
+      { userCardId: "uc-0", card: cards[0]!.card },
+      { userCardId: "uc-1", card: cards[1]!.card },
+      { userCardId: "uc-2", card: { ...cards[2]!.card, rarity: "epique" as const } },
+      { userCardId: "uc-3", card: { ...cards[2]!.card, id: "aizawa", name: "Aizawa", rarity: "legendaire" as const } },
+    ];
+    render(<CardReveal cards={moreCards} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Épique" }));
+    expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("button", { name: "Skip → Prochaine Légendaire" })).toBeTruthy();
+  });
+
+  it("offers skip while cards are face down, advancing through each exact rarity", () => {
+    const sequence: PulledCard[] = [
+      cards[0]!,
+      { userCardId: "epic", card: { ...cards[0]!.card, id: "epic", rarity: "epique" } },
+      { userCardId: "legendary", card: { ...cards[0]!.card, id: "legendary", rarity: "legendaire" } },
+      { userCardId: "mythic", card: { ...cards[0]!.card, id: "mythic", rarity: "mythique" } },
+      { userCardId: "trans", card: { ...cards[0]!.card, id: "trans", rarity: "mythique" }, customTranscendance: true },
+    ];
+    const onDone = vi.fn();
+    render(<CardReveal cards={sequence} onDone={onDone} />);
+    for (const [rarity, className] of [
+      ["Épique", "bg-purple-600/80"],
+      ["Légendaire", "bg-amber-500"],
+      ["Mythique", "bg-rose-600"],
+      ["Transcendance", "from-amber-400"],
+    ] as const) {
+      const skip = screen.getByRole("button", { name: `Skip → Prochaine ${rarity}` });
+      expect(skip).toHaveClass(className);
+      fireEvent.click(skip);
+      expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+    }
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it.each([5, 25, 50])("skips to the first qualifying copy in a %i-card draw", (count) => {
+    const sequence: PulledCard[] = Array.from({ length: count }, (_, i) => ({
+      userCardId: `copy-${i}`,
+      card: { ...cards[0]!.card, id: `card-${i}`, name: `Carte ${i}` },
+    }));
+    sequence[2] = { ...sequence[2]!, card: { ...sequence[2]!.card, rarity: "epique" } };
+    sequence[3] = { ...sequence[3]!, transcended: true };
+    const onDone = vi.fn();
+    render(<CardReveal cards={sequence} onDone={onDone} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Épique" }));
+    expect(screen.getByLabelText(`Carte 3 sur ${count}`)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Skip → Prochaine Transcendance" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it("recognizes an awakened target even when its catalog rarity is low", () => {
+    render(
+      <CardReveal
+        cards={[cards[0]!, cards[1]!]}
+        awakened={{ [cards[1]!.userCardId]: "transcended" }}
+        onDone={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Transcendance" }));
+    expect(screen.getByLabelText("Carte 2 sur 2")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
+  });
+
+  it("uses the awakened current copy's effective rarity as the escalation threshold", () => {
+    render(
+      <CardReveal
+        cards={[cards[0]!, { ...cards[1]!, transcended: true }]}
+        awakened={{ [cards[0]!.userCardId]: "transcended" }}
+        onDone={() => {}}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
+  });
+
+  it.each(["commune", "non_commune", "rare"] as const)(
+    "uses epic as the minimum target from %s",
+    (rarity) => {
+      const sequence: PulledCard[] = [
+        { ...cards[0]!, card: { ...cards[0]!.card, rarity } },
+        { ...cards[1]!, card: { ...cards[1]!.card, rarity: "rare" } },
+        { ...cards[2]!, card: { ...cards[2]!.card, rarity: "epique" } },
+      ];
+      render(<CardReveal cards={sequence} onDone={() => {}} />);
+      fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Épique" }));
+      expect(screen.getByLabelText("Carte 3 sur 3")).toBeTruthy();
+    },
+  );
+
+  it("skips repeated rarities and targets the first strictly higher effective rarity", () => {
+    const sequence: PulledCard[] = [
+      cards[0]!,
+      { userCardId: "epic-1", card: { ...cards[0]!.card, rarity: "epique" } },
+      { userCardId: "epic-2", card: { ...cards[0]!.card, rarity: "epique" } },
+      { userCardId: "legendary-1", card: { ...cards[0]!.card, rarity: "legendaire" } },
+      { userCardId: "legendary-2", card: { ...cards[0]!.card, rarity: "legendaire" } },
+      { userCardId: "mythic-1", card: { ...cards[0]!.card, rarity: "mythique" } },
+      { userCardId: "mythic-2", card: { ...cards[0]!.card, rarity: "mythique" } },
+      { userCardId: "trans-1", card: cards[0]!.card, customTranscendance: true },
+      { userCardId: "trans-2", card: cards[0]!.card, transcended: true },
+    ];
+    render(<CardReveal cards={sequence} onDone={() => {}} />);
+    for (const [label, position] of [
+      ["Épique", 2],
+      ["Légendaire", 4],
+      ["Mythique", 6],
+      ["Transcendance", 8],
+    ] as const) {
+      fireEvent.click(screen.getByRole("button", { name: `Skip → Prochaine ${label}` }));
+      expect(screen.getByLabelText(`Carte ${position} sur 9`)).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+    }
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
+  });
+
+  it("hides the skip when only equal or lower rarities remain", () => {
+    const sequence: PulledCard[] = [
+      { ...cards[0]!, card: { ...cards[0]!.card, rarity: "legendaire" } },
+      { ...cards[1]!, card: { ...cards[1]!.card, rarity: "epique" } },
+      cards[2]!,
+    ];
+    render(<CardReveal cards={sequence} onDone={() => {}} />);
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
+  });
+
+  it("shows the new badge only after revealing a new card", () => {
+    render(<CardReveal cards={[{ ...cards[0]!, isNew: true }]} onDone={() => {}} />);
+    expect(screen.queryByText("NOUVEAU")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByText("NOUVEAU")).toHaveClass("bg-amber-400", "text-black", "rounded-full");
+  });
+
+  it("allows full skip during an already-confirmed copy's local cinema", () => {
+    const sequence: PulledCard[] = [
+      { ...cards[0]!, transcended: true },
+      { ...cards[2]!, userCardId: "next", customTranscendance: true },
+    ];
+    const onDone = vi.fn();
+    render(<CardReveal cards={sequence} onDone={onDone} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByLabelText("Cinématique Transcendance")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
 });

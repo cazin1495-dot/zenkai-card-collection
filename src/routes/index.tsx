@@ -1,33 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Clock, Layers, Package, Sparkles } from "lucide-react";
+import { Clock, Gem, Package, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BoosterPack } from "@/components/BoosterPack";
 import { BoosterArtwork } from "@/components/BoosterArtwork";
-import { BoosterOdds } from "@/components/BoosterOdds";
 import { BoosterPreviewDialog } from "@/components/BoosterPreviewDialog";
 import { OpeningAura } from "@/components/OpeningAura";
-import { CardReveal } from "@/components/CardReveal";
+import { CardReveal, NewCardBadge } from "@/components/CardReveal";
 import { InspectableCard } from "@/components/Transcendance";
 import { gameQuery } from "@/lib/game";
 import { REWARD_LABELS } from "@/lib/economy";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
+import { cardsQuery, collectionQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
-import { sortBoosterCardsByRarity } from "@/lib/booster-order";
+import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
+import { markNewBoosterCards, sortBoosterCardsByRarity } from "@/lib/booster-order";
 import {
   bestRarity,
   boosterStock,
   CARDS_PER_BOOSTER,
   formatCountdown,
+  effectiveDropRate,
   OPEN_COUNTS,
-  PACK_ARTWORK,
+  PACK_ARTWORK_BY_PACK,
+  CARD_BACK_BY_PACK,
   PACKS,
   RARITY,
+  rarityRank,
+  PITY_LIMIT,
   STOCK_CAP,
+  ZENKAI_BOOSTER_COST,
   type Card,
   type PackId,
   type PulledCard,
@@ -53,8 +58,9 @@ export const Route = createFileRoute("/")({
 
 type Phase = "idle" | "opening" | "tearing" | "reveal" | "summary";
 type Awake = Record<string, "transcended" | "failed">;
+type PackFilter = "free" | "zen" | "all";
 
-function BoostersPage() {
+export function BoostersPage() {
   const { data: cards } = useSuspenseQuery(cardsQuery);
   const { session, ready, guest } = useAuth();
   const userId = session?.user.id;
@@ -67,11 +73,40 @@ function BoostersPage() {
   const [now, setNow] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [pack, setPack] = useState<PackId>("shonen");
+  const [packFilter, setPackFilter] = useState<PackFilter>("free");
   const [isPackPreviewOpen, setIsPackPreviewOpen] = useState(false);
   const [pulled, setPulled] = useState<PulledCard[]>([]);
   const [opened, setOpened] = useState(1);
   const [awake, setAwake] = useState<Awake>({});
   const [returningToBoosters, setReturningToBoosters] = useState(false);
+  const [quantity, setQuantity] = useState<(typeof OPEN_COUNTS)[number]>(1);
+  const [localZen, setLocalZen] = useState<number | null>(null);
+  const [localZenError, setLocalZenError] = useState(false);
+  const tearBeam = useMemo(
+    () => bestOpeningRarity(pulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
+    [pulled],
+  );
+
+  useEffect(() => {
+    function refreshLocalZen() {
+      try {
+        setLocalZen(getGuestBalance());
+        setLocalZenError(false);
+      } catch {
+        setLocalZen(null);
+        setLocalZenError(true);
+      }
+    }
+    refreshLocalZen();
+    window.addEventListener("zenkai:guest-updated", refreshLocalZen);
+    window.addEventListener("zenkai:zen-updated", refreshLocalZen);
+    window.addEventListener("storage", refreshLocalZen);
+    return () => {
+      window.removeEventListener("zenkai:guest-updated", refreshLocalZen);
+      window.removeEventListener("zenkai:zen-updated", refreshLocalZen);
+      window.removeEventListener("storage", refreshLocalZen);
+    };
+  }, []);
 
   useEffect(() => {
     setNow(Date.now());
@@ -99,6 +134,10 @@ function BoostersPage() {
 
   async function open(count: number, category: string = pack) {
     if (busy) return;
+    if (category === "zenkai") {
+      toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
+      return;
+    }
     if (!session) {
       if (!guest) {
         navigate({ to: "/auth" });
@@ -109,7 +148,17 @@ function BoostersPage() {
         toast.error("Ce type de booster n’est pas disponible en mode Invité.");
         return;
       }
-      const localDraw = sortBoosterCardsByRarity(createLocalGuestDraw(cards, localPack.id, count));
+      let localDraw: PulledCard[];
+      try {
+        const ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
+        localDraw = sortBoosterCardsByRarity(markNewBoosterCards(
+          createLocalGuestDraw(cards, localPack.id, count),
+          ownedIdsBeforeOpen,
+        ));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Tirage invité impossible.");
+        return;
+      }
       if (!localDraw.length) {
         toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
         return;
@@ -134,19 +183,39 @@ function BoostersPage() {
       await new Promise((resolve) => setTimeout(resolve, 600));
       setPhase("tearing");
       await new Promise((resolve) => setTimeout(resolve, 1800));
-      setPhase(count === 1 ? "reveal" : "summary");
+      setPhase("reveal");
       return;
     }
-    if (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:")) return;
+    if (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:")) {
+      toast.error("Pas assez de boosters en stock.");
+      return;
+    }
     setPhase("opening");
     setPulled([]);
     setAwake({});
+    let ownedIdsBeforeOpen: string[];
+    try {
+      const current = await queryClient.fetchQuery({ ...collectionQuery(session.user.id), staleTime: 0 });
+      ownedIdsBeforeOpen = current.map((row) => row.card_id);
+    } catch (reason) {
+      setPhase("idle");
+      toast.error(reason instanceof Error ? `Collection indisponible : ${reason.message}` : "Collection indisponible. Réessaie.");
+      return;
+    }
     const started = Date.now();
-    const { data, error } = await supabase.rpc("open_boosters", { _category: category, _count: count });
+    let response: Awaited<ReturnType<typeof supabase.rpc<"open_boosters">>>;
+    try {
+      response = await supabase.rpc("open_boosters", { _category: category, _count: count });
+    } catch (error) {
+      setPhase("idle");
+      toast.error(error instanceof Error ? `Ouverture impossible : ${error.message}` : "Ouverture impossible. Réessaie.");
+      return;
+    }
+    const { data, error } = response;
     await new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started))));
 
     if (error || !data?.length) {
-      setPhase(pulled.length ? "summary" : "idle");
+      setPhase("idle");
       toast.error(
         error?.message.includes("not_enough_boosters")
           ? "Pas assez de boosters en stock."
@@ -179,8 +248,7 @@ function BoostersPage() {
 
     const transcendedIds = new Set(copyStates.filter((copy) => copy.transcended).map((copy) => copy.id));
     const byId = new Map(cards.map((c) => [c.id, c]));
-    const items = sortBoosterCardsByRarity(
-      data
+    const items = data
         .map((row) => {
           const card = byId.get(row.card_id);
           if (!card) return null;
@@ -190,10 +258,17 @@ function BoostersPage() {
             ...(transcendedIds.has(row.user_card_id) ? { transcended: true } : {}),
           };
         })
-        .filter((item): item is PulledCard => item !== null),
-    );
-    setAwake(Object.fromEntries(items.filter((item) => item.transcended).map((item) => [item.userCardId, "transcended" as const])));
-    setPulled(items);
+        .filter((item): item is PulledCard => item !== null);
+    if (items.length !== data.length) {
+      setPhase("idle");
+      toast.error("Booster ouvert, mais certaines cartes manquent dans le catalogue. Consulte ta collection.");
+      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
+      return;
+    }
+    const marked = sortBoosterCardsByRarity(markNewBoosterCards(items, ownedIdsBeforeOpen));
+    setAwake(Object.fromEntries(marked.filter((item) => item.transcended).map((item) => [item.userCardId, "transcended" as const])));
+    setPulled(marked);
     setOpened(count);
     queryClient.setQueryData(profileQuery(session.user.id).queryKey, (old) =>
       old && data[0] ? { ...old, boosters_stored: data[0].boosters_left, stock_updated_at: data[0].stock_updated_at } : old,
@@ -207,7 +282,7 @@ function BoostersPage() {
     await new Promise((r) => setTimeout(r, 600));
     setPhase("tearing");
     await new Promise((r) => setTimeout(r, 1800));
-    setPhase(count === 1 ? "reveal" : "summary");
+    setPhase("reveal");
   }
 
   async function returnToBoosterSelection() {
@@ -237,14 +312,19 @@ function BoostersPage() {
     }
   }
 
-  const tearBeam = useMemo(
-    () => bestOpeningRarity(pulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
-    [pulled],
-  );
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
+  const pityCount = userId && !pity.isError && pity.data !== undefined
+    ? Math.max(0, Math.min(PITY_LIMIT, pity.data))
+    : null;
+
+  function selectFilter(filter: PackFilter) {
+    setPackFilter(filter);
+    if (filter === "zen") setPack("zenkai");
+    if (filter === "free" && pack === "zenkai") setPack("shonen");
+  }
 
   return (
-    <div className="booster-hub mx-auto flex max-w-[100vw] flex-col items-center overflow-x-hidden px-4 pb-12 pt-6 sm:px-6">
+    <div className="booster-hub mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-12 pt-6">
       {(phase === "reveal" || phase === "summary") && <h1 className="sr-only">Ouverture du booster</h1>}
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
@@ -256,31 +336,83 @@ function BoostersPage() {
             {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
           </p>
 
-          <div role="radiogroup" aria-label="Catégorie de booster" className="hub-pack-selector mt-5 flex w-full max-w-full flex-wrap justify-center gap-2">
-            {PACKS.map((p) => (
-              <Button variant="ghost"
-                key={p.id}
-                role="radio"
-                aria-checked={pack === p.id}
-                disabled={busy}
-                onClick={() => setPack(p.id)}
-                className={cn(
-                  "hub-pack-option block h-auto flex-1 basis-28 rounded-md border bg-foreground/5 px-2 py-2 text-left transition-all",
-                  pack === p.id ? "border-[var(--accent)] bg-surface-raised" : "border-border opacity-70 hover:opacity-100",
+          {phase === "idle" && (
+            <div className="mt-8 grid w-full min-w-0 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+              <section className="min-w-0">
+                <div className="flex flex-wrap items-center gap-4">
+                  <h2 className="text-xl font-black sm:text-2xl">Choisis ton booster</h2>
+                  <div role="group" aria-label="Filtrer les boosters" className="flex flex-wrap gap-2">
+                    {([["free", "Gratuits"], ["zen", "Boosters Zen"], ["all", "Tous"]] as const).map(([value, label]) => (
+                      <button key={value} type="button" aria-pressed={packFilter === value} onClick={() => selectFilter(value)}
+                        className={cn("rounded-full px-4 py-2 text-xs font-bold transition-colors", packFilter === value ? "bg-amber-400 text-black shadow-[0_0_20px_-6px_rgba(251,191,36,0.65)]" : "border border-white/10 bg-white/5 text-muted-foreground hover:text-foreground")}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {packFilter !== "free" && (
+                  <p className="mt-4 flex items-center gap-2 text-xs text-amber-400" role={localZenError ? "alert" : undefined}>
+                    <Gem className="size-4" aria-hidden />
+                    {localZenError ? "Solde local indisponible" : localZen === null ? "Chargement du solde…" : `${localZen.toLocaleString("fr-FR")} Zen disponibles (local)`}
+                  </p>
                 )}
-                style={{ ["--accent" as string]: p.accent, boxShadow: pack === p.id ? `0 0 24px -6px ${p.accent}` : undefined }}
-              >
-                <span className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold sm:text-xs">
-                  <span className="size-2.5 rounded-full" style={{ background: p.accent }} /> {p.label}
-                </span>
-                <span className="mt-1 block truncate text-[9px] text-muted-foreground">{p.hint}</span>
-              </Button>
-            ))}
-          </div>
+                <div role="radiogroup" aria-label="Catégorie de booster" className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3">
+                  {PACKS.filter((p) => packFilter === "all" || (packFilter === "zen" ? p.id === "zenkai" : p.id !== "zenkai")).map((p) => (
+                    <PackOption key={p.id} info={p} selected={pack === p.id} onSelect={() => setPack(p.id)} />
+                  ))}
+                </div>
+              </section>
+              <aside aria-label="Détails du booster" className="h-fit min-w-0 rounded-2xl border border-amber-400/15 bg-surface p-4 shadow-xl lg:sticky lg:top-24">
+                <div className="flex items-center gap-3">
+                  <BoosterArtwork src={PACK_ARTWORK_BY_PACK[pack]} alt={`Pochette ${packInfo.label}`} className="h-20 w-14 shrink-0 rounded-lg object-cover" />
+                  <div className="min-w-0"><h2 className="font-bold">{packInfo.label}</h2><p className="mt-1 text-xs text-muted-foreground">{packInfo.hint}</p></div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{CARDS_PER_BOOSTER}</strong><p className="text-[10px] text-muted-foreground">cartes par booster</p></div>
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{pack === "zenkai" ? "Taux ×10" : "Taux standard"}</strong><p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Mythique & Transcendance" : "par carte"}</p></div>
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3">
+                    <strong>{pack === "zenkai" || pityCount === null ? "—" : PITY_LIMIT - pityCount}</strong>
+                    <p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Garantie non définie" : "avant Mythique sûre"}</p>
+                    {pack !== "zenkai" && pityCount !== null && <div role="progressbar" aria-label="Garantie Mythique" aria-valuemin={0} aria-valuemax={PITY_LIMIT} aria-valuenow={pityCount} className="mt-2 h-1 rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400" style={{ width: `${pityCount / PITY_LIMIT * 100}%` }} /></div>}
+                  </div>
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{stock ? `${stock.count}/${STOCK_CAP}` : "—"}</strong><p className="text-[10px] text-muted-foreground">{guest ? "stock non suivi" : "boosters en stock"}</p></div>
+                </div>
+                <div className="mt-4 [&>button]:w-full">
+                  <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} />
+                </div>
+                <div className="mt-5">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Chance par booster <span className="font-normal normal-case tracking-normal">· par carte</span></h3>
+                  <ul className="mt-3 space-y-2">
+                    {(["commune", "non_commune", "rare", "epique", "legendaire", "mythique", "transcendance"] as const).map((rarity) => {
+                      const rate = effectiveDropRate(rarity, pack);
+                      return <li key={rarity} className="grid grid-cols-[minmax(0,1fr)_minmax(40px,1fr)_auto] items-center gap-2 text-[10px]">
+                        <span className="truncate text-muted-foreground">{RARITY[rarity].label}</span>
+                        <span aria-hidden className="h-1 overflow-hidden rounded-full bg-white/10"><span className={cn("block h-full min-w-px rounded-full", RARITY[rarity].bg)} style={{ width: `${rate}%` }} /></span>
+                        <span className="tabular-nums">{String(rate).replace(".", ",")} %</span>
+                      </li>;
+                    })}
+                  </ul>
+                </div>
+                <div role="radiogroup" aria-label="Quantité de boosters" className="mt-4 flex gap-2">
+                  {OPEN_COUNTS.map((n) => (
+                    <Button key={n} role="radio" aria-checked={quantity === n} variant={quantity === n ? "hero" : "glass"} className="min-w-0 flex-1 px-1" onClick={() => setQuantity(n)}>{n}x</Button>
+                  ))}
+                </div>
+                <Button size="lg" className="mt-3 h-auto min-h-11 w-full whitespace-normal rounded-full bg-amber-400 px-3 text-center font-bold text-black hover:bg-amber-300" disabled={!ready || busy} onClick={() => open(quantity)}>
+                  {pack === "zenkai" ? `Acheter et ouvrir · ${(quantity * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : `Ouvrir · Gratuit${stock ? ` (${stock.count} restants)` : ""}`}
+                </Button>
+                {stock && <p className="mt-2 text-center text-xs text-muted-foreground"><Clock className="mr-1 inline size-3" />{stock.nextInMs === null ? "Stock plein" : `Prochain gratuit dans ${formatCountdown(stock.nextInMs)}`} · {game.data?.bonus_boosters ?? 0} bonus</p>}
+                {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" className="mt-2 w-full" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
+                {pack === "zenkai" && <p className="mt-2 text-xs text-muted-foreground">Achat indisponible : les règles Zen doivent être ajoutées au serveur.</p>}
+                {guest && <p className="mt-2 text-xs text-muted-foreground">Mode invité : tirages simulés, cartes non sauvegardées.</p>}
+              </aside>
+            </div>
+          )}
         </>
       )}
 
-      <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center bg-transparent", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
+      {phase !== "idle" && guest && <p className="text-center text-xs text-muted-foreground">Simulation invitée : les cartes révélées ne sont pas sauvegardées.</p>}
+      {phase !== "idle" && <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center bg-transparent", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
           <CardReveal
@@ -288,7 +420,7 @@ function BoostersPage() {
             awakened={awake}
             onAwaken={onAwaken}
             onDone={() => setPhase("summary")}
-            backTheme={{ image: "/image_39f4fe98.jpg" }}
+            backTheme={{ image: CARD_BACK_BY_PACK[pack] }}
           />
         ) : phase === "summary" ? (
           <Summary
@@ -302,95 +434,33 @@ function BoostersPage() {
           />
         ) : (
           <div className="flex flex-col items-center gap-3">
-            {phase === "idle" ? (
-              <div
-                className="group flex w-48 flex-col items-center justify-center"
-                style={{ ["--accent" as string]: packInfo.accent }}
-              >
-                <span className="pack-category-badge pack-category-badge-flow mt-6 mb-4">
-                  {packInfo.label}
-                </span>
-                <div className="mx-auto h-80 w-48 overflow-hidden rounded-xl">
-                  <BoosterArtwork
-                    src={PACK_ARTWORK}
-                    alt={`Booster ${packInfo.label}`}
-                    className="h-full w-full scale-[1.22] rounded-xl object-cover drop-shadow-[0_15px_35px_rgba(168,85,247,0.35)] transition-transform duration-300 group-hover:scale-[1.26] group-active:scale-[1.22]"
-                  />
-                </div>
-              </div>
-            ) : (
               <BoosterPack
                 state={phase === "tearing" ? "tearing" : "opening"}
                 accent={packInfo.accent}
                 category={packInfo.label}
-                artwork={PACK_ARTWORK}
+                artwork={PACK_ARTWORK_BY_PACK[pack]}
                 beam={tearBeam}
               />
-            )}
-            <Button
-              variant="ghost"
-              aria-label="Ouvrir le Booster"
-              disabled={
-                !ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < 1)
-              }
-              onClick={() => open(1)}
-              className="opening-pack-button mt-6 flex-col gap-3 h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100"
-              style={{ ["--accent" as string]: packInfo.accent }}
-            >
-              <span className="rounded-full border border-[var(--accent)] bg-surface/80 px-5 py-2 text-xs font-bold uppercase tracking-wider text-foreground shadow-[0_0_20px_-8px_var(--accent)]">
-                Ouvrir le Booster
-              </span>
-            </Button>
-            {phase === "idle" && (
-              <BoosterPreviewDialog
-                cards={cards}
-                pack={pack}
-                packLabel={packInfo.label}
-                open={isPackPreviewOpen}
-                onOpenChange={setIsPackPreviewOpen}
-              />
-            )}
           </div>
         )}
-      </section>
-
-      {phase !== "reveal" && <BoosterOdds counter={userId ? pity.data : 0} failed={!!userId && pity.isError} />}
-
-      <div className={cn("mt-6 flex flex-col items-center gap-3", phase === "reveal" && "hidden")}>
-        {session && stock && (
-          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-4 py-1.5 text-xs text-muted-foreground">
-            <Package className="size-3.5 text-primary" />
-            <span className="font-semibold text-foreground">{stock.count} / {STOCK_CAP}</span> boosters gratuits · {game.data?.bonus_boosters ?? 0} bonus
-            <span aria-hidden>·</span>
-            {stock.nextInMs === null ? "Stock plein" : (<><Clock className="size-3.5" /> +1 dans {formatCountdown(stock.nextInMs)}</>)}
-          </p>
-        )}
-        {phase === "summary" && <p className="text-xs text-muted-foreground">Pack sélectionné : {packInfo.label}</p>}
-        <div className="flex flex-wrap justify-center gap-2">
-          {OPEN_COUNTS.map((n) => (
-            <Button
-              key={n}
-              variant={n === 1 ? "hero" : "glass"}
-              size="lg"
-              className="rounded-full"
-              onClick={() => open(n)}
-              disabled={!ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < n)}
-            >
-              {phase === "opening" ? <Sparkles className="animate-spin" /> : <Layers />} Ouvrir x{n}
-            </Button>
-          ))}
-        </div>
-        {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
-        {ready && !session && (
-          <p className="text-xs text-muted-foreground">
-            {guest
-              ? "Mode Invité local : tirages simulés, cartes non sauvegardées."
-              : "Connecte-toi pour ouvrir des boosters et garder tes cartes."}
-          </p>
-        )}
-      </div>
+      </section>}
 
     </div>
+  );
+}
+
+function PackOption({ info, selected, onSelect }: { info: (typeof PACKS)[number]; selected: boolean; onSelect: () => void }) {
+  const exclusive = info.id === "zenkai";
+  return (
+    <button type="button" role="radio" aria-label={info.label} aria-checked={selected} onClick={onSelect}
+      className="group min-w-0 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+      <div className={cn("relative aspect-[2/3] w-full overflow-hidden rounded-xl transition-transform duration-300 motion-safe:group-hover:[transform:perspective(900px)_rotateY(-4deg)_translateY(-4px)]", selected && "ring-2 ring-amber-400 shadow-[0_0_24px_-8px_rgba(251,191,36,0.7)]")}>
+        <BoosterArtwork src={PACK_ARTWORK_BY_PACK[info.id]} alt={`Booster ${info.label}`} className="h-full w-full rounded-xl object-cover" />
+        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-3 pt-8 text-sm font-bold text-white">{info.label}</span>
+      </div>
+      <span className={cn("mt-3 block text-xs font-semibold", exclusive ? "text-amber-400" : "text-muted-foreground")}>{exclusive ? "500 Zen" : "Gratuit"}</span>
+      {exclusive && <span className="mt-1 block text-[10px] text-amber-300">Mythique &amp; Transcendance ×10</span>}
+    </button>
   );
 }
 
@@ -407,6 +477,7 @@ function Summary({
 }) {
   return (
     <div className="relative flex w-full flex-col items-center">
+      <Button variant="glass" className="mb-4 self-start" onClick={onReturnToBoosters}>← Boosters</Button>
       <h2 className="text-xl font-black sm:text-2xl">{opened === 1 ? "Récapitulatif" : `Récapitulatif — ${items.length} cartes`}</h2>
       {best && (
         <p className="mt-1 text-sm text-muted-foreground">
@@ -414,7 +485,11 @@ function Summary({
         </p>
       )}
       <div className="mx-auto mt-4 grid w-full max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-        {items.map((p, i) => (
+        {[...items].sort((a, b) => {
+          const aRarity = a.transcended || a.customTranscendance || awake[a.userCardId] === "transcended" ? "transcendance" : a.card.rarity;
+          const bRarity = b.transcended || b.customTranscendance || awake[b.userCardId] === "transcended" ? "transcendance" : b.card.rarity;
+          return rarityRank(aRarity) - rarityRank(bRarity);
+        }).map((p, i) => (
           <SummaryCard
             key={p.userCardId}
             item={p}
@@ -437,8 +512,9 @@ function Summary({
 function SummaryCard({ item, delay, state, onAwaken }: { item: PulledCard; delay: number; state?: "transcended" | "failed" | undefined; onAwaken: (id: string, r: "transcended" | "failed") => void }) {
   const card: Card = item.card;
   return (
-    <div className="flex animate-card-in flex-col items-center gap-2" style={{ animationDelay: `${delay}ms` }}>
-      <InspectableCard card={card} transcended={state === "transcended"} customTranscendance={item.customTranscendance === true} />
+    <div className="relative flex animate-card-in flex-col items-center gap-2" style={{ animationDelay: `${delay}ms` }}>
+      <InspectableCard card={card} transcended={state === "transcended" || item.transcended === true} customTranscendance={item.customTranscendance === true} />
+      {item.isNew && <NewCardBadge />}
     </div>
   );
 }

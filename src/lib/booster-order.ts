@@ -1,26 +1,19 @@
-import { CARDS_PER_BOOSTER, type Rarity, type PulledCard } from "./cards";
+import { rarityRank, type PulledCard } from "./cards";
 
-const RARITY_WEIGHT: Record<Rarity, number> = {
-  commune: 1,
-  non_commune: 2,
-  rare: 3,
-  epique: 4,
-  legendaire: 5,
-  mythique: 6,
-  transcendance: 7,
-};
+export function markNewBoosterCards(cards: PulledCard[], ownedIdsBeforeOpen: Iterable<string>): PulledCard[] {
+  const knownIds = new Set(ownedIdsBeforeOpen);
+  return cards.map((item) => {
+    const isNew = !knownIds.has(item.card.id);
+    knownIds.add(item.card.id);
+    return { ...item, isNew };
+  });
+}
 
-/** Sort cards from each booster independently, preserving the original order for ties. */
+/** Sort the full reveal from least to most rare, preserving draw order for ties. */
 export function sortBoosterCardsByRarity(cards: PulledCard[]): PulledCard[] {
-  const sorted: PulledCard[] = [];
-  for (let start = 0; start < cards.length; start += CARDS_PER_BOOSTER) {
-    sorted.push(
-      ...cards.slice(start, start + CARDS_PER_BOOSTER).sort((left, right) => {
-        const leftRarity = left.customTranscendance || left.transcended ? "transcendance" : left.card.rarity;
-        const rightRarity = right.customTranscendance || right.transcended ? "transcendance" : right.card.rarity;
-        return RARITY_WEIGHT[leftRarity] - RARITY_WEIGHT[rightRarity];
-      }),
-    );
-  }
-  return sorted;
+  return [...cards].sort((left, right) => {
+    const leftRarity = left.customTranscendance || left.transcended ? "transcendance" : left.card.rarity;
+    const rightRarity = right.customTranscendance || right.transcended ? "transcendance" : right.card.rarity;
+    return rarityRank(rightRarity) - rarityRank(leftRarity);
+  });
 }

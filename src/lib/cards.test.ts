@@ -12,6 +12,9 @@ import {
   TRANSCEND_CHANCE_LABEL,
   TRANSCEND_CHANCE_PERCENT,
   formatCountdown,
+  getCardMarketPrice,
+  getCardPopularityFactor,
+  getCardRecycleValue,
   inPack,
   isTranscendanceCatalogCard,
   normalizeCatalogCard,
@@ -22,6 +25,24 @@ import {
 
 const t0 = new Date("2026-11-19T12:00:00Z");
 const min = 60_000;
+
+describe("local card economics", () => {
+  it("prices each rarity and clamps and rounds popularity adjustments", () => {
+    expect(["commune", "non_commune", "rare", "epique", "legendaire", "mythique", "transcendance"].map(
+      (rarity) => getCardMarketPrice({ rarity: rarity as import("./cards").Rarity }),
+    )).toEqual([10, 25, 60, 150, 400, 1200, 5000]);
+    expect(getCardMarketPrice({ rarity: "rare", popularity: -100 })).toBe(60);
+    expect(getCardMarketPrice({ rarity: "rare", popularity: 32000 })).toBe(85);
+    expect(getCardMarketPrice({ rarity: "rare", popularity: 100000 })).toBe(120);
+    expect(getCardPopularityFactor({ popularity: 31999 })).toBeLessThan(1.4);
+    expect(getCardPopularityFactor({ popularity: 32000 })).toBeGreaterThanOrEqual(1.4);
+  });
+  it("protects Transcendance and computes standard recycling from market value", () => {
+    expect(getCardRecycleValue({ rarity: "transcendance", popularity: 80000 })).toBe(0);
+    expect(getCardRecycleValue({ rarity: "rare", popularity: 32000 })).toBe(34);
+    expect(getCardRecycleValue({ rarity: "commune" })).toBe(4);
+  });
+});
 
 describe("booster stock", () => {
   it("gains +1 booster every 10 minutes", () => {
@@ -130,7 +151,7 @@ describe("booster content", () => {
 
 describe("packs", () => {
   const villain = { category: "shonen", role: "antagoniste" } as Card;
-  it("keeps exactly the six original pack selections", () => {
+  it("keeps the six original packs alongside the Zenkai pack", () => {
     expect(PACKS.map((pack) => pack.id)).toEqual([
       "shonen",
       "seinen",
@@ -138,7 +159,12 @@ describe("packs", () => {
       "sport",
       "antagoniste",
       "protagoniste",
+      "zenkai",
     ]);
+  });
+  it("includes every category in the Zenkai pack", () => {
+    expect(inPack(villain, "zenkai")).toBe(true);
+    expect(inPack({ category: "sport", role: null } as Card, "zenkai")).toBe(true);
   });
   it("puts villains in the Antagoniste and their genre packs only", () => {
     expect(inPack(villain, "antagoniste")).toBe(true);

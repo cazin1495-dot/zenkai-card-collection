@@ -38,7 +38,7 @@ export type Card = {
 };
 
 /** One owned copy coming out of a booster. */
-export type PulledCard = { userCardId: string; card: Card; transcended?: boolean; customTranscendance?: boolean };
+export type PulledCard = { userCardId: string; card: Card; transcended?: boolean; customTranscendance?: boolean; isNew?: boolean };
 
 export function isTranscendanceCatalogCard(card: { id: string; name?: string; rarity: string }): boolean {
   const name = card.name?.trim().toLowerCase();
@@ -83,6 +83,29 @@ export const DROP_RATES: Record<BaseRarity, number> = {
   transcendance: 0.05,
 };
 
+export const ZENKAI_DROP_RATES: Record<BaseRarity, number> = {
+  commune: 10, non_commune: 25, rare: 35, epique: 19,
+  legendaire: 8, mythique: 2.5, transcendance: 0.5,
+};
+export const ZENKAI_BOOSTER_COST = 500;
+
+const CARD_BASE_MARKET_PRICES: Record<BaseRarity, number> = {
+  commune: 10, non_commune: 25, rare: 60, epique: 150,
+  legendaire: 400, mythique: 1200, transcendance: 5000,
+};
+
+export function getCardPopularityFactor(card: Pick<Card, "popularity">): number {
+  return 1 + Math.min(1, Math.max(0, (card.popularity ?? 0) / 80000));
+}
+
+export function getCardMarketPrice(card: { rarity: BaseRarity; popularity?: number }): number {
+  return Math.round((CARD_BASE_MARKET_PRICES[card.rarity] * getCardPopularityFactor(card)) / 5) * 5;
+}
+
+export function getCardRecycleValue(card: { rarity: BaseRarity; popularity?: number }): number {
+  return card.rarity === "transcendance" ? 0 : Math.max(2, Math.round(getCardMarketPrice(card) * 0.4));
+}
+
 export const PITY_LIMIT = 200;
 
 export function rarityFromRoll(roll: number): BaseRarity {
@@ -95,8 +118,8 @@ export function rarityFromRoll(roll: number): BaseRarity {
   return "transcendance";
 }
 
-export function effectiveDropRate(rarity: BaseRarity) {
-  return DROP_RATES[rarity];
+export function effectiveDropRate(rarity: BaseRarity, pack?: PackId) {
+  return (pack === "zenkai" ? ZENKAI_DROP_RATES : DROP_RATES)[rarity];
 }
 
 /** Legacy fictional test art, kept for cards without an AniList portrait. */
@@ -125,9 +148,20 @@ export const RARITY: Record<Rarity, { label: string; text: string; border: strin
   transcendance: { label: "Transcendance", text: "text-gradient-transcend", border: "border-rarity-transcendance", glow: "glow-transcendance", bg: "bg-rarity-transcendance" },
 };
 
-export type PackId = "shonen" | "seinen" | "shojo" | "sport" | "antagoniste" | "protagoniste";
+export type PackId = "shonen" | "seinen" | "shojo" | "sport" | "antagoniste" | "protagoniste" | "zenkai";
 
 export const PACK_ARTWORK = "/image_c1811ac7.jpg";
+export const PACK_ARTWORK_BY_PACK: Record<PackId, string> = {
+  shonen: PACK_ARTWORK, seinen: "/pack%20sienen%201.jpg", shojo: PACK_ARTWORK,
+  sport: "/pack-sport-2.png", antagoniste: "/pack%20antagoniste.png",
+  protagoniste: PACK_ARTWORK, zenkai: PACK_ARTWORK,
+};
+export const CARD_BACK_BY_PACK: Record<PackId, string> = {
+  shonen: "/image_39f4fe98.jpg", seinen: "/card-back-seinen.png",
+  shojo: "/image_39f4fe98.jpg", sport: "/carte%20sport.jpg",
+  antagoniste: "/pack%20antagoniste.png", protagoniste: "/image_39f4fe98.jpg",
+  zenkai: "/image_39f4fe98.jpg",
+};
 
 export const PACKS: { id: PackId; label: string; hint: string; accent: string }[] = [
   { id: "shonen", label: "Shonen Mix", hint: "Dragon Ball, Naruto, Bleach, JJK, Honkai: Star Rail", accent: "var(--pack-shonen)" },
@@ -136,10 +170,12 @@ export const PACKS: { id: PackId; label: string; hint: string; accent: string }[
   { id: "sport", label: "Sport", hint: "Blue Lock, Haikyuu!!, Kuroko, Ippo", accent: "var(--pack-sport)" },
   { id: "antagoniste", label: "Antagoniste", hint: "Les méchants de toutes les sagas", accent: "var(--pack-antagoniste)" },
   { id: "protagoniste", label: "Protagoniste", hint: "Les héros principaux", accent: "var(--pack-protagoniste)" },
+  { id: "zenkai", label: "Booster Zenkai", hint: "Tout le catalogue avec des taux boostés", accent: "#c084fc" },
 ];
 
 /** Does a card belong to a booster pack / collection filter? */
 export function inPack(card: Card, pack: PackId) {
+  if (pack === "zenkai") return true;
   if (pack === "antagoniste" || pack === "protagoniste") return card.role === pack;
   return card.category === pack;
 }
