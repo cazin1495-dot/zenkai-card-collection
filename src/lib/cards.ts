@@ -26,6 +26,7 @@ export type Card = {
   rarity: CatalogRarity;
   description: string;
   sort_order: number;
+  transcendance_series_number?: string;
   category?: Genre | null;
   series?: string | null;
   role?: CardRole | null;

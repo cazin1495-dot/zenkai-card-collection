@@ -186,4 +186,27 @@ describe("AnimeCard illustration", () => {
       "z-20",
     );
   });
+
+  it("uses a pearly white and divine gold aura for Monkey D. Luffy (Gear 5)", () => {
+    const luffyCard = {
+      ...card,
+      id: "luffy-gear-5-transcendance",
+      name: "Monkey D. Luffy (Gear 5)",
+      image_url: "/luffy%20gear%205.jpg",
+      transcendance_series_number: "ZEN-007-TR",
+    };
+    const { container } = render(<AnimeCard card={luffyCard} customTranscendance />);
+
+    expect(container.querySelector(".flip-front")).toHaveAttribute("data-transcendence-id", luffyCard.id);
+    expect(container.querySelector(".holo-tilt")).toHaveAttribute("data-transcendence-id", luffyCard.id);
+    expect(container.querySelector(".premium-bottom-shade")).toBeTruthy();
+    expect(container.querySelector(".premium-holo-sweep")).toBeTruthy();
+    expect(container.textContent).toContain("ZEN-007-TR");
+    expect(screen.getByRole("img", { name: luffyCard.name })).toHaveAttribute("src", luffyCard.image_url);
+    expect(screen.getByRole("img", { name: luffyCard.name })).toHaveClass(
+      "mix-blend-normal",
+      "opacity-100",
+      "z-20",
+    );
+  });
 });

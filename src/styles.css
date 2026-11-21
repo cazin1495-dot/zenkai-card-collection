@@ -708,6 +708,21 @@
 .card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-flash {
   background: radial-gradient(ellipse, #fff 0%, #fee2e2 22%, #fbbf24 40%, #dc2626 58%, transparent 76%);
 }
+.card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-blur,
+.card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-secondary {
+  background: radial-gradient(ellipse, #fff 0%, #fef3c7 30%, #fbbf24 58%, transparent 76%);
+}
+.card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-particle {
+  background: #fff;
+  box-shadow: 0 0 12px 4px #fbbf24;
+}
+.card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-particle:nth-child(even) {
+  background: #fef3c7;
+  box-shadow: 0 0 12px 4px #fff;
+}
+.card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-flash {
+  background: radial-gradient(ellipse, #fff 0%, #fffef5 22%, #fef3c7 40%, #fbbf24 58%, transparent 76%);
+}
 .transcendence-reveal-flash { background: radial-gradient(ellipse, color-mix(in oklab, #fff 94%, transparent), color-mix(in oklab, #22d3ee 50%, transparent) 38%, transparent 76%); mix-blend-mode: screen; animation: transcendence-reveal-flash 600ms ease-out both; }
 @keyframes transcendence-reveal-flash {
   0% { opacity: 0; scale: 0.88; }
@@ -878,6 +893,13 @@
   --transcendence-aura-tertiary: #fb923c;
   --gradient-prismatic: repeating-linear-gradient(115deg, #7f1d1d 0%, #dc2626 12%, #fb923c 24%, #ffedd5 36%, #7f1d1d 48%);
 }
+.holo-tilt[data-transcendence-id="luffy-gear-5-transcendance"] {
+  --accent: #fbbf24;
+  --transcendence-aura-primary: #fffef5;
+  --transcendence-aura-secondary: #fef3c7;
+  --transcendence-aura-tertiary: #fbbf24;
+  --gradient-prismatic: repeating-linear-gradient(115deg, #fff 0%, #fef3c7 12%, #fbbf24 24%, #fffef5 36%, #fff 48%);
+}
 /* Full-art finish: energy stays on the edge; varnish reacts only to tilt. */
 .reverse-card { background: var(--surface); box-shadow: var(--shadow-reverse-card); }
 .flip-front.reverse-card { box-shadow: 0 0 0 1px color-mix(in oklab, #e2e8f0 72%, transparent), 0 0 20px 3px color-mix(in oklab, #22d3ee 30%, transparent), 0 0 34px 6px color-mix(in oklab, #a855f7 24%, transparent); }
@@ -914,6 +936,9 @@
 }
 .holo-tilt[data-transcendence-id="sukuna-fuga-transcendance"] .premium-energy-frame {
   background: conic-gradient(from var(--tcg-prism-angle), #7f1d1d 0deg, #dc2626 95deg, #fb923c 185deg, #ffedd5 275deg, #7f1d1d 360deg);
+}
+.holo-tilt[data-transcendence-id="luffy-gear-5-transcendance"] .premium-energy-frame {
+  background: conic-gradient(from var(--tcg-prism-angle), #fff 0deg, #fef3c7 95deg, #fbbf24 185deg, #fffef5 275deg, #fff 360deg);
 }
 @keyframes tcg-prism-rotate { to { --tcg-prism-angle: 360deg; } }
 .premium-awakened-aura {
@@ -989,6 +1014,20 @@
 }
 .premium-rarity-badge svg { color: var(--rarity-legendaire); fill: color-mix(in oklab, var(--rarity-legendaire) 28%, transparent); }
 .premium-energy-particles { z-index: 10; overflow: hidden; border-radius: inherit; }
+.premium-holo-sweep {
+  background: linear-gradient(115deg, transparent 38%, color-mix(in oklab, #fff 28%, transparent) 49%, color-mix(in oklab, var(--accent, #fbbf24) 18%, transparent) 52%, transparent 62%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateX(-115%) skewX(-8deg);
+}
+.holo-tilt[data-active="true"] .premium-holo-sweep {
+  opacity: 0.32;
+  animation: premium-holo-sweep 2.8s ease-in-out both;
+}
+@keyframes premium-holo-sweep {
+  0% { transform: translateX(-115%) skewX(-8deg); }
+  100% { transform: translateX(115%) skewX(-8deg); }
+}
 .premium-energy-spark {
   width: 2px;
   height: 3px;

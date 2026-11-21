@@ -7,6 +7,7 @@ export type CustomTranscendanceCard = {
   image_url: string;
   pack_ids: PackId[];
   rarity: "Transcendance";
+  series_number: string;
 };
 
 /** Dedicated Transcendance cards stay outside the standard database catalogue. */
@@ -18,6 +19,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/goku%20ui.png",
     pack_ids: ["shonen"],
     rarity: "Transcendance",
+    series_number: "ZEN-001-TR",
   },
   {
     id: "goku-black-rose-transcendance",
@@ -26,6 +28,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/blackj%20goku%20rose.jpg",
     pack_ids: ["antagoniste", "shonen"],
     rarity: "Transcendance",
+    series_number: "ZEN-002-TR",
   },
   {
     id: "naruto-baryon-transcendance",
@@ -34,6 +37,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/naruto%20bayron.jpg",
     pack_ids: ["shonen", "protagoniste"],
     rarity: "Transcendance",
+    series_number: "ZEN-003-TR",
   },
   {
     id: "borushiki-transcendance",
@@ -42,6 +46,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/borushiki.jpg",
     pack_ids: ["shonen", "protagoniste"],
     rarity: "Transcendance",
+    series_number: "ZEN-004-TR",
   },
   {
     id: "ichigo-bankai-transcendance",
@@ -50,6 +55,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/ichigo%20bankai.webp",
     pack_ids: ["shonen", "protagoniste"],
     rarity: "Transcendance",
+    series_number: "ZEN-005-TR",
   },
   {
     id: "sukuna-fuga-transcendance",
@@ -58,6 +64,16 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     image_url: "/sukuna%20eveil%201.jpg",
     pack_ids: ["antagoniste", "shonen"],
     rarity: "Transcendance",
+    series_number: "ZEN-006-TR",
+  },
+  {
+    id: "luffy-gear-5-transcendance",
+    name: "Monkey D. Luffy (Gear 5)",
+    anime: "One Piece",
+    image_url: "/luffy%20gear%205.jpg",
+    pack_ids: ["shonen", "protagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-007-TR",
   },
 ];
 
@@ -77,5 +93,6 @@ export function customTranscendanceAsCard(card: CustomTranscendanceCard): Card {
     series: card.anime,
     role,
     image_url: card.image_url,
+    transcendance_series_number: card.series_number,
   };
 }

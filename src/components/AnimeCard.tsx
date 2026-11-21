@@ -184,6 +184,18 @@ export function AnimeCard({ card, backTheme, flipped = true, className, count, l
               )}
             />
           ) : null}
+          {rarity === "transcendance" && !locked && (
+            <div
+              aria-hidden
+              className="premium-holo-sweep pointer-events-none absolute inset-0 z-[21] overflow-hidden rounded-2xl"
+            />
+          )}
+          {rarity === "transcendance" && !locked && (
+            <div
+              aria-hidden
+              className="premium-bottom-shade pointer-events-none absolute inset-x-0 bottom-0 z-[25] h-[22%] bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+            />
+          )}
           {(rarity === "legendaire" || rarity === "mythique") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />
           )}
@@ -227,7 +239,11 @@ export function AnimeCard({ card, backTheme, flipped = true, className, count, l
                 {locked ? card.series ?? "Non obtenue" : identity.title}
               </p>
             )}
-            {rarity === "transcendance" && !locked && <p className={cn("tcg-collector-number mt-1.5 text-right font-semibold tabular-nums", compact ? "text-[6px]" : "text-[8px]")}>{card.id === "al-246" ? "ZEN-001" : `ZEN-${String(card.sort_order + 1).padStart(3, "0")}`} • TR</p>}
+            {rarity === "transcendance" && !locked && (
+              <p className={cn("tcg-collector-number mt-1.5 text-right font-semibold tabular-nums", compact ? "text-[6px]" : "text-[8px]")}>
+                {card.transcendance_series_number ?? (card.id === "al-246" ? "ZEN-001-TR" : `ZEN-${String(card.sort_order + 1).padStart(3, "0")}-TR`)}
+              </p>
+            )}
           </div>
         </div>
       </div>

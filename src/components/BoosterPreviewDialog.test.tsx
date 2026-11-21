@@ -130,4 +130,19 @@ describe("booster content preview", () => {
       unmount();
     }
   });
+
+  it("shows Monkey D. Luffy (Gear 5) in Shonen Mix and Protagoniste previews", () => {
+    for (const [pack, label] of [["shonen", "Shonen Mix"], ["protagoniste", "Protagoniste"]] as const) {
+      const { unmount } = render(<PreviewHarness pack={pack} />);
+      fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+
+      expect(screen.getByText(`Contenu du pack ${label}`)).toBeTruthy();
+      expect(screen.getByText("Monkey D. Luffy (Gear 5)")).toBeTruthy();
+      expect(screen.getByRole("img", { name: "Monkey D. Luffy (Gear 5)" })).toHaveAttribute(
+        "src",
+        "/luffy%20gear%205.jpg",
+      );
+      unmount();
+    }
+  });
 });
