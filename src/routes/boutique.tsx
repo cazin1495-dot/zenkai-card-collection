@@ -1,16 +1,46 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ShoppingBag, Coins, Package } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { gameQuery, type GameState } from "@/lib/game";
+import { BOOSTER_COST } from "@/lib/economy";
 import packArt from "@/assets/zenkai-booster-pack.png.asset.json";
 
 export const Route = createFileRoute("/boutique")({
   head: () => ({ meta: [
-    { title: "Boutique — ZENKAI" }, { name: "description", content: "La boutique de cartes et boosters ZENKAI ouvrira prochainement." },
-    { property: "og:title", content: "Boutique — ZENKAI" }, { property: "og:description", content: "Découvre prochainement la boutique ZENKAI." },
+    { title: "Boutique — ZENKAI" }, { name: "description", content: "Achète des boosters de cinq cartes anime pour 100 Zenkai Coins chacun." },
+    { property: "og:title", content: "Boutique — ZENKAI" }, { property: "og:description", content: "Tes Zenkai Coins contre des boosters de collection." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-    { property: "og:image", content: packArt.url }, { name: "twitter:image", content: packArt.url },
   ] }), component: ShopPage,
 });
 function ShopPage() {
-  return <div className="game-page mx-auto max-w-6xl px-4 py-8 sm:px-6"><p className="game-eyebrow"><ShoppingBag className="size-4" /> BOUTIQUE ZENKAI</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">Boutique</h1><div className="flex flex-col items-center py-8"><img src={packArt.url} alt="Booster ZENKAI" className="w-44 mix-blend-screen" /><p className="mt-6 font-display text-lg text-rarity-legendaire">Bientôt disponible</p><Button variant="glass" className="mt-5" asChild><Link to="/"><ArrowLeft /> Retour aux boosters</Link></Button></div></div>;
+  const { session } = useAuth();
+  const userId = session?.user.id ?? "";
+  const queryClient = useQueryClient();
+  const game = useQuery({ ...gameQuery(userId), enabled: !!session });
+  const [pending, setPending] = useState(false);
+  const [count, setCount] = useState(1);
+  async function buy() {
+    if (!session || pending) return;
+    if (!window.confirm(`Acheter ${count} booster${count > 1 ? "s" : ""} pour ${count * BOOSTER_COST} Coins ?`)) return;
+    setPending(true);
+    try { const { data, error } = await supabase.rpc("buy_boosters", { _count: count }); if (error) throw error; queryClient.setQueryData(gameQuery(userId).queryKey, data as unknown as GameState); toast.success(`${count} booster${count > 1 ? "s" : ""} ajouté${count > 1 ? "s" : ""} à ton stock bonus.`); }
+    catch { toast.error("Achat impossible. Vérifie ton solde de Coins."); await game.refetch(); }
+    finally { setPending(false); }
+  }
+  return <div className="game-page mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <p className="game-eyebrow"><ShoppingBag className="size-4" /> BOUTIQUE ZENKAI</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">Boutique</h1>
+    <div className="mt-5 flex items-center gap-2 text-sm text-rarity-legendaire"><Coins className="size-4" />{session ? `${game.data?.coins ?? "…"} Zenkai Coins` : "100 Coins / booster"}</div>
+    {game.isError && <p role="alert" className="mt-4 text-sm text-destructive">Solde indisponible.<Button variant="link" onClick={() => game.refetch()}>Réessayer</Button></p>}
+    <section className="mt-7 flex flex-col items-center border-y border-border py-7"><img src={packArt.url} alt="Booster ZENKAI" className="w-44 mix-blend-lighten" /><h2 className="mt-4 font-display text-lg font-semibold">Booster ZENKAI</h2><p className="mt-2 text-xs text-muted-foreground">5 cartes · 7 raretés · {BOOSTER_COST} Coins</p>
+      <div aria-label="Quantité de boosters" role="radiogroup" className="mt-5 flex gap-2">{[1, 5, 10].map(value => <Button key={value} role="radio" aria-checked={value === count} variant={count === value ? "hero" : "glass"} disabled={pending} onClick={() => setCount(value)}>×{value}</Button>)}</div>
+      {session ? <Button variant="transcend" className="mt-5" disabled={pending || !game.data || game.data.coins < count * BOOSTER_COST} onClick={buy}><Coins className="size-4" />{pending ? "Achat en cours…" : `Acheter · ${count * BOOSTER_COST} Coins`}</Button> : <Button variant="hero" className="mt-5" asChild><Link to="/auth">Connexion</Link></Button>}
+      {game.data && <p className="mt-3 text-xs text-muted-foreground">{game.data.bonus_boosters} boosters bonus disponibles</p>}
+      <Button variant="glass" className="mt-5" asChild><Link to="/"><Package className="size-4" />Ouvrir mes boosters</Link></Button>
+    </section>
+  </div>;
 }

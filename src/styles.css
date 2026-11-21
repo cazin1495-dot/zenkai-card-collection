@@ -133,6 +133,9 @@
   --gradient-rainbow: conic-gradient(from var(--spin, 0deg), oklch(0.8 0.18 20), oklch(0.88 0.16 90), oklch(0.85 0.17 150), oklch(0.82 0.14 220), oklch(0.75 0.18 300), oklch(0.95 0.02 260), oklch(0.8 0.18 20));
   --letterbox: oklch(0 0 0);
   --flash: oklch(1 0 0);
+  --cinema-background: color-mix(in oklab, var(--letterbox) 95%, transparent);
+  --shadow-subtitle-outline: -1px -1px 0 var(--letterbox), 1px -1px 0 var(--letterbox), -1px 1px 0 var(--letterbox), 1px 1px 0 var(--letterbox);
+  --gradient-god-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 65%, var(--flash)), color-mix(in oklab, var(--beam) 35%, transparent) 45%, transparent);
   --opening-commune: var(--rarity-transcendance);
   --opening-non_commune: #10B981;
   --opening-rare: #3B82F6;
@@ -1047,7 +1050,20 @@
   from { opacity: 0; transform: translateY(10px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+.card-cinema { background: var(--cinema-background); box-shadow: var(--shadow-cinema-player); isolation: isolate; }
+.card-cinema audio { display: none; }
+.card-cinema-halo { background: var(--gradient-awakening-silver); filter: blur(28px); opacity: 0.35; }
+.card-cinema-subtitle { color: var(--flash); text-shadow: var(--shadow-subtitle-outline); }
+.card-cinema-flash { background: var(--gradient-form-flash); animation: cinema-reveal-flash 500ms ease-out both; z-index: 20; }
+.pack-god-ray { bottom: 84%; left: 12%; width: 76%; height: min(85vh, 700px); transform-origin: bottom; clip-path: polygon(36% 100%, 64% 100%, 100% 0, 0 0); background: var(--gradient-god-ray); filter: blur(12px); animation: god-ray-rise 1.8s ease-out both; }
+.opening-shard { width: 7px; height: 11px; border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 75%); }
+.opening-shard:nth-child(even) { background: var(--flash); }
+.opening-afterglow[data-rarity="transcendance"] .opening-afterglow-halo { background: var(--gradient-prismatic); opacity: 0.35; }
+.pack-opening-scene[data-rarity="transcendance"] .pack-god-ray { background: var(--gradient-prismatic); }
+@keyframes cinema-reveal-flash { 0% { opacity: 0; } 15% { opacity: 0.65; } 100% { opacity: 0; } }
+@keyframes god-ray-rise { 0% { opacity: 0; scale: 0.85 0.5; } 30% { opacity: 0.7; } 100% { opacity: 0; scale: 1.1 1; } }
 @media (prefers-reduced-motion: reduce) {
+  .card-cinema-flash, .pack-god-ray { display: none; }
   .opening-afterglow-halo { animation: none; opacity: 0.65; }
   .opening-afterglow-flash, .opening-afterglow-particle { display: none; }
   .form-morph-scene .form-morph-body { animation: none; }

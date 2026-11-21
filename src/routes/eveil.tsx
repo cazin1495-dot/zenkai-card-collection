@@ -1,34 +1,78 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Combine } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, Gift, Trophy, Clock, Coins, Package, Recycle, LogIn } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AnimeCard } from "@/components/AnimeCard";
-import { TranscendButton } from "@/components/Transcendance";
 import { useAuth } from "@/hooks/use-auth";
-import { cardsQuery, collectionQuery } from "@/lib/queries";
+import { supabase } from "@/integrations/supabase/client";
+import { gameQuery, type GameState } from "@/lib/game";
+import { MAX_LEVEL, MILESTONES, xpRequired, REWARD_LABELS } from "@/lib/economy";
+import { formatCountdown } from "@/lib/cards";
 
 export const Route = createFileRoute("/eveil")({
   head: () => ({ meta: [
-    { title: "Éveil & Fusion — ZENKAI" },
-    { name: "description", content: "Retrouve tes cartes Mythiques et tente leur éveil Transcendance dans ZENKAI." },
-    { property: "og:title", content: "Éveil & Fusion — ZENKAI" },
-    { property: "og:description", content: "Tes cartes Mythiques prêtes pour la Transcendance." },
+    { title: "Missions & Niveaux — ZENKAI" },
+    { name: "description", content: "Réclame tes missions quotidiennes, gagne des Zenkai Coins et progresse jusqu’au niveau 150." },
+    { property: "og:title", content: "Missions & Niveaux — ZENKAI" },
+    { property: "og:description", content: "Tes récompenses quotidiennes et les dix paliers de progression ZENKAI." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }), component: AwakeningPage,
+  ] }), component: MissionsPage,
 });
 
-function AwakeningPage() {
+function MissionsPage() {
   const { session } = useAuth();
-  const cards = useQuery(cardsQuery);
-  const owned = useQuery({ ...collectionQuery(session?.user.id ?? ""), enabled: !!session });
-  const eligible = (owned.data ?? []).filter(copy => !copy.awaken_attempted).flatMap(copy => {
-    const card = cards.data?.find(card => card.id === copy.card_id && card.rarity === "mythique");
-    return card ? [{ copy, card }] : [];
-  });
+  const userId = session?.user.id ?? "";
+  const queryClient = useQueryClient();
+  const game = useQuery({ ...gameQuery(userId), enabled: !!session, refetchInterval: 30_000 });
+  const [pending, setPending] = useState<string | null>(null);
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  const state = game.data;
+  const missions = [
+    { id: "login", title: "Se connecter", icon: LogIn, progress: session ? 1 : 0, goal: 1, reward: "+100 Coins" },
+    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Coins" },
+    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Coins" },
+  ];
+  async function claim(id: string) {
+    if (pending) return;
+    setPending(id);
+    try {
+      const { data, error } = await supabase.rpc("claim_mission", { _mission: id });
+      if (error) throw error;
+      queryClient.setQueryData(gameQuery(userId).queryKey, data as unknown as GameState);
+      toast.success("Récompense ajoutée à ton profil.");
+    } catch { toast.error("Cette récompense n’est pas disponible. Actualise tes missions."); await game.refetch(); }
+    finally { setPending(null); }
+  }
+  const remaining = state && now !== null ? Math.max(0, new Date(state.mission_started_at).getTime() + 86400000 - now) : null;
+  const xpGoal = xpRequired(state?.level ?? 1);
   return <div className="game-page mx-auto max-w-6xl px-4 py-8 sm:px-6">
-    <p className="game-eyebrow"><Sparkles className="size-4" /> ATELIER TRANSCENDANCE</p>
-    <h1 className="mt-3 text-3xl font-black sm:text-4xl">Éveil & Fusion</h1>
-    <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground"><Combine className="size-4 text-rarity-legendaire" /> Fusion · Bientôt disponible</div>
-    {!session ? <Button variant="hero" className="mt-8" asChild><Link to="/auth">Connexion</Link></Button> : eligible.length ? <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">{eligible.map(({ copy, card }) => <div key={copy.id} className="flex flex-col items-center gap-3"><AnimeCard card={card} /><TranscendButton userCardId={copy.id} card={card} /></div>)}</div> : <div className="py-16 text-center"><Sparkles className="mx-auto size-10 text-rarity-legendaire" /><p className="mt-4 text-muted-foreground">Aucune carte Mythique prête à l’éveil.</p><Button variant="glass" className="mt-5" asChild><Link to="/">Ouvrir des boosters</Link></Button></div>}
+    <p className="game-eyebrow"><Trophy className="size-4" /> PROGRESSION DU JOUEUR</p>
+    <h1 className="mt-3 text-3xl font-black sm:text-4xl">Missions & Niveaux</h1>
+    {!session && <Button variant="hero" className="mt-6" asChild><Link to="/auth">Connexion</Link></Button>}
+    {game.isError && <div role="alert" className="mt-5 flex items-center gap-3 text-sm text-destructive">Le profil n’a pas pu être chargé.<Button variant="glass" size="sm" onClick={() => game.refetch()}>Réessayer</Button></div>}
+    {session && !state && !game.isError && <p className="mt-6 text-sm text-muted-foreground">Chargement du profil…</p>}
+    {state && <section className="mt-7 border-y border-border py-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs uppercase text-muted-foreground">{state.username}</p><h2 className="mt-2 font-display text-2xl font-bold">Niveau {state.level}<span className="ml-2 text-sm text-muted-foreground">/ {MAX_LEVEL}</span></h2></div>
+        <div className="flex items-center gap-5 text-sm font-semibold"><span className="flex items-center gap-2 text-rarity-legendaire"><Coins className="size-4" />{state.coins.toLocaleString("fr-FR")}</span><span className="flex items-center gap-2 text-accent"><Package className="size-4" />{state.bonus_boosters} bonus</span></div>
+      </div>
+      <div role="progressbar" aria-label="Progression XP" aria-valuemin={0} aria-valuemax={xpGoal} aria-valuenow={Math.min(state.xp, xpGoal)} className="mt-5 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gradient-primary transition-all" style={{ width: `${state.level === MAX_LEVEL ? 100 : Math.min(100, state.xp / xpGoal * 100)}%` }} /></div>
+      <p className="mt-2 text-xs text-muted-foreground">{state.level === MAX_LEVEL ? "Divinité Zenkai · Niveau maximum" : `${state.xp.toLocaleString("fr-FR")} / ${xpGoal.toLocaleString("fr-FR")} XP`}</p>
+    </section>}
+    <section className="py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold">Missions quotidiennes</h2><p className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="size-3.5" />Reset dans {remaining === null ? "24 h" : formatCountdown(remaining)}</p></div>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">{missions.map(mission => {
+        const claimed = state?.mission_claims.includes(mission.id) ?? false;
+        return <div key={mission.id} className="rounded-md border border-border bg-foreground/5 p-5">
+          <mission.icon className="size-5 text-accent" /><h3 className="mt-4 text-sm font-semibold">{mission.title}</h3><p className="mt-2 text-xs font-semibold text-rarity-legendaire">{mission.reward}</p>
+          <div className="mt-4 flex items-center justify-between gap-2"><span className="text-xs text-muted-foreground">{Math.min(mission.goal, mission.progress)} / {mission.goal}</span><Button variant={claimed ? "ghost" : "glass"} size="sm" disabled={!state || !!pending || claimed || mission.progress < mission.goal} onClick={() => claim(mission.id)}>{claimed ? <><Check className="size-3" />Reçue</> : pending === mission.id ? "En cours…" : "Réclamer"}</Button></div>
+        </div>;
+      })}</div>
+      <div className="mt-5 flex items-center gap-3 border-b border-border pb-6 text-sm"><Gift className="size-5 text-rarity-legendaire" /><span>3 missions terminées · <strong>+1 Booster gratuit</strong></span><span className="ml-auto text-xs text-muted-foreground">{state?.mission_claims.length ?? 0} / 3</span></div>
+    </section>
+    {state && Object.values(state.reward_packs).some(count => count > 0) && <section className="pb-8"><h2 className="text-xl font-bold">Récompenses disponibles</h2><div className="mt-4 flex flex-wrap gap-3">{Object.entries(state.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" asChild><Link to="/">{REWARD_LABELS[key]} ×{count}<Package className="size-4" /></Link></Button>)}</div></section>}
+    <section className="border-t border-border py-8"><h2 className="text-xl font-bold">Les 10 paliers majeurs</h2><p className="mt-2 text-xs text-muted-foreground">Niveau classique · +100 Coins et +1 Booster</p><div className="mt-5 grid gap-x-8 sm:grid-cols-2">{MILESTONES.map(([level, title, reward]) => <div key={level} className="flex items-start gap-4 border-b border-border py-5"><span className={`grid size-11 shrink-0 place-items-center rounded-md border border-border text-sm font-bold ${state && state.level >= level ? "bg-accent text-accent-foreground" : "bg-foreground/5 text-muted-foreground"}`}>{level}</span><div className="min-w-0"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{reward}</p></div>{state && state.level >= level && <Check className="ml-auto size-4 shrink-0 text-accent" />}</div>)}</div></section>
   </div>;
 }
