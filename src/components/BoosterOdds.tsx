@@ -18,7 +18,7 @@ export function BoosterOdds({ counter, failed = false }: { counter: number | und
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[10px] text-muted-foreground">Transcendance · 1 chance sur 5 000 par carte</p>
+      <p className="mt-3 text-[10px] text-muted-foreground">Transcendance · 1 chance sur 2 000 par carte</p>
       <div className="mt-4 border-t border-foreground/10 pt-3">
         <p aria-live="polite" className="flex items-center gap-2 text-xs font-medium">
           <ShieldCheck className="size-3.5 text-rarity-mythique" />

@@ -1,22 +1,26 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { normalizeOpeningRarity, openingEffects, packSealToken } from "@/lib/pack-opening";
+import { PACK_ARTWORK } from "@/lib/cards";
+import { BoosterArtwork } from "@/components/BoosterArtwork";
 
 export type PackState = "idle" | "opening" | "tearing";
 
-const TEAR = 16;
+const TEAR = 15;
 
-/** CSS-only collector pack; its seam peels away into the card stack on opening. */
+/** CSS-only pack opening with a horizontal tear and a card revealed behind it. */
 export function BoosterPack({
   state = "idle",
   accent = "var(--primary)",
   category = "ZENKAI",
+  artwork = PACK_ARTWORK,
   beam,
   className,
 }: {
   state?: PackState;
   accent?: string;
   category?: string;
+  artwork?: string;
   beam?: string | null;
   className?: string;
 }) {
@@ -32,18 +36,13 @@ export function BoosterPack({
   const packArt = () => (
     <div
       aria-hidden
-      className="pack-art pack-art-css absolute inset-0"
-      style={{ "--pack-illustration": 'url("/IMG_6616.png")' } as CSSProperties}
+      className="pack-art pack-art-css absolute inset-0 h-80 w-48 overflow-hidden rounded-xl"
     >
-      <div className="pack-art-panel absolute inset-[4%]">
-        <span className="pack-art-kicker">LIMITED COLLECTOR EDITION</span>
-        <span className="pack-art-category">{category}</span>
-        <div className="pack-art-emblem" />
-        <span className="pack-art-title">ZENKAI</span>
-        <span className="pack-art-subtitle">ANIME CARD COLLECTION</span>
-        <span className="pack-art-footer">5 CARTES ANIME</span>
-      </div>
-      <span className="pack-art-glint absolute inset-0" />
+      <BoosterArtwork
+        src={artwork}
+        alt=""
+        className="pack-art-image h-full w-full scale-x-[1.15] scale-y-[1.12] rounded-xl object-cover drop-shadow-[0_15px_35px_rgba(168,85,247,0.35)]"
+      />
     </div>
   );
 
@@ -55,32 +54,26 @@ export function BoosterPack({
       style={style}
     >
       <div aria-hidden className="pack-dynamic-aura pointer-events-none absolute" />
+      <span className="pack-category-badge mt-6">{category}</span>
       {tearing && (
         <>
           <div aria-hidden className="pack-reflection pointer-events-none absolute" />
-          <div aria-hidden className="pack-god-ray pointer-events-none absolute" />
         </>
       )}
       <div
         className={cn(
-          "pack-body relative mx-auto h-[290px] w-[210px] overflow-visible",
-          beam && (state === "opening" || tearing) && "pack-rarity-vibration",
+          "pack-body relative mx-auto h-80 w-48 overflow-visible",
+          beam && state === "opening" && "pack-rarity-vibration",
         )}
       >
         {tearing ? (
           <>
-            <div aria-hidden className="pack-card-stack pointer-events-none absolute">
-              {[2, 1, 0].map((i) => (
-                <div
-                  key={i}
-                  className="pack-stack-card card-back absolute inset-0 flex items-center justify-center border border-border font-display text-sm font-bold text-rarity-transcendance"
-                  style={{
-                    transform: `translateZ(${-i * 4}px) translate(${i * 3}px, ${-i * 3}px)`,
-                  }}
-                >
-                  ZENKAI
-                </div>
-              ))}
+            <div aria-hidden className="pack-first-card absolute left-1/2 top-1/2 mx-auto h-[268px] w-48 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-transparent">
+              <img
+                src="/image_39f4fe98.jpg"
+                alt=""
+                className="h-full w-full scale-[1.12] rounded-2xl bg-transparent object-cover"
+              />
             </div>
             <div
               className="pack-sleeve absolute inset-0"
@@ -90,9 +83,13 @@ export function BoosterPack({
             </div>
             <div
               className="pack-cap absolute inset-0"
-              style={{ clipPath: `inset(0 0 ${100 - TEAR}% 0)` }}
             >
-              <div className="pack-cap-peel absolute inset-0">{packArt()}</div>
+              <div
+                className="pack-cap-peel absolute inset-0"
+                style={{ clipPath: `inset(0 0 ${100 - TEAR}% 0)` }}
+              >
+                {packArt()}
+              </div>
             </div>
             <div aria-hidden className="pack-seal-light pointer-events-none absolute" />
             <div aria-hidden className="pack-seam-effects pointer-events-none absolute">
@@ -106,29 +103,6 @@ export function BoosterPack({
                       "--spark-y": `${-35 - ((i * 23) % 145)}px`,
                       left: `${18 + (i * 61) / Math.max(1, effects.sparks - 1)}%`,
                       animationDelay: `${450 + (i % 5) * 35}ms`,
-                    } as CSSProperties
-                  }
-                />
-              ))}
-              {Array.from({ length: effects.rays }, (_, i) => (
-                <span
-                  key={`ray-${i}`}
-                  className="pack-seam-ray absolute"
-                  style={{ "--ray-angle": `${(i - 3) * 18}deg` } as CSSProperties}
-                />
-              ))}
-            </div>
-            <div aria-hidden className="pack-opening-shards pointer-events-none absolute">
-              {Array.from({ length: 12 }, (_, i) => (
-                <span
-                  key={i}
-                  className="pack-opening-shard absolute"
-                  style={
-                    {
-                      "--shard-x": `${(i % 2 ? 1 : -1) * (25 + Math.floor(i / 2) * 12)}px`,
-                      "--shard-y": `${-35 - ((i * 19) % 125)}px`,
-                      "--shard-delay": `${i * 32}ms`,
-                      left: `${i % 2 ? 61 + (i % 4) * 3 : 39 - (i % 4) * 3}%`,
                     } as CSSProperties
                   }
                 />

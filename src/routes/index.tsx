@@ -4,9 +4,10 @@ import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-quer
 import { Clock, Layers, Package, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AnimeCard } from "@/components/AnimeCard";
 import { BoosterPack } from "@/components/BoosterPack";
+import { BoosterArtwork } from "@/components/BoosterArtwork";
 import { BoosterOdds } from "@/components/BoosterOdds";
+import { BoosterPreviewDialog } from "@/components/BoosterPreviewDialog";
 import { OpeningAura } from "@/components/OpeningAura";
 import { CardReveal } from "@/components/CardReveal";
 import { InspectableCard } from "@/components/Transcendance";
@@ -16,15 +17,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
+import { sortBoosterCardsByRarity } from "@/lib/booster-order";
 import {
   bestRarity,
   boosterStock,
   CARDS_PER_BOOSTER,
   formatCountdown,
   OPEN_COUNTS,
+  PACK_ARTWORK,
   PACKS,
   RARITY,
-  rarityRank,
   STOCK_CAP,
   type Card,
   type PackId,
@@ -65,9 +67,11 @@ function BoostersPage() {
   const [now, setNow] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [pack, setPack] = useState<PackId>("shonen");
+  const [isPackPreviewOpen, setIsPackPreviewOpen] = useState(false);
   const [pulled, setPulled] = useState<PulledCard[]>([]);
   const [opened, setOpened] = useState(1);
   const [awake, setAwake] = useState<Awake>({});
+  const [returningToBoosters, setReturningToBoosters] = useState(false);
 
   useEffect(() => {
     setNow(Date.now());
@@ -79,10 +83,19 @@ function BoostersPage() {
     profile.data && now !== null
       ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now)
       : null;
-  const busy = phase === "opening" || phase === "tearing" || phase === "reveal" || (!!userId && profile.isLoading);
+  const busy =
+    phase === "opening" ||
+    phase === "tearing" ||
+    phase === "reveal" ||
+    returningToBoosters ||
+    (!!userId && profile.isLoading);
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
-  const best = bestRarity(pulled.map((p) => (awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity)));
+  const best = bestRarity(
+    pulled.map((p) =>
+      awake[p.userCardId] === "transcended" || p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity,
+    ),
+  );
 
   async function open(count: number, category: string = pack) {
     if (busy) return;
@@ -96,7 +109,7 @@ function BoostersPage() {
         toast.error("Ce type de booster n’est pas disponible en mode Invité.");
         return;
       }
-      const localDraw = createLocalGuestDraw(cards, localPack.id, count);
+      const localDraw = sortBoosterCardsByRarity(createLocalGuestDraw(cards, localPack.id, count));
       if (!localDraw.length) {
         toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
         return;
@@ -104,7 +117,13 @@ function BoostersPage() {
 
       setPhase("opening");
       setPulled([]);
-      setAwake({});
+      setAwake(
+        Object.fromEntries(
+          localDraw
+            .filter((item) => item.transcended)
+            .map((item) => [item.userCardId, "transcended" as const]),
+        ),
+      );
       const started = Date.now();
       await new Promise((resolve) =>
         setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
@@ -137,10 +156,43 @@ function BoostersPage() {
       return;
     }
 
+    const { data: copyStates, error: copyStatesError } = await supabase
+      .from("user_cards")
+      .select("id, transcended")
+      .eq("user_id", session.user.id)
+      .in("id", data.map((row) => row.user_card_id));
+    if (copyStatesError || copyStates.length !== data.length) {
+      setPhase("idle");
+      toast.error(
+        copyStatesError
+          ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${copyStatesError.message}`
+          : "Booster ouvert, mais l’état de certaines cartes n’a pas pu être chargé.",
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["game", session.user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] }),
+      ]);
+      return;
+    }
+
+    const transcendedIds = new Set(copyStates.filter((copy) => copy.transcended).map((copy) => copy.id));
     const byId = new Map(cards.map((c) => [c.id, c]));
-    const items = data
-      .map((row) => ({ userCardId: row.user_card_id, card: byId.get(row.card_id) }))
-      .filter((p): p is PulledCard => !!p.card);
+    const items = sortBoosterCardsByRarity(
+      data
+        .map((row) => {
+          const card = byId.get(row.card_id);
+          if (!card) return null;
+          return {
+            userCardId: row.user_card_id,
+            card,
+            ...(transcendedIds.has(row.user_card_id) ? { transcended: true } : {}),
+          };
+        })
+        .filter((item): item is PulledCard => item !== null),
+    );
+    setAwake(Object.fromEntries(items.filter((item) => item.transcended).map((item) => [item.userCardId, "transcended" as const])));
     setPulled(items);
     setOpened(count);
     queryClient.setQueryData(profileQuery(session.user.id).queryKey, (old) =>
@@ -158,7 +210,37 @@ function BoostersPage() {
     setPhase(count === 1 ? "reveal" : "summary");
   }
 
-  const tearBeam = useMemo(() => bestOpeningRarity(pulled.map((p) => p.card.rarity)), [pulled]);
+  async function returnToBoosterSelection() {
+    setPulled([]);
+    setAwake({});
+    setOpened(1);
+    setNow(Date.now());
+    setPhase("idle");
+
+    if (!userId) return;
+    setReturningToBoosters(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: profileQuery(userId).queryKey }),
+        queryClient.invalidateQueries({ queryKey: ["collection", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["game", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["pity", userId] }),
+      ]);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `Actualisation des données impossible : ${error.message}`
+          : "Actualisation des données impossible. Réessaie.",
+      );
+    } finally {
+      setReturningToBoosters(false);
+    }
+  }
+
+  const tearBeam = useMemo(
+    () => bestOpeningRarity(pulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
+    [pulled],
+  );
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
@@ -198,27 +280,50 @@ function BoostersPage() {
         </>
       )}
 
-      <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
+      <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center bg-transparent", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
-          <CardReveal cards={pulled} awakened={awake} onAwaken={onAwaken} onDone={() => setPhase("summary")} />
+          <CardReveal
+            cards={pulled}
+            awakened={awake}
+            onAwaken={onAwaken}
+            onDone={() => setPhase("summary")}
+            backTheme={{ image: "/image_39f4fe98.jpg" }}
+          />
         ) : phase === "summary" ? (
-          <Summary items={pulled} opened={opened} awake={awake} onAwaken={onAwaken} best={best} signedIn={!!session} />
+          <Summary
+            items={pulled}
+            opened={opened}
+            awake={awake}
+            onAwaken={onAwaken}
+            best={best}
+            signedIn={!!session}
+            onReturnToBoosters={returnToBoosterSelection}
+          />
         ) : (
           <div className="flex flex-col items-center gap-3">
             {phase === "idle" ? (
-              <div className="h-[290px] w-[175px] overflow-hidden rounded-xl shadow-2xl">
-                <img
-                  src="/IMG_6616.png"
-                  alt="Booster Zenkai"
-                  className="h-full w-full scale-125 object-cover"
-                />
+              <div
+                className="group flex w-48 flex-col items-center justify-center"
+                style={{ ["--accent" as string]: packInfo.accent }}
+              >
+                <span className="pack-category-badge pack-category-badge-flow mt-6 mb-4">
+                  {packInfo.label}
+                </span>
+                <div className="mx-auto h-80 w-48 overflow-hidden rounded-xl">
+                  <BoosterArtwork
+                    src={PACK_ARTWORK}
+                    alt={`Booster ${packInfo.label}`}
+                    className="h-full w-full scale-[1.22] rounded-xl object-cover drop-shadow-[0_15px_35px_rgba(168,85,247,0.35)] transition-transform duration-300 group-hover:scale-[1.26] group-active:scale-[1.22]"
+                  />
+                </div>
               </div>
             ) : (
               <BoosterPack
                 state={phase === "tearing" ? "tearing" : "opening"}
                 accent={packInfo.accent}
                 category={packInfo.label}
+                artwork={PACK_ARTWORK}
                 beam={tearBeam}
               />
             )}
@@ -229,13 +334,22 @@ function BoostersPage() {
                 !ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < 1)
               }
               onClick={() => open(1)}
-              className="opening-pack-button flex-col gap-3 h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100"
+              className="opening-pack-button mt-6 flex-col gap-3 h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100"
               style={{ ["--accent" as string]: packInfo.accent }}
             >
               <span className="rounded-full border border-[var(--accent)] bg-surface/80 px-5 py-2 text-xs font-bold uppercase tracking-wider text-foreground shadow-[0_0_20px_-8px_var(--accent)]">
                 Ouvrir le Booster
               </span>
             </Button>
+            {phase === "idle" && (
+              <BoosterPreviewDialog
+                cards={cards}
+                pack={pack}
+                packLabel={packInfo.label}
+                open={isPackPreviewOpen}
+                onOpenChange={setIsPackPreviewOpen}
+              />
+            )}
           </div>
         )}
       </section>
@@ -267,9 +381,6 @@ function BoostersPage() {
           ))}
         </div>
         {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
-        {phase === "summary" && (
-          <Button variant="link" size="sm" onClick={() => setPhase("idle")}>Changer de pack</Button>
-        )}
         {ready && !session && (
           <p className="text-xs text-muted-foreground">
             {guest
@@ -284,7 +395,7 @@ function BoostersPage() {
 }
 
 function Summary({
-  items, opened, awake, onAwaken, best, signedIn,
+  items, opened, awake, onAwaken, best, signedIn, onReturnToBoosters,
 }: {
   items: PulledCard[];
   opened: number;
@@ -292,11 +403,8 @@ function Summary({
   onAwaken: (id: string, r: "transcended" | "failed") => void;
   best: Rarity | null;
   signedIn: boolean;
+  onReturnToBoosters: () => void;
 }) {
-  const rank = (p: PulledCard) => rarityRank(awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity);
-  const sorted = [...items].sort((a, b) => rank(a) - rank(b));
-  const highlights = opened === 1 ? items : (sorted.filter((p) => rank(p) <= rarityRank("epique")).slice(0, 10).length ? sorted.filter((p) => rank(p) <= rarityRank("epique")).slice(0, 10) : sorted.slice(0, 5));
-
   return (
     <div className="relative flex w-full flex-col items-center">
       <h2 className="text-xl font-black sm:text-2xl">{opened === 1 ? "Récapitulatif" : `Récapitulatif — ${items.length} cartes`}</h2>
@@ -305,22 +413,20 @@ function Summary({
           Meilleure rareté : <span className={cn("font-semibold", RARITY[best].text)}>{RARITY[best].label}</span>
         </p>
       )}
-      {opened > 1 && <h3 className="mt-6 text-sm font-bold uppercase tracking-widest text-muted-foreground">Meilleures cartes</h3>}
-      <div className="mt-4 grid w-full max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {highlights.map((p, i) => (
-          <SummaryCard key={p.userCardId} item={p} delay={i * 90} state={awake[p.userCardId]} onAwaken={onAwaken} />
+      <div className="mx-auto mt-4 grid w-full max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        {items.map((p, i) => (
+          <SummaryCard
+            key={p.userCardId}
+            item={p}
+            delay={(i % CARDS_PER_BOOSTER) * 90}
+            state={awake[p.userCardId]}
+            onAwaken={onAwaken}
+          />
         ))}
       </div>
-      {opened > 1 && (
-        <>
-          <h3 className="mt-10 text-sm font-bold uppercase tracking-widest text-muted-foreground">Tout le tirage</h3>
-          <div className="mt-4 grid w-full max-w-5xl grid-cols-5 gap-2 sm:grid-cols-10">
-            {sorted.map((p) => (
-              <AnimeCard key={p.userCardId} card={p.card} compact transcended={awake[p.userCardId] === "transcended"} />
-            ))}
-          </div>
-        </>
-      )}
+      <Button variant="hero" size="lg" className="mt-6 rounded-full" onClick={onReturnToBoosters}>
+        Retour aux boosters
+      </Button>
       {signedIn && (
         <Link to="/collection" className="mt-6 text-sm font-semibold text-primary hover:underline">Voir ma collection</Link>
       )}
@@ -332,7 +438,7 @@ function SummaryCard({ item, delay, state, onAwaken }: { item: PulledCard; delay
   const card: Card = item.card;
   return (
     <div className="flex animate-card-in flex-col items-center gap-2" style={{ animationDelay: `${delay}ms` }}>
-      <InspectableCard card={card} transcended={state === "transcended"} />
+      <InspectableCard card={card} transcended={state === "transcended"} customTranscendance={item.customTranscendance === true} />
     </div>
   );
 }

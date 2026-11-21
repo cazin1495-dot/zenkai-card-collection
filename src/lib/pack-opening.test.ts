@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestOpeningRarity, normalizeOpeningRarity, openingEffects, packSealToken } from "./pack-opening";
+import { bestOpeningRarity, normalizeOpeningRarity, openingEffects, packSealToken, RARITY_GLOW_CONFIG } from "./pack-opening";
 
 describe("pack seal rarity cues", () => {
   it.each([["Commun", "commune"], ["COMMON", "commune"], ["Peu commun", "non_commune"], ["Uncommon", "non_commune"], ["RARE", "rare"], ["Épique", "epique"], ["EPIC", "epique"], ["Légendaire", "legendaire"], ["Legendary", "legendaire"], ["Mythique", "mythique"], ["MYTHIC", "mythique"]])("normalizes %s", (input, expected) => expect(normalizeOpeningRarity(input)).toBe(expected));
@@ -17,4 +17,19 @@ describe("pack seal rarity cues", () => {
   it("gives Épique particles and suspense", () => expect(openingEffects("epique")).toEqual({ sparks: 14, rays: 0, jackpot: false, suspense: true }));
   it("gives Légendaire golden rays and suspense", () => expect(openingEffects("legendaire")).toEqual({ sparks: 0, rays: 7, jackpot: false, suspense: true }));
   it("reserves particle explosion and flash for Mythique", () => expect(openingEffects("mythique")).toEqual({ sparks: 30, rays: 0, jackpot: true, suspense: true }));
+  it("defines a glow for each Supabase card rarity", () => {
+    expect(Object.keys(RARITY_GLOW_CONFIG).sort()).toEqual([
+      "commune",
+      "epique",
+      "legendaire",
+      "mythique",
+      "non_commune",
+      "rare",
+      "transcendance",
+    ]);
+    expect(RARITY_GLOW_CONFIG.rare.color).toBe("#3b82f6");
+    expect(RARITY_GLOW_CONFIG.epique.color).toBe("#a855f7");
+    expect(RARITY_GLOW_CONFIG.legendaire.particles).toBeGreaterThan(0);
+    expect(RARITY_GLOW_CONFIG.mythique).toMatchObject({ color: "#ef4444", effect: "holographic", flash: true, shake: true });
+  });
 });

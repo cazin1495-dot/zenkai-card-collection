@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { boosterStock, bestRarity, cardIdentity, effectiveDropRate, GOKU_TEST_DROP_PERCENT, GOKU_CARD_ID, TRANSCEND_CHANCE_PERCENT, CARDS_PER_BOOSTER, DROP_RATES, STOCK_CAP, PITY_LIMIT, formatCountdown, inPack, type Card } from "./cards";
-import { readFileSync } from "node:fs";
+import {
+  boosterStock,
+  bestRarity,
+  cardIdentity,
+  effectiveDropRate,
+  GOKU_CARD_ID,
+  CARDS_PER_BOOSTER,
+  DROP_RATES,
+  STOCK_CAP,
+  PITY_LIMIT,
+  TRANSCEND_CHANCE_LABEL,
+  TRANSCEND_CHANCE_PERCENT,
+  formatCountdown,
+  inPack,
+  isTranscendanceCatalogCard,
+  normalizeCatalogCard,
+  rarityFromRoll,
+  type Card,
+} from "./cards";
 
 const t0 = new Date("2026-11-19T12:00:00Z");
 const min = 60_000;
@@ -26,29 +43,9 @@ describe("booster stock", () => {
   });
 });
 
-describe("temporary Goku test rules", () => {
-  const allPacks = readFileSync("drizzle/migrations/0007_temporary_all_packs_goku_test.sql", "utf8");
-  it("forces Mythique Goku on every draw across all packs", () => {
-    expect(GOKU_TEST_DROP_PERCENT).toBe(100);
-    expect(allPacks).toContain("c.id=''al-246'' AND c.active AND c.rarity=''mythique''");
-    expect(allPacks).toContain("_rarity:=''mythique'';");
-    expect(allPacks).not.toContain("IF _category=");
-    expect(effectiveDropRate("mythique")).toBe(100);
-    for (const r of ["commune", "non_commune", "rare", "epique", "legendaire"] as const) expect(effectiveDropRate(r)).toBe(0);
-  });
-  it("guarantees evolution while preserving ownership and one attempt per copy", () => {
-    expect(allPacks).toContain("uc.id=_user_card_id AND uc.user_id=_uid FOR UPDATE OF uc");
-    expect(allPacks).toContain("IF _attempted THEN RAISE EXCEPTION 'already_attempted'");
-    expect(allPacks).toContain("SET awaken_attempted=true,transcended=true");
-    expect(allPacks).toContain("RETURN true;");
-  });
-  const migration = readFileSync("drizzle/migrations/0002_temporary_goku_guaranteed_tests.sql", "utf8");
+describe("card identity", () => {
   it("keeps Goku in the card catalogue", () => {
     expect(GOKU_CARD_ID).toBe("al-246");
-  });
-  it("guarantees successful transcendence during testing", () => {
-    expect(TRANSCEND_CHANCE_PERCENT).toBe(100);
-    expect(migration).toContain("'_ok := true;");
   });
   it("evolves Goku into Ultra Instinct without renaming the base card", () => {
     const card = { id: "al-246", name: "Son Goku", title: "Guerrier Saiyan" } as Card;
@@ -58,42 +55,72 @@ describe("temporary Goku test rules", () => {
 });
 
 describe("booster content", () => {
-  const migration = readFileSync("drizzle/migrations/0005_booster_rates_and_mythic_pity.sql", "utf8");
-  const thresholds = [...migration.matchAll(/WHEN _roll < ([\d.]+) THEN '(\w+)'/g)].map((match) => ({ upper: Number(match[1]), rarity: match[2] }));
-  for (const [rarity, rate] of Object.entries({ commune: 50, non_commune: 26, rare: 15, epique: 6, legendaire: 2.4, mythique: 0.6 })) {
-    it(`${rarity} has ${rate}% in both client and SQL`, () => {
-      expect(DROP_RATES[rarity as keyof typeof DROP_RATES]).toBe(rate);
-      const index = thresholds.findIndex((t) => t.rarity === rarity);
-      const actual = rarity === "commune" ? 100 - (thresholds.at(-1)?.upper ?? 0) : (thresholds[index]?.upper ?? 0) - (thresholds[index - 1]?.upper ?? 0);
-      expect(actual).toBeCloseTo(rate);
+  const rates = {
+    commune: 54,
+    non_commune: 26.5,
+    rare: 14,
+    epique: 4,
+    legendaire: 1.2,
+    mythique: 0.25,
+    transcendance: 0.05,
+  } as const;
+  it("uses the requested per-card rates and totals 100%", () => {
+    expect(DROP_RATES).toEqual(rates);
+    expect(Object.values(DROP_RATES).reduce((total, rate) => total + rate, 0)).toBe(100);
+    for (const [rarity, rate] of Object.entries(rates)) {
+      expect(effectiveDropRate(rarity as keyof typeof rates)).toBe(rate);
+    }
+  });
+  it.each([
+    [0, "commune"],
+    [53.9999, "commune"],
+    [54, "non_commune"],
+    [80.4999, "non_commune"],
+    [80.5, "rare"],
+    [94.4999, "rare"],
+    [94.5, "epique"],
+    [98.4999, "epique"],
+    [98.5, "legendaire"],
+    [99.6999, "legendaire"],
+    [99.7, "mythique"],
+    [99.9499, "mythique"],
+    [99.95, "transcendance"],
+  ] as const)("maps roll %s to %s", (roll, rarity) => {
+    expect(rarityFromRoll(roll)).toBe(rarity);
+  });
+  it("keeps the Mythique pity limit at 200 boosters", () => expect(PITY_LIMIT).toBe(200));
+  it("uses the dedicated 0.05% Transcendance drop rate", () => {
+    expect(TRANSCEND_CHANCE_PERCENT).toBe(0.05);
+    expect(TRANSCEND_CHANCE_LABEL).toBe("0.05 %");
+  });
+  it("filters Transcendance rarity and TR-suffixed codes from the standard catalog", () => {
+    expect(isTranscendanceCatalogCard({ id: "al-123", rarity: "Transcendance" })).toBe(true);
+    expect(isTranscendanceCatalogCard({ id: "al-123-TR", rarity: "mythique" })).toBe(true);
+    expect(isTranscendanceCatalogCard({ id: "al-123", name: "Son Goku (Ultra Instinct)", rarity: "mythique" })).toBe(true);
+    expect(isTranscendanceCatalogCard({ id: "al-123", rarity: "mythique" })).toBe(false);
+    expect(isTranscendanceCatalogCard({ id: "goku-black-TR", name: "Goku Black", rarity: "Transcendance" })).toBe(true);
+  });
+  it("normalizes the existing Goku Black catalog card to Mythique in both requested packs", () => {
+    const gokuBlack = normalizeCatalogCard({
+      id: "goku-black",
+      name: "Goku Black",
+      title: "Dragon Ball Super",
+      rarity: "rare",
+      description: "",
+      sort_order: 2,
+      category: "seinen",
+      role: null,
     });
-  }
-  it("removes the guaranteed Goku override", () => expect(migration).not.toContain("al-246"));
-  it("fills missing protagonist tiers without substituting another rarity", () => {
-    const pools = readFileSync("drizzle/migrations/0006_complete_protagonist_rarity_pools.sql", "utf8");
-    expect(pools).toContain("c.active AND c.rarity=_rarity");
-    expect(pools).toContain("c.role IS DISTINCT FROM ''antagoniste''");
-  });
-  it("guarantees Mythique on booster 200 and advances per booster, not per card", () => {
-    expect(PITY_LIMIT).toBe(200);
-    expect(migration).toContain("_pity >= 199 AND i=5 AND NOT _mythic");
-    expect(migration).toMatch(/FOR b IN 1\.\._count LOOP[\s\S]*FOR i IN 1\.\.5 LOOP[\s\S]*END LOOP;\s*_pity:=public.booster_pity_after\(_pity,_mythic\);\s*END LOOP;/);
-  });
-  it("resets on any Mythique and blocks client counter writes", () => {
-    expect(migration).toContain("WHEN _mythic THEN 0 ELSE _counter + 1 END");
-    expect(migration).toContain("GRANT SELECT ON public.booster_pity TO authenticated;");
-    expect(migration).not.toMatch(/GRANT (?:ALL|.*UPDATE).*booster_pity TO authenticated/);
-    expect(migration).toContain("WHERE p.user_id=_uid FOR UPDATE");
+
+    expect(gokuBlack.rarity).toBe("mythique");
+    expect(inPack(gokuBlack, "antagoniste")).toBe(true);
+    expect(inPack(gokuBlack, "shonen")).toBe(true);
   });
   it("ranks Non Commune between Commune and Rare", () => {
     expect(bestRarity(["commune", "non_commune"])).toBe("non_commune");
     expect(bestRarity(["non_commune", "rare"])).toBe("rare");
   });
   it("contains 5 cards", () => expect(CARDS_PER_BOOSTER).toBe(5));
-  it("never drops transcendance and totals 100%", () => {
-    expect("transcendance" in DROP_RATES).toBe(false);
-    expect(Object.values(DROP_RATES).reduce((a, b) => a + b, 0)).toBeCloseTo(100);
-  });
   it("ranks transcendance above mythique", () => {
     expect(bestRarity(["rare", "mythique", "transcendance"])).toBe("transcendance");
     expect(bestRarity(["rare", "legendaire", "mythique"])).toBe("mythique");

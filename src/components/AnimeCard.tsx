@@ -5,77 +5,93 @@ import { cardArt, cardIdentity, RARITY, type Card, type Rarity } from "@/lib/car
 
 type Props = {
   card: Card;
+  backTheme?: CardBackTheme | undefined;
   flipped?: boolean | undefined;
   className?: string | undefined;
   count?: number | undefined;
   locked?: boolean | undefined;
   /** This copy evolved into Transcendance. */
   transcended?: boolean | undefined;
+  /** This is a dedicated custom card, not an evolved copy. */
+  customTranscendance?: boolean | undefined;
   compact?: boolean | undefined;
   comparisonForm?: "base" | "awakened" | undefined;
   transformationKey?: number | undefined;
 };
 
-export function displayRarity(card: Card, transcended?: boolean): Rarity {
-  return transcended ? "transcendance" : card.rarity;
+export type CardBackTheme = { image: string };
+
+export function displayRarity(card: Card, transcended?: boolean, customTranscendance?: boolean): Rarity {
+  return transcended || customTranscendance ? "transcendance" : card.rarity;
 }
 
 function CardIllustration({
   src,
   alt,
   className,
+  fallbackClassName,
   loading = "lazy",
   ariaHidden = false,
 }: {
   src: string;
   alt: string;
   className: string;
+  fallbackClassName?: string | undefined;
   loading?: "eager" | "lazy";
   ariaHidden?: boolean;
 }) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
+  const [loadedSource, setLoadedSource] = useState<string | null>(null);
+  const fallback = (exposeToAccessibility: boolean) => (
+    <div
+      role={!ariaHidden && exposeToAccessibility ? "img" : undefined}
+      aria-label={!ariaHidden && exposeToAccessibility ? alt || undefined : undefined}
+      aria-hidden={ariaHidden || !exposeToAccessibility}
+      className={cn(className, "card-art-fallback", fallbackClassName)}
+    />
+  );
   if (!src || failedSource === src) {
-    return (
-      <div
-        role={ariaHidden ? undefined : "img"}
-        aria-label={alt || undefined}
-        aria-hidden={ariaHidden}
-        className={cn(className, "card-art-fallback")}
-      />
-    );
+    return fallback(true);
   }
   return (
-    <img
-      src={src}
-      alt={alt}
-      aria-hidden={ariaHidden}
-      loading={loading}
-      onError={() => setFailedSource(src)}
-      className={cn(className, "object-cover")}
-    />
+    <>
+      {loadedSource !== src && fallback(false)}
+      <img
+        src={src}
+        alt={alt}
+        aria-hidden={ariaHidden}
+        loading={loading}
+        onLoad={() => setLoadedSource(src)}
+        onError={() => setFailedSource(src)}
+        className={cn(className, "object-cover")}
+      />
+    </>
   );
 }
 
-/** Metallic frame and low-opacity pointer-reactive varnish. */
+/** Prism frame and pointer-reactive holographic layers, kept behind the illustration. */
 export function TranscendFrame() {
   return <>
-    <div aria-hidden className="premium-energy-frame pointer-events-none absolute inset-0" />
-    <div aria-hidden className="tcg-inner-frame pointer-events-none absolute" />
-    <div aria-hidden className="tcg-corners pointer-events-none absolute inset-0">
+    <div aria-hidden className="transcendence-cosmic-bg pointer-events-none absolute inset-0 z-0" />
+    <div aria-hidden className="premium-energy-frame pointer-events-none absolute inset-0 z-30" />
+    <div aria-hidden className="tcg-inner-frame pointer-events-none absolute z-30" />
+    <div aria-hidden className="tcg-corners pointer-events-none absolute inset-0 z-30">
       {[0, 1, 2, 3].map((corner) => <span key={corner} className="tcg-corner" data-corner={corner} />)}
     </div>
-    <div aria-hidden className="reverse-foil pointer-events-none absolute inset-0" />
-    <div aria-hidden className="tcg-engraving pointer-events-none absolute inset-0" />
-    <div aria-hidden className="tcg-light-sweep pointer-events-none absolute inset-0" />
-    <div aria-hidden className="premium-energy-particles pointer-events-none absolute inset-0">
+    <div aria-hidden className="reverse-foil pointer-events-none absolute inset-0 z-10" />
+    <div aria-hidden className="holo-prism pointer-events-none absolute inset-0 z-10" />
+    <div aria-hidden className="holo-glitter pointer-events-none absolute inset-0 z-10" />
+    <div aria-hidden className="tcg-engraving pointer-events-none absolute inset-0 z-10" />
+    <div aria-hidden className="tcg-light-sweep pointer-events-none absolute inset-0 z-10" />
+    <div aria-hidden className="premium-energy-particles pointer-events-none absolute inset-0 z-10">
       {Array.from({ length: 10 }, (_, i) => <span key={i} className="premium-energy-spark absolute" style={{ left: `${8 + (i * 29 % 85)}%`, top: `${35 + (i * 17 % 60)}%`, animationDelay: `${-i * 0.41}s` }} />)}
     </div>
   </>;
 }
 
 /** Trading card with a flip animation and a rarity-coloured frame. */
-export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0 }: Props) {
-  const rarity = displayRarity(card, transcended);
+export function AnimeCard({ card, backTheme, flipped = true, className, count, locked, transcended, customTranscendance, compact, comparisonForm, transformationKey = 0 }: Props) {
+  const rarity = displayRarity(card, transcended, customTranscendance);
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
   const identity = cardIdentity(card, transcended);
@@ -103,16 +119,41 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
   }
   return (
     <div onPointerMove={tilt} onPointerDown={tilt} onPointerLeave={resetTilt} onPointerUp={resetTilt} onPointerCancel={resetTilt}
-      className={cn("flip-scene relative aspect-[2/3] w-full", interactive && "holo-interactive", className)}>
-      <div ref={tiltRef} className={cn("relative size-full", interactive && "holo-tilt")}>
+      className={cn("flip-scene relative aspect-[2.5/3.5] w-full bg-transparent", interactive && "holo-interactive", className)}>
+      <div
+        ref={tiltRef}
+        data-transcendence-id={rarity === "transcendance" ? card.id : undefined}
+        className={cn("relative size-full bg-transparent", interactive && "holo-tilt")}
+      >
       {!locked && flipped && rarity === "mythique" && <div aria-hidden className="flame-aura" />}
-      {!locked && flipped && rarity === "transcendance" && <div aria-hidden className="premium-awakened-aura pointer-events-none absolute inset-0 rounded-2xl" />}
-      <div className={cn("flip-inner size-full", flipped && "flipped")}>
-        <div className="flip-face card-back grid place-items-center rounded-2xl border border-border">
-          <span className={cn("font-display font-bold tracking-[0.3em] text-foreground/70", compact ? "text-[10px]" : "text-xl")}>ZENKAI</span>
+      {!locked && flipped && rarity === "transcendance" && <div aria-hidden className="premium-awakened-aura pointer-events-none absolute inset-0 z-0 rounded-2xl" />}
+      <div className={cn("flip-inner size-full bg-transparent", flipped && "flipped")}>
+        <div
+          className={cn(
+            "flip-face grid place-items-center overflow-hidden rounded-2xl bg-transparent",
+            !backTheme && "card-back border border-border",
+          )}
+        >
+          {backTheme ? (
+            <div className="absolute inset-0 size-full overflow-hidden rounded-2xl bg-transparent">
+              <img
+                src={backTheme.image}
+                alt=""
+                aria-hidden
+                loading="eager"
+                className="h-full w-full scale-[1.12] rounded-2xl object-cover"
+              />
+            </div>
+          ) : (
+            <span className={cn("font-display font-bold tracking-[0.3em] text-foreground/70", compact ? "text-[10px]" : "text-xl")}>ZENKAI</span>
+          )}
         </div>
 
-        <div data-compact={compact ? "true" : "false"} className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-surface", locked ? "border border-border" : rarity === "transcendance" ? "reverse-card" : r.glow)}>
+        <div
+          data-compact={compact ? "true" : "false"}
+          data-transcendence-id={rarity === "transcendance" ? card.id : undefined}
+          className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-transparent", locked ? "border border-border" : rarity === "transcendance" ? "reverse-card" : r.glow)}
+        >
           {comparisonForm ? (
             <div className="form-portrait-stack absolute inset-0 overflow-hidden" data-form={comparisonForm}>
               <CardIllustration
@@ -134,14 +175,24 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
             <CardIllustration
               src={art}
               alt={identity.name}
-              className={cn(rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")}
+              fallbackClassName={customTranscendance ? "custom-transcendance-fallback" : undefined}
+              className={cn(
+                rarity === "transcendance" && !locked
+                  ? "reverse-art z-20 h-full w-full mix-blend-normal opacity-100"
+                  : "size-full",
+                locked && "silhouette",
+              )}
             />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />
           )}
           {rarity === "transcendance" && !locked && <TranscendFrame />}
-          <div className={cn("absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-1", compact ? "p-1" : "p-2.5")}>
+          <div className={cn(
+            "absolute inset-x-0 top-0 flex items-start justify-between gap-1",
+            rarity === "transcendance" && !locked ? "z-30" : "z-10",
+            compact ? "p-1" : "p-2.5",
+          )}>
             <span
               className={cn(
                 "inline-flex min-w-0 items-center gap-1 rounded-md font-semibold uppercase",
@@ -157,8 +208,18 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
               <span className="shrink-0 rounded-full bg-gradient-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">×{count}</span>
             ) : rarity === "transcendance" && !locked ? <span aria-hidden className={cn("tcg-universe-emblem grid shrink-0 place-items-center", compact ? "size-4" : "size-7")}><Sparkles className={compact ? "size-2.5" : "size-4"} /></span> : null}
           </div>
-          <div className={cn("premium-glass-label absolute inset-x-0 bottom-0 z-10", compact ? "p-1.5 pt-4" : "p-3 pt-6")}>
-            <p className={cn("font-bold leading-tight", rarity === "transcendance" && !locked ? "tcg-nameplate font-display" : "font-display", compact ? "truncate text-[9px]" : "text-xs sm:text-sm")}>
+          <div className={cn(
+            "premium-glass-label absolute inset-x-0 bottom-0",
+            rarity === "transcendance" && !locked ? "z-30" : "z-10",
+            compact ? "p-1.5 pt-4" : "p-3 pt-6",
+          )}>
+            <p className={cn(
+              "font-bold leading-tight",
+              rarity === "transcendance" && !locked
+                ? "font-display text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]"
+                : "font-display",
+              compact ? "truncate text-[9px]" : "text-xs sm:text-sm",
+            )}>
               {locked ? "???" : identity.name}
             </p>
             {!compact && (

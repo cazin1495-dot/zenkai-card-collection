@@ -10,9 +10,11 @@ import lyra from "@/assets/characters/lyra.jpg";
 import ryujin from "@/assets/characters/ryujin.jpg";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
-/** Rarities stored on cards. "transcendance" only exists as an evolved copy of a mythique card. */
+/** Rarities used by draw, display, and economy rules. */
 export type BaseRarity = "commune" | "non_commune" | "rare" | "epique" | "legendaire" | "mythique" | "transcendance";
-export type Rarity = BaseRarity | "transcendance";
+/** Standard catalogue cards never store Transcendance; that is a copy/custom-card state. */
+export type CatalogRarity = Exclude<BaseRarity, "transcendance">;
+export type Rarity = BaseRarity;
 
 export type Genre = "shonen" | "seinen" | "shojo" | "sport";
 export type CardRole = "protagoniste" | "antagoniste";
@@ -21,7 +23,7 @@ export type Card = {
   id: string;
   name: string;
   title: string;
-  rarity: BaseRarity;
+  rarity: CatalogRarity;
   description: string;
   sort_order: number;
   category?: Genre | null;
@@ -35,7 +37,22 @@ export type Card = {
 };
 
 /** One owned copy coming out of a booster. */
-export type PulledCard = { userCardId: string; card: Card };
+export type PulledCard = { userCardId: string; card: Card; transcended?: boolean; customTranscendance?: boolean };
+
+export function isTranscendanceCatalogCard(card: { id: string; name?: string; rarity: string }): boolean {
+  const name = card.name?.trim().toLowerCase();
+  if (name === "goku black" && !card.id.toUpperCase().endsWith("-TR")) return false;
+  return card.rarity.toLowerCase() === "transcendance"
+    || card.id.toUpperCase().endsWith("-TR")
+    || name === "son goku (ultra instinct)"
+    || name === "goku ultra instinct";
+}
+
+/** Applies local catalog overrides for known cards without creating duplicate records. */
+export function normalizeCatalogCard(card: Card): Card {
+  if (card.name.trim().toLowerCase() !== "goku black") return card;
+  return { ...card, rarity: "mythique", category: "shonen", role: "antagoniste" };
+}
 
 /** Booster rules — mirror public.open_boosters(). */
 export const CARDS_PER_BOOSTER = 5;
@@ -43,9 +60,7 @@ export const STOCK_CAP = 15;
 export const STOCK_REGEN_MINUTES = 10;
 export const STOCK_REGEN_MS = STOCK_REGEN_MINUTES * 60 * 1000;
 export const OPEN_COUNTS = [1, 5, 10] as const;
-/** Temporary test values; restore normal probabilities after testing. */
-export const GOKU_TEST_DROP_PERCENT = 0;
-export const TRANSCEND_CHANCE_PERCENT = 0;
+export const TRANSCEND_CHANCE_PERCENT = 0.05;
 export const TRANSCEND_CHANCE_LABEL = `${TRANSCEND_CHANCE_PERCENT} %`;
 export const GOKU_CARD_ID = "al-246";
 
@@ -58,16 +73,26 @@ export function cardIdentity(card: Card, transcended = false) {
 
 /** Drop chance per card, in percent (mirrors the SQL thresholds). */
 export const DROP_RATES: Record<BaseRarity, number> = {
-  transcendance: 0.02,
-  mythique: 0.58,
-  legendaire: 2.4,
-  epique: 6,
-  rare: 15,
-  non_commune: 26,
-  commune: 50,
+  commune: 54,
+  non_commune: 26.5,
+  rare: 14,
+  epique: 4,
+  legendaire: 1.2,
+  mythique: 0.25,
+  transcendance: 0.05,
 };
 
 export const PITY_LIMIT = 200;
+
+export function rarityFromRoll(roll: number): BaseRarity {
+  if (roll < 54) return "commune";
+  if (roll < 80.5) return "non_commune";
+  if (roll < 94.5) return "rare";
+  if (roll < 98.5) return "epique";
+  if (roll < 99.7) return "legendaire";
+  if (roll < 99.95) return "mythique";
+  return "transcendance";
+}
 
 export function effectiveDropRate(rarity: BaseRarity) {
   return DROP_RATES[rarity];
@@ -100,6 +125,8 @@ export const RARITY: Record<Rarity, { label: string; text: string; border: strin
 };
 
 export type PackId = "shonen" | "seinen" | "shojo" | "sport" | "antagoniste" | "protagoniste";
+
+export const PACK_ARTWORK = "/image_c1811ac7.jpg";
 
 export const PACKS: { id: PackId; label: string; hint: string; accent: string }[] = [
   { id: "shonen", label: "Shonen Mix", hint: "Dragon Ball, Naruto, Bleach", accent: "var(--pack-shonen)" },

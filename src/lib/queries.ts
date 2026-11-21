@@ -1,10 +1,13 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isTranscendanceCatalogCard, normalizeCatalogCard } from "./cards";
 import { getCards } from "./cards.functions";
 
 export const cardsQuery = queryOptions({
   queryKey: ["cards"],
-  queryFn: () => getCards(),
+  queryFn: async () => (await getCards())
+    .filter((card) => !isTranscendanceCatalogCard(card))
+    .map(normalizeCatalogCard),
   staleTime: Infinity,
 });
 

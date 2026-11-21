@@ -72,7 +72,6 @@
   --animate-pack-shake: pack-shake 0.6s ease-in-out;
   --animate-sheen: sheen 3.2s linear infinite;
   --animate-card-in: card-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-  --animate-suspense: suspense 1.6s ease-in-out infinite;
   --animate-rarity-burst: rarity-burst 1.4s ease-out 0.35s both;
   --animate-halo: halo 3.5s ease-in-out infinite;
   --animate-pack-rumble: pack-rumble 0.12s linear infinite;
@@ -144,10 +143,8 @@
   --opening-mythique: var(--rarity-mythique);
   --opening-transcendance: var(--rarity-transcendance);
   --gradient-opening-aura: radial-gradient(ellipse, color-mix(in oklab, var(--beam) 36%, transparent), transparent 70%);
-  --gradient-opening-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 75%, var(--flash)), color-mix(in oklab, var(--beam) 60%, transparent) 32%, transparent);
   --gradient-opening-flash: radial-gradient(ellipse at 50% 16%, var(--flash), color-mix(in oklab, var(--beam) 70%, transparent) 25%, transparent 70%);
   --gradient-god-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 65%, var(--flash)), color-mix(in oklab, var(--beam) 35%, transparent) 45%, transparent);
-  --shadow-opening-halo: 0 0 0 1px color-mix(in oklab, var(--beam) 75%, transparent), 0 0 24px color-mix(in oklab, var(--beam) 40%, transparent), 0 0 65px color-mix(in oklab, var(--beam) 20%, transparent);
   --smoke: oklch(0.2 0.01 270);
   --aura-ui: oklch(0.82 0.12 230);
 
@@ -190,9 +187,7 @@
   --gradient-reverse-reflection: linear-gradient(125deg, transparent 30%, color-mix(in oklab, var(--accent) 55%, transparent) 42%, color-mix(in oklab, var(--rarity-transcendance) 65%, transparent) 48%, color-mix(in oklab, var(--rarity-epique) 45%, transparent) 53%, color-mix(in oklab, var(--rarity-legendaire) 45%, transparent) 57%, transparent 67%);
   --shadow-cinema-quote: 0 0 2px var(--rarity-transcendance), 0 0 12px color-mix(in oklab, var(--rarity-transcendance) 35%, transparent);
   --gradient-pack-reflection: radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--beam) 15%, transparent), transparent 68%);
-  --gradient-pack-seal: linear-gradient(180deg, transparent, color-mix(in oklab, var(--beam) 85%, var(--flash)) 45%, var(--beam) 65%, transparent);
-  --gradient-pack-prism: linear-gradient(105deg, transparent 20%, var(--rarity-mythique) 35%, var(--rarity-transcendance) 45%, var(--rarity-epique) 49%, var(--rarity-mythique) 60%, transparent 80%);
-  --shadow-pack-seal: 0 0 5px color-mix(in oklab, var(--beam) 65%, transparent);
+  --gradient-pack-prism: linear-gradient(90deg, transparent 20%, var(--rarity-mythique) 35%, var(--rarity-transcendance) 45%, var(--rarity-epique) 49%, var(--rarity-mythique) 60%, transparent 80%);
   --gradient-awakening-blue: radial-gradient(ellipse, color-mix(in oklab, var(--aura-ui) 75%, transparent), color-mix(in oklab, var(--rarity-rare) 40%, transparent) 45%, transparent 72%);
   --gradient-awakening-silver: radial-gradient(ellipse, color-mix(in oklab, var(--rarity-transcendance) 45%, transparent), transparent 70%);
   --gradient-awakening-rays: repeating-conic-gradient(from 0deg, transparent 0deg 13deg, color-mix(in oklab, var(--aura-ui) 65%, transparent) 14deg 16deg, transparent 17deg 30deg);
@@ -257,27 +252,14 @@
 .booster-hub { max-width: 100vw; overflow-x: hidden; background-image: var(--gradient-game-grid); background-size: 48px 48px; }
 .booster-hub .pack-body { width: 210px; height: 290px; }
 .hub-pack-option { flex: 1 1 7rem; max-width: 13rem; backdrop-filter: blur(12px); white-space: normal; }
-.pack-art-css { isolation: isolate; filter: drop-shadow(0 10px 24px color-mix(in oklab, var(--accent) 32%, transparent)); }
-.pack-art-css::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background: linear-gradient(135deg, #fff1bd33 0%, #725c3922 12%, color-mix(in oklab, var(--accent) 24%, transparent) 25%, #17172255 45%, #090b1266 72%, #d7b86b33 100%);
-}
-.pack-art-css { clip-path: polygon(4% 3%,9% 0,14% 3%,19% 0,24% 3%,29% 0,34% 3%,39% 0,44% 3%,49% 0,54% 3%,59% 0,64% 3%,69% 0,74% 3%,79% 0,84% 3%,89% 0,94% 3%,98% 1%,100% 6%,97% 12%,100% 18%,97% 24%,100% 30%,97% 36%,100% 42%,97% 48%,100% 54%,97% 60%,100% 66%,97% 72%,100% 78%,97% 84%,100% 90%,98% 96%,94% 97%,89% 100%,84% 97%,79% 100%,74% 97%,69% 100%,64% 97%,59% 100%,54% 97%,49% 100%,44% 97%,39% 100%,34% 97%,29% 100%,24% 97%,19% 100%,14% 97%,9% 100%,4% 97%,1% 94%,0 88%,3% 82%,0 76%,3% 70%,0 64%,3% 58%,0 52%,3% 46%,0 40%,3% 34%,0 28%,3% 22%,0 16%,3% 10%,1% 5%); background-color: #11131c; background-image: linear-gradient(180deg, color-mix(in oklab, var(--accent) 32%, transparent), #080a1080 38%, #080a10cc 100%), var(--pack-illustration); background-position: center, center 35%; background-size: cover; }
-.pack-art-panel { z-index: 1; overflow: hidden; border: 1px solid color-mix(in oklab, #f8e6a8 80%, var(--accent)); background: linear-gradient(180deg, #080a10d9, #11131c55 44%, #090b12e8), radial-gradient(ellipse at 50% 48%, color-mix(in oklab, var(--accent) 32%, transparent), transparent 78%); }
-.pack-art-panel::before { position: absolute; inset: 0; content: ""; background: repeating-linear-gradient(120deg, transparent 0 16px, color-mix(in oklab, #fff 5%, transparent) 17px 18px); pointer-events: none; }
-.pack-art-kicker, .pack-art-category, .pack-art-emblem, .pack-art-title, .pack-art-subtitle, .pack-art-footer { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; }
-.pack-art-kicker { top: 7%; color: #e8d8ae; font-size: 7px; font-weight: 700; letter-spacing: 2px; }
-.pack-art-category { top: 17%; border: 1px solid color-mix(in oklab, var(--accent) 85%, white); border-radius: 999px; background: #080a10d9; padding: 5px 13px; color: var(--accent); font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 0 18px color-mix(in oklab, var(--accent) 35%, transparent); }
-.pack-art-emblem { top: 35%; width: 112px; height: 112px; border: 1px solid color-mix(in oklab, var(--accent) 62%, #f8e6a8); border-radius: 50%; box-shadow: 0 0 32px color-mix(in oklab, var(--accent) 32%, transparent), inset 0 0 24px color-mix(in oklab, var(--accent) 22%, transparent); }
-.pack-art-emblem::before, .pack-art-emblem::after { position: absolute; inset: 12px; content: ""; border: 1px solid color-mix(in oklab, #f8e6a8 64%, transparent); transform: rotate(45deg); }
-.pack-art-emblem::after { inset: 27px; border-color: var(--accent); transform: rotate(0); }
-.pack-art-title { top: 51%; z-index: 1; color: #fff3cf; font-family: var(--font-display); font-size: 25px; font-weight: 900; font-style: italic; letter-spacing: 1px; text-shadow: 0 0 12px var(--accent), 0 2px 3px #000; }
-.pack-art-subtitle { top: 66%; color: #e8d8ae; font-size: 7px; font-weight: 700; letter-spacing: 1.2px; }
-.pack-art-footer { bottom: 8%; color: var(--accent); font-size: 10px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px color-mix(in oklab, var(--accent) 55%, transparent); }
-.pack-art-glint { z-index: 2; background: linear-gradient(120deg, transparent 27%, #fff2 46%, #fff6 50%, #fff1 53%, transparent 72%); pointer-events: none; }
+.pack-art-css { isolation: isolate; }
+.pack-art-image { position: relative; z-index: 1; }
+.pack-category-badge { position: absolute; z-index: 12; top: -2rem; left: 50%; transform: translateX(-50%); border: 1px solid color-mix(in oklab, var(--accent) 85%, white); border-radius: 999px; background: color-mix(in oklab, var(--surface) 88%, transparent); padding: 5px 13px; color: var(--accent); font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 0 18px color-mix(in oklab, var(--accent) 35%, transparent); }
+.pack-category-badge-flow { position: relative; inset: auto; transform: none; }
 .card-art-fallback { background: radial-gradient(ellipse at 50% 28%, color-mix(in oklab, var(--accent) 44%, #16131f), transparent 58%), linear-gradient(145deg, #30283e, #10111b 62%, #090b12); }
+.custom-transcendance-fallback { display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in oklab, #fbbf24 72%, transparent); background: radial-gradient(ellipse at 50% 38%, color-mix(in oklab, #fef3c7 48%, transparent), transparent 18%), radial-gradient(ellipse at 50% 42%, color-mix(in oklab, #f59e0b 38%, transparent), transparent 55%), linear-gradient(145deg, #5b4210, #211807 54%, #100e0a); box-shadow: inset 0 0 30px color-mix(in oklab, #fbbf24 20%, transparent); }
+.custom-transcendance-fallback::before { content: ""; position: absolute; inset: 12%; border: 1px solid color-mix(in oklab, #fef3c7 64%, transparent); border-radius: 48%; background: radial-gradient(ellipse, color-mix(in oklab, #fef3c7 32%, transparent), transparent 68%); box-shadow: 0 0 24px color-mix(in oklab, #fbbf24 52%, transparent), inset 0 0 24px color-mix(in oklab, #fbbf24 30%, transparent); }
+.custom-transcendance-fallback::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 38%, color-mix(in oklab, #fff7cc 55%, transparent) 50%, transparent 62%); }
 .hub-pack-option > span:first-child { min-height: 24px; }
 .hub-pack-option > span:first-child > span { flex-shrink: 0; }
 .hub-odds { box-shadow: 0 12px 48px color-mix(in oklab, var(--background) 50%, transparent); }
@@ -396,6 +378,11 @@
   inherits: false;
   initial-value: 0deg;
 }
+@property --tcg-prism-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
 @utility holo-sheen {
   background-image: var(--gradient-holo);
@@ -430,10 +417,6 @@
 @keyframes card-in {
   from { opacity: 0; transform: translateY(40px) scale(0.8); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes suspense {
-  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0 transparent); }
-  50% { transform: scale(1.03) rotate(-1deg); filter: drop-shadow(0 0 24px color-mix(in oklab, var(--primary) 55%, transparent)); }
 }
 @keyframes rarity-burst {
   0% { opacity: 0; transform: scale(0.2); }
@@ -556,17 +539,18 @@
 }
 .pack-opening-scene { perspective: 1100px; }
 .pack-micro-vibration { animation: pack-micro-vibration 80ms linear 6; transform-style: preserve-3d; }
-.pack-cap { animation: pack-cap-lift 650ms cubic-bezier(0.22, 0.7, 0.3, 1) 850ms both; }
-.pack-cap-peel { transform-origin: left top; animation: pack-peel 400ms ease-in-out 450ms both; }
+.pack-cap { pointer-events: none; }
+.pack-cap-peel { transform-origin: center top; animation: pack-cap-flight 600ms cubic-bezier(0.22, 0.7, 0.3, 1) 650ms both; }
+.pack-first-card { z-index: 0; display: grid; place-items: center; opacity: 0; transform: translateY(32px) scale(0.82); animation: pack-card-emerge 850ms cubic-bezier(0.22, 0.7, 0.3, 1) 800ms both; }
 .pack-seal-light {
-  top: calc(var(--tear-position) - 1%);
-  left: 16%;
-  width: 68%;
-  height: 7px;
+  top: calc(var(--tear-position) - 2px);
+  left: 0;
+  width: 100%;
+  height: 4px;
   z-index: 5;
-  background: var(--gradient-pack-seal);
-  box-shadow: var(--shadow-pack-seal);
-  animation: pack-seal-light 900ms ease-in-out both;
+  background: linear-gradient(90deg, #fff 0%, #fde68a 35%, #fff 55%, #f59e0b 100%);
+  box-shadow: 0 0 7px #fff, 0 0 18px #f59e0b;
+  animation: pack-seal-light 650ms ease-out both;
 }
 .pack-opening-scene[data-rarity="commune"] .pack-seal-light { height: 3px; opacity: 0.55; }
 .pack-opening-scene[data-rarity="mythique"] .pack-seal-light::after {
@@ -583,41 +567,26 @@
   background-image: var(--gradient-pack-reflection);
   animation: pack-reflection 1.5s ease-out 450ms both;
 }
-.pack-sleeve { animation: pack-sleeve 700ms ease-in-out 1100ms both; }
-.pack-card-stack {
-  inset: 17% 18% 5%;
-  transform-style: preserve-3d;
-  animation: pack-stack 700ms ease-out 1000ms both;
-}
-.pack-stack-card { border-radius: 6px; }
+.pack-sleeve { animation: pack-sleeve 750ms cubic-bezier(0.22, 0.7, 0.3, 1) 900ms both; }
 @keyframes pack-micro-vibration {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-0.7px) rotate(-0.15deg); }
   75% { transform: translateX(0.7px) rotate(0.15deg); }
 }
 @keyframes pack-seal-light {
-  0% { opacity: 0; }
-  22%, 48% { opacity: 1; }
-  100% { opacity: 0; }
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  15% { opacity: 1; }
+  75% { opacity: 1; clip-path: inset(0 0 0 0); }
+  100% { opacity: 0; clip-path: inset(0 0 0 0); }
 }
 @keyframes pack-prism { from { background-position: 130% 0; } to { background-position: -80% 0; } }
-@keyframes pack-peel {
-  0% { clip-path: polygon(0 0, 100% 0, 100% var(--tear-position), 50% var(--tear-position), 0 var(--tear-position)); transform: rotateZ(0); }
-  50% { clip-path: polygon(0 0, 100% 0, 100% var(--tear-position), 50% var(--tear-position), 0 calc(var(--tear-position) - 3%)); transform: rotateZ(-1deg); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% calc(var(--tear-position) - 3%), 50% calc(var(--tear-position) - 3%), 0 calc(var(--tear-position) - 3%)); transform: rotateZ(-2deg); }
-}
-@keyframes pack-cap-lift {
-  from { transform: translateY(0) rotateZ(0); opacity: 1; }
-  to { transform: translateY(-105px) rotateZ(-8deg); opacity: 0; }
-}
+@keyframes pack-cap-flight { from { transform: translateY(0) rotate(0); opacity: 1; } to { transform: translateY(-60px) rotate(-6deg); opacity: 0; } }
+@keyframes pack-card-emerge { 0% { opacity: 0; transform: translateY(32px) scale(0.82); } 25% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(0.9); } }
 @keyframes pack-sleeve {
   from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(70px); opacity: 0; }
+  to { transform: translateY(110px); opacity: 0; }
 }
-@keyframes pack-stack {
-  from { transform: translateY(10px) rotateX(0) rotateY(0); opacity: 0; }
-  to { transform: translateY(-8px) rotateX(10deg) rotateY(-12deg); opacity: 1; }
-}
+
 @keyframes pack-reflection {
   0%, 100% { opacity: 0; }
   30% { opacity: 1; }
@@ -626,12 +595,8 @@
   --aura-strength: 0.3; --shake-distance: 0px; --shake-angle: 0deg;
   /* Resolve these semantic tokens locally, where the actual draw sets --beam. */
   --gradient-opening-aura: radial-gradient(ellipse, color-mix(in oklab, var(--beam) 36%, transparent), transparent 70%);
-  --gradient-opening-ray: linear-gradient(to top, color-mix(in oklab, var(--beam) 70%, transparent), transparent);
   --gradient-opening-flash: radial-gradient(ellipse at 50% 16%, var(--flash), color-mix(in oklab, var(--beam) 70%, transparent) 25%, transparent 70%);
-  --shadow-opening-halo: 0 0 0 1px color-mix(in oklab, var(--beam) 75%, transparent), 0 0 24px color-mix(in oklab, var(--beam) 40%, transparent), 0 0 65px color-mix(in oklab, var(--beam) 20%, transparent);
   --gradient-pack-reflection: radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--beam) 15%, transparent), transparent 68%);
-  --gradient-pack-seal: linear-gradient(180deg, transparent, color-mix(in oklab, var(--beam) 85%, var(--flash)) 45%, var(--beam) 65%, transparent);
-  --shadow-pack-seal: 0 0 5px color-mix(in oklab, var(--beam) 65%, transparent);
 }
 .rarity-opening[data-rarity="non_commune"] { --aura-strength: 0.5; }
 .rarity-opening[data-rarity="rare"] { --aura-strength: 0.7; }
@@ -655,28 +620,116 @@
 .pack-opening-scene[data-state="tearing"] .pack-rarity-vibration { animation-iteration-count: 10; }
 .pack-seam-effects { inset: var(--tear-position) 0 auto; z-index: 8; }
 .pack-seam-spark { width: 2px; height: 4px; border-radius: 50%; background: var(--beam); box-shadow: 0 0 6px var(--beam); animation: pack-seam-spark 750ms ease-out both; }
-.pack-seam-ray { left: 50%; bottom: 0; width: 15px; height: 170px; transform-origin: center bottom; background: var(--gradient-opening-ray); animation: pack-seam-ray 800ms ease-out 450ms both; }
-.pack-opening-shards { inset: 0; z-index: 8; }
-.pack-opening-shard { top: 52%; width: 10px; height: 16px; background: var(--beam); filter: drop-shadow(0 0 7px var(--beam)); clip-path: polygon(50% 0, 100% 100%, 0 75%); animation: pack-shard-burst 900ms cubic-bezier(0.16, 0.75, 0.28, 1) var(--shard-delay) both; }
-.pack-opening-shard:nth-child(3n + 1) { width: 7px; height: 12px; }
 .opening-stage > button.opening-pack-button { mix-blend-mode: normal; }
 .pack-jackpot-flash { z-index: 9; background: var(--gradient-opening-flash); animation: pack-jackpot-flash 350ms ease-out 450ms both; }
 .pack-opening-scene[data-rarity="rare"] .pack-seal-light,
 .pack-opening-scene[data-rarity="epique"] .pack-seal-light,
 .pack-opening-scene[data-rarity="legendaire"] .pack-seal-light,
-.pack-opening-scene[data-rarity="mythique"] .pack-seal-light { height: 5px; animation: pack-tear-glow 1100ms ease-out both; }
-.card-personal-halo { box-shadow: var(--shadow-opening-halo); opacity: var(--aura-strength); animation: card-personal-halo 850ms ease-out both; }
+.pack-opening-scene[data-rarity="mythique"] .pack-seal-light { height: 5px; }
 .card-reveal-flip .flip-inner { transition: transform 650ms cubic-bezier(0.22, 0.7, 0.3, 1); }
 .card-reveal-premium .card-reveal-flip .flip-inner { transition-duration: 950ms; transition-timing-function: cubic-bezier(0.45, 0.03, 0.2, 1); }
+.rarity-glow-layer { position: absolute; z-index: 0; inset: -18%; overflow: visible; pointer-events: none; border-radius: 2rem; }
+.rarity-glow-blur { position: absolute; inset: 12%; border-radius: inherit; background: radial-gradient(ellipse, color-mix(in srgb, var(--rarity-glow-color) 58%, transparent), transparent 70%); filter: blur(28px); opacity: 0; }
+.rarity-glow-secondary { position: absolute; inset: 5%; border-radius: inherit; background: radial-gradient(ellipse, color-mix(in srgb, var(--rarity-glow-color) 35%, transparent), transparent 68%); filter: blur(38px); opacity: 0; }
+.rarity-glow-layer[data-glow="neutral"] .rarity-glow-blur { opacity: 0.12; filter: blur(18px); }
+.rarity-glow-layer[data-glow="soft"] .rarity-glow-blur { opacity: 0.52; }
+.rarity-glow-layer[data-glow="pulse"] .rarity-glow-blur { opacity: 0.72; animation: rarity-glow-pulse 1.15s ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="pulse"][data-revealed="true"] .rarity-glow-blur { animation: rarity-glow-subtle-pulse 1.8s ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="double"] .rarity-glow-blur { opacity: 0.82; }
+.rarity-glow-layer[data-glow="double"] .rarity-glow-secondary { opacity: 0.54; animation: rarity-glow-pulse 1.4s ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="double"][data-revealed="true"] .rarity-glow-blur { opacity: 0.52; }
+.rarity-glow-layer[data-glow="double"][data-revealed="true"] .rarity-glow-secondary { opacity: 0.34; animation: rarity-glow-subtle-pulse 1.8s ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="holographic"] .rarity-glow-blur { opacity: 0.9; animation: rarity-glow-pulse 700ms ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="holographic"] .rarity-glow-secondary { opacity: 0.8; background: var(--gradient-rainbow); filter: blur(25px); mix-blend-mode: screen; animation: rarity-glow-pulse 850ms ease-in-out infinite alternate-reverse; }
+.rarity-glow-layer[data-glow="holographic"][data-revealed="true"] .rarity-glow-blur { opacity: 0.58; animation: rarity-glow-subtle-pulse 1.6s ease-in-out infinite alternate; }
+.rarity-glow-layer[data-glow="holographic"][data-revealed="true"] .rarity-glow-secondary { opacity: 0.38; animation: rarity-glow-subtle-pulse 1.8s ease-in-out infinite alternate-reverse; }
+.rarity-glow-flash { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(ellipse, color-mix(in srgb, var(--rarity-glow-color) 85%, white), transparent 68%); filter: blur(18px); opacity: 0; animation: rarity-flip-flash 300ms ease-out both; }
+.rarity-glow-particle { position: absolute; z-index: 1; width: 4px; height: 4px; border-radius: 50%; background: #fff7c2; box-shadow: 0 0 8px 2px var(--rarity-glow-color); opacity: 0; animation: rarity-particle-float 2.4s ease-in-out infinite; }
+.rarity-glow-layer[data-particle-tone="gold"] .rarity-glow-particle { background: #fde68a; }
+.rarity-glow-particle:nth-child(3n + 1) { top: 10%; left: 18%; animation-delay: -0.5s; }
+.rarity-glow-particle:nth-child(3n + 2) { top: 28%; right: 8%; animation-delay: -1.3s; }
+.rarity-glow-particle:nth-child(3n) { bottom: 14%; left: 6%; animation-delay: -1.9s; }
+.rarity-glow-particle:nth-child(4n) { bottom: 6%; right: 24%; animation-delay: -0.9s; }
+.rarity-glow-layer[data-glow="double"] .rarity-glow-particle,
+.rarity-glow-layer[data-glow="holographic"] .rarity-glow-particle { opacity: 0.8; }
+.rarity-glow-layer[data-glow="holographic"] .rarity-glow-particle { background: #fff; box-shadow: 0 0 10px 3px var(--rarity-glow-color); animation-duration: 1.4s; }
+.rarity-micro-shake { animation: rarity-micro-shake 300ms ease-in-out 2; }
+.card-reveal-transcendence .rarity-glow-blur { background: var(--gradient-prismatic); opacity: 0.94; filter: blur(32px); }
+.card-reveal-transcendence .rarity-glow-secondary { background: var(--gradient-prismatic); opacity: 0.86; filter: blur(38px); }
+.card-reveal-transcendence .rarity-glow-particle { background: #e2e8f0; box-shadow: 0 0 11px 3px #fbbf24; }
+.card-reveal-transcendence .rarity-glow-particle:nth-child(3n + 1) { background: #22d3ee; box-shadow: 0 0 11px 3px #22d3ee; }
+.card-reveal-transcendence .rarity-glow-particle:nth-child(3n + 2) { background: #e2e8f0; box-shadow: 0 0 11px 3px #8b5cf6; }
+.card-reveal-transcendence .rarity-glow-flash { background: radial-gradient(ellipse, #fff 0%, color-mix(in oklab, #e2e8f0 85%, transparent) 20%, transparent 72%), var(--gradient-prismatic); filter: blur(10px); mix-blend-mode: screen; animation-duration: 650ms; }
+.card-reveal-transcendence[data-transcendence-id="goku-black-rose-transcendance"] .rarity-glow-blur,
+.card-reveal-transcendence[data-transcendence-id="goku-black-rose-transcendance"] .rarity-glow-secondary {
+  background: radial-gradient(ellipse, #f0abfc, #d946ef 30%, #7e22ce 58%, transparent 76%);
+}
+.card-reveal-transcendence[data-transcendence-id="goku-black-rose-transcendance"] .rarity-glow-particle {
+  background: #f5d0fe;
+  box-shadow: 0 0 11px 3px #d946ef;
+}
+.card-reveal-transcendence[data-transcendence-id="goku-black-rose-transcendance"] .rarity-glow-flash {
+  background: radial-gradient(ellipse, #fff 0%, #f0abfc 25%, #d946ef 48%, transparent 74%);
+}
+.card-reveal-transcendence[data-transcendence-id="naruto-baryon-transcendance"] .rarity-glow-blur,
+.card-reveal-transcendence[data-transcendence-id="naruto-baryon-transcendance"] .rarity-glow-secondary {
+  background: radial-gradient(ellipse, #ffedd5, #fb923c 30%, #ef4444 58%, transparent 76%);
+}
+.card-reveal-transcendence[data-transcendence-id="naruto-baryon-transcendance"] .rarity-glow-particle {
+  background: #ffedd5;
+  box-shadow: 0 0 11px 3px #ef4444;
+}
+.card-reveal-transcendence[data-transcendence-id="naruto-baryon-transcendance"] .rarity-glow-flash {
+  background: radial-gradient(ellipse, #fff 0%, #ffedd5 25%, #ef4444 48%, transparent 74%);
+}
+.card-reveal-transcendence[data-transcendence-id="borushiki-transcendance"] .rarity-glow-blur,
+.card-reveal-transcendence[data-transcendence-id="borushiki-transcendance"] .rarity-glow-secondary {
+  background: radial-gradient(ellipse, #e0f2fe, #38bdf8 30%, #6366f1 58%, transparent 76%);
+}
+.card-reveal-transcendence[data-transcendence-id="borushiki-transcendance"] .rarity-glow-particle {
+  background: #e0f2fe;
+  box-shadow: 0 0 11px 3px #6366f1;
+}
+.card-reveal-transcendence[data-transcendence-id="borushiki-transcendance"] .rarity-glow-flash {
+  background: radial-gradient(ellipse, #fff 0%, #e0f2fe 25%, #6366f1 48%, transparent 74%);
+}
+.card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-blur,
+.card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-secondary {
+  background: radial-gradient(ellipse, #fee2e2, #dc2626 30%, #111827 58%, transparent 76%);
+}
+.card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-particle {
+  background: #fbbf24;
+  box-shadow: 0 0 11px 3px #dc2626;
+}
+.card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-particle:nth-child(even) {
+  background: #fee2e2;
+  box-shadow: 0 0 11px 3px #fbbf24;
+}
+.card-reveal-transcendence[data-transcendence-id="ichigo-bankai-transcendance"] .rarity-glow-flash {
+  background: radial-gradient(ellipse, #fff 0%, #fee2e2 22%, #fbbf24 40%, #dc2626 58%, transparent 76%);
+}
+.transcendence-reveal-flash { background: radial-gradient(ellipse, color-mix(in oklab, #fff 94%, transparent), color-mix(in oklab, #22d3ee 50%, transparent) 38%, transparent 76%); mix-blend-mode: screen; animation: transcendence-reveal-flash 600ms ease-out both; }
+@keyframes transcendence-reveal-flash {
+  0% { opacity: 0; scale: 0.88; }
+  18% { opacity: 0.95; scale: 1.03; }
+  100% { opacity: 0; scale: 1.14; }
+}
+.card-reveal-transcendence .transcendence-card-anticipation { transform-origin: center; animation: transcendence-back-vibration 1.1s ease-in-out 2; }
+@keyframes transcendence-back-vibration {
+  0%, 100% { transform: translateX(0) rotate(0) scale(1); }
+  18%, 54% { transform: translateX(-1px) rotate(-0.2deg) scale(1.005); }
+  36%, 72% { transform: translateX(1px) rotate(0.2deg) scale(1.005); }
+}
+@keyframes rarity-glow-pulse { from { transform: scale(0.94); opacity: 0.55; } to { transform: scale(1.06); opacity: 1; } }
+@keyframes rarity-glow-subtle-pulse { from { transform: scale(0.97); opacity: 0.24; } to { transform: scale(1.02); opacity: 0.52; } }
+@keyframes rarity-flip-flash { 0% { opacity: 0; scale: 0.82; } 30% { opacity: 1; scale: 1.08; } 100% { opacity: 0; scale: 1.2; } }
+@keyframes rarity-particle-float { 0%, 100% { transform: translate3d(0, 5px, 0) scale(0.65); opacity: 0.25; } 50% { transform: translate3d(4px, -8px, 0) scale(1.15); opacity: 0.95; } }
+@keyframes rarity-micro-shake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-1px) rotate(-0.15deg); } 75% { transform: translateX(1px) rotate(0.15deg); } }
 @keyframes pack-aura-arrive { from { opacity: 0; scale: 0.97; } to { opacity: var(--aura-strength); scale: 1; } }
 @keyframes pack-aura-pulse { from { opacity: 0.5; scale: 0.98; } to { opacity: var(--aura-strength); scale: 1.03; } }
 @keyframes pack-rarity-vibration { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(calc(-1 * var(--shake-distance))) rotate(calc(-1 * var(--shake-angle))); } 75% { transform: translateX(var(--shake-distance)) rotate(var(--shake-angle)); } }
 @keyframes pack-seam-spark { from { opacity: 0; transform: translate(0, 0) scale(0.5); } 10% { opacity: 1; } to { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0.2); } }
-@keyframes pack-seam-ray { from { opacity: 0; transform: rotate(var(--ray-angle)) scaleY(0.1); } 25% { opacity: 0.85; } to { opacity: 0; transform: rotate(var(--ray-angle)) scaleY(1.3); } }
-@keyframes pack-shard-burst { from { opacity: 0; transform: translate(0, 0) rotate(0) scale(0.4); } 18% { opacity: 1; } to { opacity: 0; transform: translate(var(--shard-x), var(--shard-y)) rotate(150deg) scale(0.8); } }
 @keyframes pack-jackpot-flash { from { opacity: 0; } 15% { opacity: 0.9; } to { opacity: 0; } }
-@keyframes pack-tear-glow { from { opacity: 0; transform: scaleX(0.7); } 40% { opacity: 0.6; } 55%, 70% { opacity: 1; transform: scaleX(1.03); } to { opacity: 0; transform: scaleX(1); } }
-@keyframes card-personal-halo { from { opacity: 0; scale: 0.97; } 55% { opacity: var(--aura-strength); scale: 1.02; } to { opacity: var(--aura-strength); scale: 1; } }
 .opening-stage { overflow: visible; }
 .opening-afterglow { z-index: 0; }
 .opening-stage > :not(.opening-afterglow) { position: relative; z-index: 1; }
@@ -787,24 +840,82 @@
   --tilt-y: 0deg;
   --holo-x: 50%;
   --holo-y: 50%;
+  --transcendence-aura-primary: #22d3ee;
+  --transcendence-aura-secondary: #8b5cf6;
+  --transcendence-aura-tertiary: #fbbf24;
   transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
   transform-style: preserve-3d;
   transition: transform 180ms ease-out;
 }
+.holo-tilt[data-transcendence-id="goku-black-rose-transcendance"] {
+  --transcendence-aura-primary: #f0abfc;
+  --transcendence-aura-secondary: #d946ef;
+  --transcendence-aura-tertiary: #7e22ce;
+  --gradient-prismatic: repeating-linear-gradient(115deg, #f5d0fe 0%, #e879f9 12%, #c026d3 24%, #7e22ce 36%, #f5d0fe 48%);
+}
+.holo-tilt[data-transcendence-id="naruto-baryon-transcendance"] {
+  --transcendence-aura-primary: #fb923c;
+  --transcendence-aura-secondary: #ef4444;
+  --transcendence-aura-tertiary: #f97316;
+  --gradient-prismatic: repeating-linear-gradient(115deg, #ffedd5 0%, #fb923c 12%, #ef4444 24%, #9f1239 36%, #ffedd5 48%);
+}
+.holo-tilt[data-transcendence-id="borushiki-transcendance"] {
+  --transcendence-aura-primary: #38bdf8;
+  --transcendence-aura-secondary: #7c3aed;
+  --transcendence-aura-tertiary: #4f46e5;
+  --gradient-prismatic: repeating-linear-gradient(115deg, #e0f2fe 0%, #38bdf8 12%, #6366f1 24%, #7c3aed 36%, #e0f2fe 48%);
+}
+.holo-tilt[data-transcendence-id="ichigo-bankai-transcendance"] {
+  --transcendence-aura-primary: #dc2626;
+  --transcendence-aura-secondary: #111827;
+  --transcendence-aura-tertiary: #fbbf24;
+  --gradient-prismatic: repeating-linear-gradient(115deg, #fee2e2 0%, #dc2626 12%, #111827 24%, #fbbf24 36%, #fee2e2 48%);
+}
 /* Full-art finish: energy stays on the edge; varnish reacts only to tilt. */
 .reverse-card { background: var(--surface); box-shadow: var(--shadow-reverse-card); }
+.flip-front.reverse-card { box-shadow: 0 0 0 1px color-mix(in oklab, #e2e8f0 72%, transparent), 0 0 20px 3px color-mix(in oklab, #22d3ee 30%, transparent), 0 0 34px 6px color-mix(in oklab, #a855f7 24%, transparent); }
 .reverse-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.transcendence-cosmic-bg {
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--transcendence-aura-secondary, #8b5cf6) 18%, transparent), transparent 62%),
+    radial-gradient(ellipse at 50% 88%, color-mix(in oklab, var(--transcendence-aura-primary, #22d3ee) 14%, transparent), transparent 52%),
+    linear-gradient(160deg, #090b18, #171124 55%, #080b14);
+}
 .premium-energy-frame {
-  z-index: 4;
+  --tcg-prism-angle: 0deg;
+  z-index: 30;
   border-radius: inherit;
   padding: 2px;
-  background: var(--texture-tcg-metal);
+  background: conic-gradient(from var(--tcg-prism-angle), #e2e8f0 0deg, #fbbf24 95deg, #22d3ee 185deg, #8b5cf6 275deg, #e2e8f0 360deg);
   mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0);
   mask-composite: exclude;
+  animation: tcg-prism-rotate 6s linear infinite;
 }
-.premium-awakened-aura { box-shadow: var(--shadow-premium-aura); animation: premium-aura-pulse 3.2s ease-in-out infinite; }
+.holo-tilt[data-transcendence-id="goku-black-rose-transcendance"] .premium-energy-frame {
+  background: conic-gradient(from var(--tcg-prism-angle), #e2e8f0 0deg, #f0abfc 95deg, #d946ef 185deg, #7e22ce 275deg, #e2e8f0 360deg);
+}
+.holo-tilt[data-transcendence-id="naruto-baryon-transcendance"] .premium-energy-frame {
+  background: conic-gradient(from var(--tcg-prism-angle), #fff7ed 0deg, #fb923c 95deg, #ef4444 185deg, #9f1239 275deg, #fff7ed 360deg);
+}
+.holo-tilt[data-transcendence-id="borushiki-transcendance"] .premium-energy-frame {
+  background: conic-gradient(from var(--tcg-prism-angle), #e0f2fe 0deg, #38bdf8 95deg, #6366f1 185deg, #7c3aed 275deg, #e0f2fe 360deg);
+}
+.holo-tilt[data-transcendence-id="ichigo-bankai-transcendance"] .premium-energy-frame {
+  background: conic-gradient(from var(--tcg-prism-angle), #fee2e2 0deg, #dc2626 95deg, #111827 185deg, #fbbf24 275deg, #fee2e2 360deg);
+}
+@keyframes tcg-prism-rotate { to { --tcg-prism-angle: 360deg; } }
+.premium-awakened-aura {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--transcendence-aura-primary, #22d3ee) 80%, transparent),
+    -4px 0 22px color-mix(in oklab, var(--transcendence-aura-secondary, #8b5cf6) 35%, transparent),
+    5px 3px 24px color-mix(in oklab, var(--transcendence-aura-tertiary, #fbbf24) 28%, transparent);
+  animation: premium-aura-pulse 3.2s ease-in-out infinite;
+}
 .reverse-foil {
-  z-index: 1;
+  z-index: 10;
+  z-index: 10;
   border-radius: inherit;
   background: var(--gradient-reverse-reflection);
   background-size: 250% 250%;
@@ -814,26 +925,50 @@
   transition: opacity 180ms ease-out;
 }
 .holo-tilt[data-active="true"] .reverse-foil { opacity: 0.16; }
-.tcg-inner-frame { inset: 6px; z-index: 5; border-radius: 10px; padding: 1px; background: var(--texture-tcg-metal); mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0); mask-composite: exclude; opacity: 0.85; }
-.tcg-corners { z-index: 6; }
+.holo-prism {
+  z-index: 2;
+  z-index: 10;
+  border-radius: inherit;
+  background-image: var(--gradient-prismatic);
+  background-size: 300% 300%;
+  background-position: var(--holo-x) var(--holo-y);
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+.holo-tilt[data-active="true"] .holo-prism { opacity: 0.38; }
+.holo-glitter {
+  z-index: 3;
+  border-radius: inherit;
+  background-image: var(--gradient-glitter), var(--gradient-glitter);
+  background-size: 11px 13px, 19px 23px;
+  background-position: var(--holo-x) var(--holo-y), var(--holo-y) var(--holo-x);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+.holo-tilt[data-active="true"] .holo-glitter { opacity: 0.3; }
+.tcg-inner-frame { inset: 6px; z-index: 30; border-radius: 10px; padding: 1px; background: var(--texture-tcg-metal); mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0); mask-composite: exclude; opacity: 0.85; }
+.tcg-corners { z-index: 30; }
 .tcg-corner { position: absolute; width: 25px; height: 25px; background: var(--gradient-premium-frame); clip-path: polygon(0 0,100% 0,100% 8%,30% 8%,8% 30%,8% 100%,0 100%); filter: drop-shadow(var(--shadow-tcg-ornament)); }
 .tcg-corner[data-corner="0"] { top: 6px; left: 6px; }
 .tcg-corner[data-corner="1"] { top: 6px; right: 6px; transform: rotate(90deg); }
 .tcg-corner[data-corner="2"] { bottom: 6px; right: 6px; transform: rotate(180deg); }
 .tcg-corner[data-corner="3"] { bottom: 6px; left: 6px; transform: rotate(270deg); }
-.tcg-engraving { z-index: 2; background: var(--texture-tcg-engraving); background-size: 180% 180%; background-position: var(--holo-x, 50%) var(--holo-y, 50%); mix-blend-mode: color-dodge; opacity: 0.025; transition: opacity 180ms ease-out; }
+.tcg-engraving { z-index: 10; background: var(--texture-tcg-engraving); background-size: 180% 180%; background-position: var(--holo-x, 50%) var(--holo-y, 50%); mix-blend-mode: color-dodge; opacity: 0.025; transition: opacity 180ms ease-out; }
 .holo-tilt[data-active="true"] .tcg-engraving { opacity: 0.12; }
-.tcg-light-sweep { z-index: 2; background: var(--gradient-tcg-sweep); background-size: 300% 300%; mix-blend-mode: color-dodge; animation: tcg-light-sweep 4s ease-in-out infinite; }
-.tcg-nameplate { padding: 7px 8px; border: 1px solid transparent; border-radius: 3px; background: var(--gradient-tcg-plaque) padding-box, var(--gradient-premium-frame) border-box; backdrop-filter: blur(3px); text-wrap: balance; letter-spacing: 0; font-size: 11px; }
+.tcg-light-sweep { z-index: 10; background: var(--gradient-tcg-sweep); background-size: 300% 300%; mix-blend-mode: color-dodge; animation: tcg-light-sweep 4s ease-in-out infinite; }
 .tcg-universe-emblem { color: var(--rarity-legendaire); background: var(--gradient-tcg-plaque); border: 1px solid var(--rarity-legendaire); border-radius: 50%; box-shadow: var(--shadow-tcg-ornament); }
 .tcg-collector-number { color: var(--rarity-transcendance); letter-spacing: 0; }
-.reverse-card[data-compact="true"] .tcg-nameplate { padding: 3px; font-family: var(--font-sans); }
 .reverse-card[data-compact="true"] .tcg-corner { width: 14px; height: 14px; }
 @keyframes tcg-light-sweep { 0%, 65% { background-position: 150% 150%; opacity: 0; } 72% { opacity: 0.13; } 92% { background-position: -50% -50%; opacity: 0.13; } 100% { background-position: -50% -50%; opacity: 0; } }
 .premium-glass-label {
   background: var(--gradient-premium-label);
   backdrop-filter: blur(2px);
   mask-image: linear-gradient(transparent, var(--letterbox) 18%);
+}
+.reverse-card .premium-glass-label {
+  background: linear-gradient(to top, color-mix(in oklab, var(--letterbox) 96%, transparent), color-mix(in oklab, var(--letterbox) 62%, transparent) 58%, transparent);
 }
 .premium-rarity-badge {
   color: var(--rarity-transcendance);
@@ -843,7 +978,7 @@
   letter-spacing: 0;
 }
 .premium-rarity-badge svg { color: var(--rarity-legendaire); fill: color-mix(in oklab, var(--rarity-legendaire) 28%, transparent); }
-.premium-energy-particles { z-index: 3; overflow: hidden; border-radius: inherit; }
+.premium-energy-particles { z-index: 10; overflow: hidden; border-radius: inherit; }
 .premium-energy-spark {
   width: 2px;
   height: 3px;
@@ -977,14 +1112,16 @@
   background-size: 300% 300%;
   background-position: var(--holo-x) var(--holo-y);
   mix-blend-mode: color-dodge;
-  opacity: 0.23;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
 }
 .holo-glitter {
   background-image: var(--gradient-glitter), var(--gradient-glitter);
   background-size: 11px 13px, 19px 23px;
   background-position: var(--holo-x) var(--holo-y), var(--holo-y) var(--holo-x);
   mix-blend-mode: screen;
-  opacity: 0.25;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
 }
 .holo-tilt[data-active="true"] .divine-card-sheen {
   animation: none;
@@ -1100,16 +1237,21 @@
 .card-cinema-halo { background: var(--gradient-awakening-silver); filter: blur(28px); opacity: 0.35; }
 .card-cinema-subtitle { color: var(--flash); text-shadow: var(--shadow-subtitle-outline); }
 .card-cinema-flash { background: var(--gradient-form-flash); animation: cinema-reveal-flash 500ms ease-out both; z-index: 20; }
-.pack-god-ray { z-index: 4; bottom: calc(100% - var(--tear-position)); left: 50%; width: 82%; height: min(85vh, 700px); transform: translateX(-50%); transform-origin: bottom center; clip-path: polygon(46% 100%, 54% 100%, 100% 0, 0 0); background: var(--gradient-opening-ray); filter: drop-shadow(0 0 16px var(--beam)) blur(5px); mix-blend-mode: screen; animation: god-ray-rise 1.7s cubic-bezier(0.16, 0.75, 0.28, 1) both; }
-.pack-opening-scene[data-rarity="transcendance"] .pack-opening-shard { background: var(--gradient-prismatic); filter: drop-shadow(0 0 8px var(--rarity-transcendance)); }
 .opening-shard { width: 7px; height: 11px; border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 75%); }
 .opening-shard:nth-child(even) { background: var(--flash); }
 .opening-afterglow[data-rarity="transcendance"] .opening-afterglow-halo { background: var(--gradient-prismatic); opacity: 0.35; }
-.pack-opening-scene[data-rarity="transcendance"] .pack-god-ray { background: var(--gradient-prismatic); }
 @keyframes cinema-reveal-flash { 0% { opacity: 0; } 15% { opacity: 0.65; } 100% { opacity: 0; } }
-@keyframes god-ray-rise { 0% { opacity: 0; transform: translateX(-50%) scale(0.85, 0.5); } 30% { opacity: 0.9; transform: translateX(-50%) scale(1, 1); } 100% { opacity: 0; transform: translateX(-50%) scale(1.1, 1); } }
 @media (prefers-reduced-motion: reduce) {
-  .card-cinema-flash, .pack-god-ray { display: none; }
+  .premium-energy-frame { animation: none; }
+  .transcendence-card-anticipation { animation: none; }
+  .transcendence-reveal-flash { display: none; }
+  .rarity-glow-layer .rarity-glow-blur,
+  .rarity-glow-layer .rarity-glow-secondary,
+  .rarity-glow-particle,
+  .rarity-glow-flash,
+  .rarity-micro-shake { animation: none; }
+  .rarity-glow-layer .rarity-glow-particle { opacity: 0.65; }
+  .card-cinema-flash { display: none; }
   .opening-afterglow-halo { animation: none; opacity: 0.65; }
   .opening-afterglow-flash, .opening-afterglow-particle { display: none; }
   .form-morph-scene .form-morph-body { animation: none; }
@@ -1120,8 +1262,7 @@
   .pack-opening-scene[data-state] .pack-dynamic-aura { animation: none; opacity: max(0.65, var(--aura-strength)); }
   .form-flip-energy { display: none; }
   .form-flip-scene .form-flip-rotor { animation: none; }
-  .pack-rarity-vibration, .pack-dynamic-aura, .card-personal-halo { animation: none; }
-  .pack-opening-shard { display: none; }
+  .pack-rarity-vibration, .pack-dynamic-aura { animation: none; }
   .pack-dynamic-aura::after, .pack-seam-effects, .pack-jackpot-flash, .pack-tear-flash { display: none; }
   .card-reveal-flip .flip-inner { transition-duration: 150ms; }
   .premium-awakened-aura { animation: none; }
@@ -1133,9 +1274,10 @@
   .awakening-clean-flash, .awakening-silver-column { display: none; }
   .cinema-quote-first, .cinema-quote-impact, .pack-micro-vibration { animation: none; }
   .pack-seal-light, .pack-reflection { display: none; }
-  .pack-cap-peel, .pack-card-stack { animation: none; }
+  .pack-cap-peel { animation: none; }
   .pack-sleeve { animation: none; opacity: 0; }
   .pack-cap { animation: none; opacity: 0; }
+  .pack-first-card { animation: none; opacity: 1; transform: none; }
   .anime-speed-lines, .anime-impact, .anime-outro-flash { display: none; }
   .anime-card-launch, .anime-card-arrival, .cinema-fade-in { animation: none; }
   .holo-tilt { transform: none; }

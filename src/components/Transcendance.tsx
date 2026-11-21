@@ -27,13 +27,13 @@ export function CardCinema({ card, onDone }: { card: Card; onDone: () => void })
     <Button variant="ghost" size="sm" onClick={finish} className="absolute bottom-1 right-1 text-[10px] text-foreground/70">Passer <SkipForward className="size-3" /></Button>
   </div>;
 }
-export function InspectableCard({ card, transcended = false, count, locked = false }: { card: Card; transcended?: boolean; count?: number | undefined; locked?: boolean }) {
+export function InspectableCard({ card, transcended = false, customTranscendance = false, count, locked = false }: { card: Card; transcended?: boolean; customTranscendance?: boolean; count?: number | undefined; locked?: boolean }) {
   const [cinema, setCinema] = useState(false);
   const [flash, setFlash] = useState(false);
-  const ultimate = card.rarity === "transcendance" || transcended;
+  const ultimate = customTranscendance || transcended;
   function finish() { setCinema(false); setFlash(true); }
   return <div className="relative w-full">
-    {cinema ? <CardCinema card={card} onDone={finish} /> : ultimate && !locked ? <Button variant="ghost" aria-label={`Inspecter ${card.name}`} onClick={() => { setFlash(false); setCinema(true); }} className="block h-auto w-full rounded-none p-0 hover:bg-transparent"><AnimeCard card={card} transcended={transcended} count={count} /></Button> : <AnimeCard card={card} transcended={transcended} count={count} locked={locked} />}
+    {customTranscendance ? <AnimeCard card={card} customTranscendance count={count} locked={locked} /> : cinema ? <CardCinema card={card} onDone={finish} /> : ultimate && !locked ? <Button variant="ghost" aria-label={`Inspecter ${card.name}`} onClick={() => { setFlash(false); setCinema(true); }} className="block h-auto w-full rounded-none p-0 hover:bg-transparent"><AnimeCard card={card} transcended={transcended} count={count} /></Button> : <AnimeCard card={card} transcended={transcended} count={count} locked={locked} />}
     {flash && <div aria-hidden className="card-cinema-flash pointer-events-none absolute inset-0 rounded-md" />}
   </div>;
 }
