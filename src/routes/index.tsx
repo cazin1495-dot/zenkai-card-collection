@@ -15,6 +15,7 @@ import { REWARD_LABELS } from "@/lib/economy";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
+import { createLocalGuestDraw } from "@/lib/guest";
 import {
   bestRarity,
   boosterStock,
@@ -53,7 +54,7 @@ type Awake = Record<string, "transcended" | "failed">;
 
 function BoostersPage() {
   const { data: cards } = useSuspenseQuery(cardsQuery);
-  const { session, ready } = useAuth();
+  const { session, ready, guest } = useAuth();
   const userId = session?.user.id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -84,11 +85,40 @@ function BoostersPage() {
   const best = bestRarity(pulled.map((p) => (awake[p.userCardId] === "transcended" ? "transcendance" : p.card.rarity)));
 
   async function open(count: number, category: string = pack) {
+    if (busy) return;
     if (!session) {
-      navigate({ to: "/auth" });
+      if (!guest) {
+        navigate({ to: "/auth" });
+        return;
+      }
+      const localPack = PACKS.find((item) => item.id === category);
+      if (!localPack) {
+        toast.error("Ce type de booster n’est pas disponible en mode Invité.");
+        return;
+      }
+      const localDraw = createLocalGuestDraw(cards, localPack.id, count);
+      if (!localDraw.length) {
+        toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
+        return;
+      }
+
+      setPhase("opening");
+      setPulled([]);
+      setAwake({});
+      const started = Date.now();
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
+      );
+      setPulled(localDraw);
+      setOpened(count);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      setPhase("tearing");
+      await new Promise((resolve) => setTimeout(resolve, 1800));
+      setPhase(count === 1 ? "reveal" : "summary");
       return;
     }
-    if (busy || (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:"))) return;
+    if (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:")) return;
     setPhase("opening");
     setPulled([]);
     setAwake({});
@@ -240,7 +270,13 @@ function BoostersPage() {
         {phase === "summary" && (
           <Button variant="link" size="sm" onClick={() => setPhase("idle")}>Changer de pack</Button>
         )}
-        {ready && !session && <p className="text-xs text-muted-foreground">Connecte-toi pour ouvrir des boosters et garder tes cartes.</p>}
+        {ready && !session && (
+          <p className="text-xs text-muted-foreground">
+            {guest
+              ? "Mode Invité local : tirages simulés, cartes non sauvegardées."
+              : "Connecte-toi pour ouvrir des boosters et garder tes cartes."}
+          </p>
+        )}
       </div>
 
     </div>

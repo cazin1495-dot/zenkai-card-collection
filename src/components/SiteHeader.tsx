@@ -20,7 +20,7 @@ const tabs = [
 ] as const;
 
 export function SiteHeader() {
-  const { session } = useAuth();
+  const { session, guest, leaveGuestMode } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profile = useQuery({ ...profileQuery(session?.user.id ?? ""), enabled: !!session });
@@ -63,14 +63,44 @@ export function SiteHeader() {
           {avatar ? <img src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
           <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{profile.data?.username ?? "Joueur"}</p><div className="player-metrics mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-muted-foreground"><span>Niv. {game.data?.level ?? "…"}</span><span title="Zenkai Coins" className="flex items-center gap-1 whitespace-nowrap"><Coins className="size-3 text-rarity-legendaire" /> {game.data?.coins ?? "…"}</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock === null ? "…" : stock + (game.data?.bonus_boosters ?? 0)}</span></div></div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter" className="size-7"><LogOut className="size-3.5" /></Button>
-        </div> : <div className="flex min-w-0 items-center gap-1">
-          <Button variant="glass" size="sm" disabled={googleLoading} onClick={signInGoogle} className="px-2 text-[10px] sm:text-xs">
-            {googleLoading ? "Connexion…" : "Connexion Google"}
-          </Button>
-          <Button variant="ghost" size="sm" asChild className="px-2 text-[10px] sm:text-xs">
-            <Link to="/auth">E-mail</Link>
-          </Button>
-        </div>}
+        </div> : guest ? (
+          <div className="flex min-w-0 items-center gap-1">
+            <span className="rounded-md border border-border bg-foreground/5 px-2 py-1.5 text-[10px] font-semibold sm:text-xs">
+              Invité local
+            </span>
+            <Link
+              to="/auth"
+              className="px-1 text-[10px] text-muted-foreground hover:text-foreground sm:text-xs"
+            >
+              Connexion
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={leaveGuestMode}
+              aria-label="Quitter le mode invité"
+              title="Quitter le mode invité"
+              className="size-7"
+            >
+              <LogOut className="size-3.5" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex min-w-0 items-center gap-1">
+            <Button
+              variant="glass"
+              size="sm"
+              disabled={googleLoading}
+              onClick={signInGoogle}
+              className="px-2 text-[10px] sm:text-xs"
+            >
+              {googleLoading ? "Connexion…" : "Connexion Google"}
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="px-2 text-[10px] sm:text-xs">
+              <Link to="/auth">E-mail</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   </header>;

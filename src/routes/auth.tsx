@@ -32,7 +32,7 @@ function GoogleLogo() {
 }
 
 function AuthPage() {
-  const { session } = useAuth();
+  const { session, enterGuestMode } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -106,7 +106,25 @@ function AuthPage() {
               <Button type="button" variant="glass" disabled={loading} onClick={() => social("lovable")}>
                 <LovableMark /> Continuer avec Lovable
               </Button>
+              {import.meta.env.DEV && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={loading}
+                  onClick={() => {
+                    enterGuestMode();
+                    navigate({ to: "/", replace: true });
+                  }}
+                >
+                  Continuer en Invité (local)
+                </Button>
+              )}
             </div>
+            {import.meta.env.DEV && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Mode de test : les tirages sont simulés et ne sont pas sauvegardés.
+              </p>
+            )}
 
             <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />

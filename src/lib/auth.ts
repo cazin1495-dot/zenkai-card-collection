@@ -1,10 +1,23 @@
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
 export function signInWithGoogle() {
-  return supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.origin },
-  });
+  return lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+}
+
+const LOCAL_GUEST_KEY = "zenkai:local-guest";
+
+export function isLocalGuestMode() {
+  return (
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.localStorage.getItem(LOCAL_GUEST_KEY) === "true"
+  );
+}
+
+export function setLocalGuestMode(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  if (enabled && import.meta.env.DEV) window.localStorage.setItem(LOCAL_GUEST_KEY, "true");
+  else window.localStorage.removeItem(LOCAL_GUEST_KEY);
 }
 
 export function isOAuthCallbackPath(pathname: string) {
