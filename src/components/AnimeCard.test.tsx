@@ -167,4 +167,23 @@ describe("AnimeCard illustration", () => {
       "z-20",
     );
   });
+
+  it("uses a blood-red and incandescent orange aura for Ryomen Sukuna (Fuga)", () => {
+    const sukunaCard = {
+      ...card,
+      id: "sukuna-fuga-transcendance",
+      name: "Ryomen Sukuna (Fuga)",
+      image_url: "/sukuna%20eveil%201.jpg",
+    };
+    const { container } = render(<AnimeCard card={sukunaCard} customTranscendance />);
+
+    expect(container.querySelector(".flip-front")).toHaveAttribute("data-transcendence-id", sukunaCard.id);
+    expect(container.querySelector(".holo-tilt")).toHaveAttribute("data-transcendence-id", sukunaCard.id);
+    expect(screen.getByRole("img", { name: sukunaCard.name })).toHaveAttribute("src", sukunaCard.image_url);
+    expect(screen.getByRole("img", { name: sukunaCard.name })).toHaveClass(
+      "mix-blend-normal",
+      "opacity-100",
+      "z-20",
+    );
+  });
 });

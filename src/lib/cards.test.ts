@@ -15,6 +15,7 @@ import {
   inPack,
   isTranscendanceCatalogCard,
   normalizeCatalogCard,
+  PACKS,
   rarityFromRoll,
   type Card,
 } from "./cards";
@@ -129,6 +130,16 @@ describe("booster content", () => {
 
 describe("packs", () => {
   const villain = { category: "shonen", role: "antagoniste" } as Card;
+  it("keeps exactly the six original pack selections", () => {
+    expect(PACKS.map((pack) => pack.id)).toEqual([
+      "shonen",
+      "seinen",
+      "shojo",
+      "sport",
+      "antagoniste",
+      "protagoniste",
+    ]);
+  });
   it("puts villains in the Antagoniste and their genre packs only", () => {
     expect(inPack(villain, "antagoniste")).toBe(true);
     expect(inPack(villain, "shonen")).toBe(true);

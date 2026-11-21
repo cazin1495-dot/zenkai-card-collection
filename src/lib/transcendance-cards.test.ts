@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CUSTOM_TRANSCENDANCE_CARDS } from "./transcendance-cards";
 
 describe("dedicated Transcendance catalogue", () => {
-  it("contains the five configured Transcendance cards with their pack assignments", () => {
+  it("contains the six configured Transcendance cards with their pack assignments", () => {
     expect(CUSTOM_TRANSCENDANCE_CARDS).toEqual([
       {
         id: "goku-ui-transcendance",
@@ -42,6 +42,14 @@ describe("dedicated Transcendance catalogue", () => {
         anime: "Bleach",
         image_url: "/ichigo%20bankai.webp",
         pack_ids: ["shonen", "protagoniste"],
+        rarity: "Transcendance",
+      },
+      {
+        id: "sukuna-fuga-transcendance",
+        name: "Ryomen Sukuna (Fuga)",
+        anime: "Jujutsu Kaisen",
+        image_url: "/sukuna%20eveil%201.jpg",
+        pack_ids: ["antagoniste", "shonen"],
         rarity: "Transcendance",
       },
     ]);

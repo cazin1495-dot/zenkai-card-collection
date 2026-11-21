@@ -129,7 +129,7 @@ export type PackId = "shonen" | "seinen" | "shojo" | "sport" | "antagoniste" | "
 export const PACK_ARTWORK = "/image_c1811ac7.jpg";
 
 export const PACKS: { id: PackId; label: string; hint: string; accent: string }[] = [
-  { id: "shonen", label: "Shonen Mix", hint: "Dragon Ball, Naruto, Bleach", accent: "var(--pack-shonen)" },
+  { id: "shonen", label: "Shonen Mix", hint: "Dragon Ball, Naruto, Bleach, JJK, Honkai: Star Rail", accent: "var(--pack-shonen)" },
   { id: "seinen", label: "Seinen", hint: "Berserk, Vinland Saga, Tokyo Ghoul, Monster", accent: "var(--pack-seinen)" },
   { id: "shojo", label: "Shojo", hint: "Fruits Basket, Nana, Sailor Moon, Sakura", accent: "var(--pack-shojo)" },
   { id: "sport", label: "Sport", hint: "Blue Lock, Haikyuu!!, Kuroko, Ippo", accent: "var(--pack-sport)" },

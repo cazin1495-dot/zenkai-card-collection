@@ -115,4 +115,19 @@ describe("booster content preview", () => {
       unmount();
     }
   });
+
+  it("shows Ryomen Sukuna (Fuga) in Antagoniste and Shonen Mix previews", () => {
+    for (const [pack, label] of [["antagoniste", "Antagoniste"], ["shonen", "Shonen Mix"]] as const) {
+      const { unmount } = render(<PreviewHarness pack={pack} />);
+      fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+
+      expect(screen.getByText(`Contenu du pack ${label}`)).toBeTruthy();
+      expect(screen.getByText("Ryomen Sukuna (Fuga)")).toBeTruthy();
+      expect(screen.getByRole("img", { name: "Ryomen Sukuna (Fuga)" })).toHaveAttribute(
+        "src",
+        "/sukuna%20eveil%201.jpg",
+      );
+      unmount();
+    }
+  });
 });

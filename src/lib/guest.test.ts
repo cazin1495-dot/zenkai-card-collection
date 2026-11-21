@@ -16,6 +16,7 @@ const ANTAGONIST_IDS = new Set([133701, 133699, 133702, 162722]);
 
 async function fetchJjkFromBrowser(): Promise<Card[]> {
   try {
+    const endpoint = "https://graphql." + "anilist.co";
     const query = `
       query {
         Media(id: 113415, type: ANIME) {
@@ -32,7 +33,7 @@ async function fetchJjkFromBrowser(): Promise<Card[]> {
         }
       }
     `;
-    const res = await fetch("https://anilist.co", {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ query }),
@@ -63,7 +64,7 @@ async function fetchJjkFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v2"],
+  queryKey: ["cards-v4"],
   queryFn: async () => {
     const [base, jjk] = await Promise.all([getCards(), fetchJjkFromBrowser()]);
     const cleaned = base

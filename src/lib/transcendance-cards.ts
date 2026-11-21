@@ -51,6 +51,14 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     pack_ids: ["shonen", "protagoniste"],
     rarity: "Transcendance",
   },
+  {
+    id: "sukuna-fuga-transcendance",
+    name: "Ryomen Sukuna (Fuga)",
+    anime: "Jujutsu Kaisen",
+    image_url: "/sukuna%20eveil%201.jpg",
+    pack_ids: ["antagoniste", "shonen"],
+    rarity: "Transcendance",
+  },
 ];
 
 const GENRES: readonly Genre[] = ["shonen", "seinen", "shojo", "sport"];
