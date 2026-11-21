@@ -124,7 +124,7 @@ function BoostersPage() {
     // Show the actual draw's maximum aura before splitting the seam.
     await new Promise((r) => setTimeout(r, 600));
     setPhase("tearing");
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1800));
     setPhase(count === 1 ? "reveal" : "summary");
   }
 
@@ -132,7 +132,7 @@ function BoostersPage() {
   const onAwaken = (id: string, r: "transcended" | "failed") => setAwake((a) => ({ ...a, [id]: r }));
 
   return (
-    <div className="booster-hub mx-auto flex max-w-6xl flex-col items-center px-4 pb-12 pt-6 sm:px-6">
+    <div className="booster-hub mx-auto flex max-w-[100vw] flex-col items-center overflow-x-hidden px-4 pb-12 pt-6 sm:px-6">
       {(phase === "reveal" || phase === "summary") && <h1 className="sr-only">Ouverture du booster</h1>}
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
@@ -144,7 +144,7 @@ function BoostersPage() {
             {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
           </p>
 
-          <div role="radiogroup" aria-label="Catégorie de booster" className="hub-pack-selector mt-5 grid w-full max-w-4xl grid-cols-3 gap-2 sm:grid-cols-6">
+          <div role="radiogroup" aria-label="Catégorie de booster" className="hub-pack-selector mt-5 flex w-full max-w-full flex-wrap justify-center gap-2">
             {PACKS.map((p) => (
               <Button variant="ghost"
                 key={p.id}
@@ -153,7 +153,7 @@ function BoostersPage() {
                 disabled={busy}
                 onClick={() => setPack(p.id)}
                 className={cn(
-                  "hub-pack-option block h-auto min-w-0 rounded-md border bg-foreground/5 px-2 py-2 text-left transition-all",
+                  "hub-pack-option block h-auto flex-1 basis-28 rounded-md border bg-foreground/5 px-2 py-2 text-left transition-all",
                   pack === p.id ? "border-[var(--accent)] bg-surface-raised" : "border-border opacity-70 hover:opacity-100",
                 )}
                 style={{ ["--accent" as string]: p.accent, boxShadow: pack === p.id ? `0 0 24px -6px ${p.accent}` : undefined }}
@@ -175,13 +175,38 @@ function BoostersPage() {
         ) : phase === "summary" ? (
           <Summary items={pulled} opened={opened} awake={awake} onAwaken={onAwaken} best={best} signedIn={!!session} />
         ) : (
-          <Button variant="ghost" aria-label="Ouvrir ce booster" disabled={!ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < 1)} onClick={() => open(1)} className="h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100">
-          <BoosterPack
-            state={phase === "tearing" ? "tearing" : phase === "opening" ? "opening" : "idle"}
-            accent={packInfo.accent}
-            beam={phase === "opening" || phase === "tearing" ? tearBeam : null}
-          />
-          </Button>
+          <div className="flex flex-col items-center gap-3">
+            {phase === "idle" ? (
+              <div className="h-[290px] w-[175px] overflow-hidden rounded-xl shadow-2xl">
+                <img
+                  src="/IMG_6616.png"
+                  alt="Booster Zenkai"
+                  className="h-full w-full scale-125 object-cover"
+                />
+              </div>
+            ) : (
+              <BoosterPack
+                state={phase === "tearing" ? "tearing" : "opening"}
+                accent={packInfo.accent}
+                category={packInfo.label}
+                beam={tearBeam}
+              />
+            )}
+            <Button
+              variant="ghost"
+              aria-label="Ouvrir le Booster"
+              disabled={
+                !ready || busy || (!!stock && stock.count + (game.data?.bonus_boosters ?? 0) < 1)
+              }
+              onClick={() => open(1)}
+              className="opening-pack-button flex-col gap-3 h-auto rounded-none p-0 hover:bg-transparent disabled:opacity-100"
+              style={{ ["--accent" as string]: packInfo.accent }}
+            >
+              <span className="rounded-full border border-[var(--accent)] bg-surface/80 px-5 py-2 text-xs font-bold uppercase tracking-wider text-foreground shadow-[0_0_20px_-8px_var(--accent)]">
+                Ouvrir le Booster
+              </span>
+            </Button>
+          </div>
         )}
       </section>
 

@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import { Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { cardArt, cardIdentity, RARITY, type Card, type Rarity } from "@/lib/cards";
@@ -14,11 +14,46 @@ type Props = {
   compact?: boolean | undefined;
   comparisonForm?: "base" | "awakened" | undefined;
   transformationKey?: number | undefined;
-  preload?: boolean;
 };
 
 export function displayRarity(card: Card, transcended?: boolean): Rarity {
   return transcended ? "transcendance" : card.rarity;
+}
+
+function CardIllustration({
+  src,
+  alt,
+  className,
+  loading = "lazy",
+  ariaHidden = false,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  loading?: "eager" | "lazy";
+  ariaHidden?: boolean;
+}) {
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  if (!src || failedSource === src) {
+    return (
+      <div
+        role={ariaHidden ? undefined : "img"}
+        aria-label={alt || undefined}
+        aria-hidden={ariaHidden}
+        className={cn(className, "card-art-fallback")}
+      />
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      aria-hidden={ariaHidden}
+      loading={loading}
+      onError={() => setFailedSource(src)}
+      className={cn(className, "object-cover")}
+    />
+  );
 }
 
 /** Metallic frame and low-opacity pointer-reactive varnish. */
@@ -39,7 +74,7 @@ export function TranscendFrame() {
 }
 
 /** Trading card with a flip animation and a rarity-coloured frame. */
-export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0, preload = false }: Props) {
+export function AnimeCard({ card, flipped = true, className, count, locked, transcended, compact, comparisonForm, transformationKey = 0 }: Props) {
   const rarity = displayRarity(card, transcended);
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
@@ -80,11 +115,27 @@ export function AnimeCard({ card, flipped = true, className, count, locked, tran
         <div data-compact={compact ? "true" : "false"} className={cn("flip-face flip-front overflow-hidden rounded-2xl bg-surface", locked ? "border border-border" : rarity === "transcendance" ? "reverse-card" : r.glow)}>
           {comparisonForm ? (
             <div className="form-portrait-stack absolute inset-0 overflow-hidden" data-form={comparisonForm}>
-              <img src={cardArt(card, false)} alt={comparisonForm === "base" ? cardIdentity(card, false).name : ""} aria-hidden={comparisonForm !== "base"} loading="eager" className="form-portrait form-portrait-base absolute inset-0 size-full object-cover" />
-              <img src={cardArt(card, true)} alt={comparisonForm === "awakened" ? cardIdentity(card, true).name : ""} aria-hidden={comparisonForm !== "awakened"} loading="eager" className="form-portrait form-portrait-awakened absolute inset-0 size-full object-cover" />
+              <CardIllustration
+                src={cardArt(card, false)}
+                alt={comparisonForm === "base" ? cardIdentity(card, false).name : ""}
+                ariaHidden={comparisonForm !== "base"}
+                loading="eager"
+                className="form-portrait form-portrait-base absolute inset-0 size-full"
+              />
+              <CardIllustration
+                src={cardArt(card, true)}
+                alt={comparisonForm === "awakened" ? cardIdentity(card, true).name : ""}
+                ariaHidden={comparisonForm !== "awakened"}
+                loading="eager"
+                className="form-portrait form-portrait-awakened absolute inset-0 size-full"
+              />
             </div>
           ) : art ? (
-            <img src={art} alt={identity.name} loading={preload ? "eager" : "lazy"} className={cn("object-cover", rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")} />
+            <CardIllustration
+              src={art}
+              alt={identity.name}
+              className={cn(rarity === "transcendance" && !locked ? "reverse-art" : "size-full", locked && "silhouette")}
+            />
           ) : null}
           {(rarity === "legendaire" || rarity === "mythique") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { signInWithGoogle } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({
@@ -63,8 +64,25 @@ function AuthPage() {
   }
 
   async function social(provider: "google" | "lovable") {
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
-    if (result.error) toast.error("La connexion a échoué. Réessaie.");
+    setLoading(true);
+    try {
+      if (provider === "google") {
+        const { error } = await signInWithGoogle();
+        if (error) throw error;
+        return;
+      }
+
+      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+      if (result.error) throw result.error;
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `La connexion a échoué : ${error.message}`
+          : "La connexion a échoué. Réessaie.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -82,10 +100,10 @@ function AuthPage() {
         ) : (
           <>
             <div className="mt-6 grid gap-2">
-              <Button type="button" variant="glass" onClick={() => social("google")}>
+              <Button type="button" variant="glass" disabled={loading} onClick={() => social("google")}>
                 <GoogleLogo /> Continuer avec Google
               </Button>
-              <Button type="button" variant="glass" onClick={() => social("lovable")}>
+              <Button type="button" variant="glass" disabled={loading} onClick={() => social("lovable")}>
                 <LovableMark /> Continuer avec Lovable
               </Button>
             </div>

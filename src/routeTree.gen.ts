@@ -10,20 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BoutiqueRouteImport } from './routes/boutique'
+import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as EchangesRouteImport } from './routes/echanges'
 import { Route as EveilRouteImport } from './routes/eveil'
-import { Route as AuthenticatedCollectionRouteImport } from './routes/_authenticated/collection'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -36,6 +31,11 @@ const BoutiqueRoute = BoutiqueRouteImport.update({
   path: '/boutique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionRoute = CollectionRouteImport.update({
+  id: '/collection',
+  path: '/collection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EchangesRoute = EchangesRouteImport.update({
   id: '/echanges',
   path: '/echanges',
@@ -46,60 +46,53 @@ const EveilRoute = EveilRouteImport.update({
   path: '/eveil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedCollectionRoute = AuthenticatedCollectionRouteImport.update({
-  id: '/collection',
-  path: '/collection',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/boutique': typeof BoutiqueRoute
+  '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
-  '/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/boutique': typeof BoutiqueRoute
+  '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
-  '/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/boutique': typeof BoutiqueRoute
+  '/collection': typeof CollectionRoute
   '/echanges': typeof EchangesRoute
   '/eveil': typeof EveilRoute
-  '/_authenticated/collection': typeof AuthenticatedCollectionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/boutique' | '/echanges' | '/eveil' | '/collection'
+    '/' | '/auth' | '/boutique' | '/collection' | '/echanges' | '/eveil'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/boutique' | '/echanges' | '/eveil' | '/collection'
+  to: '/' | '/auth' | '/boutique' | '/collection' | '/echanges' | '/eveil'
   id:
     | '__root__'
     | '/'
-    | '/_authenticated'
     | '/auth'
     | '/boutique'
+    | '/collection'
     | '/echanges'
     | '/eveil'
-    | '/_authenticated/collection'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BoutiqueRoute: typeof BoutiqueRoute
+  CollectionRoute: typeof CollectionRoute
   EchangesRoute: typeof EchangesRoute
   EveilRoute: typeof EveilRoute
 }
@@ -111,13 +104,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -134,6 +120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoutiqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collection': {
+      id: '/collection'
+      path: '/collection'
+      fullPath: '/collection'
+      preLoaderRoute: typeof CollectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/echanges': {
       id: '/echanges'
       path: '/echanges'
@@ -148,32 +141,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EveilRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/collection': {
-      id: '/_authenticated/collection'
-      path: '/collection'
-      fullPath: '/collection'
-      preLoaderRoute: typeof AuthenticatedCollectionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedCollectionRoute: typeof AuthenticatedCollectionRoute
-}
-
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedCollectionRoute: AuthenticatedCollectionRoute,
-}
-
-const AuthenticatedRouteRouteWithChildren =
-  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BoutiqueRoute: BoutiqueRoute,
+  CollectionRoute: CollectionRoute,
   EchangesRoute: EchangesRoute,
   EveilRoute: EveilRoute,
 }

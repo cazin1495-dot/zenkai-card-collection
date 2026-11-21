@@ -10,8 +10,9 @@ import { recycleValue } from "@/lib/economy";
 import { cardsQuery, collectionQuery } from "@/lib/queries";
 import { inPack, type Card, type PackId } from "@/lib/cards";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/collection")({
+export const Route = createFileRoute("/collection")({
   head: () => ({
     meta: [
       { title: "Ma Collection — Zenkai" },
@@ -39,14 +40,15 @@ const FILTERS: { id: Filter; label: string }[] = [
 type Owned = { count: number; transcendedCount: number; pendingCopy: string | null };
 
 function CollectionPage() {
-  const { userId } = Route.useRouteContext();
+  const { session } = useAuth();
+  const userId = session?.user.id;
   const cards = useQuery(cardsQuery);
-  const owned = useQuery(collectionQuery(userId));
+  const owned = useQuery({ ...collectionQuery(userId ?? ""), enabled: !!userId });
   const queryClient = useQueryClient();
   const [recycling, setRecycling] = useState<string | null>(null);
   async function recycle(card: Card, transcended = false) {
     const copy = owned.data?.find(row => row.card_id === card.id && row.transcended === transcended);
-    if (!copy || recycling) return;
+    if (!userId || !copy || recycling) return;
     const value = recycleValue(transcended ? "transcendance" : card.rarity, card.popularity ?? 1);
     if (!window.confirm(`Recycler un doublon de ${card.name} pour ${value} Coins ?`)) return;
     setRecycling(copy.id);
@@ -97,6 +99,17 @@ function CollectionPage() {
         <Progress value={ownedInView} total={list.length} className="max-w-20 sm:max-w-xs" />
       </div>
 
+      {!session && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface/60 p-4">
+          <p className="text-sm text-muted-foreground">
+            Consulte le catalogue librement. Connecte-toi pour sauvegarder ta collection et ouvrir des boosters.
+          </p>
+          <Button variant="glass" asChild>
+            <Link to="/auth">Se connecter</Link>
+          </Button>
+        </div>
+      )}
+
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <Button variant="ghost"
@@ -139,7 +152,7 @@ function CollectionPage() {
                   const o = byCard.get(card.id);
                   return (
                     <div key={card.id} className="flex flex-col items-center gap-2">
-                       {(!o || o.count > o.transcendedCount) && <InspectableCard card={card} count={o ? o.count - o.transcendedCount : undefined} locked={!o} />}
+                       {(!o || o.count > o.transcendedCount) && <InspectableCard card={card} count={o ? o.count - o.transcendedCount : undefined} locked={!!session && !o} />}
                       {o && o.count - o.transcendedCount > 1 && <Button variant="glass" size="sm" disabled={!!recycling} onClick={() => recycle(card)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{recycleValue(card.rarity, card.popularity ?? 1)} Coins</Button>}
                        {!!o?.transcendedCount && <InspectableCard card={card} count={o.transcendedCount} transcended />}
                        {o && o.transcendedCount > 1 && <Button variant="glass" size="sm" disabled={!!recycling} onClick={() => recycle(card, true)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{recycleValue("transcendance", card.popularity ?? 1)} Coins</Button>}

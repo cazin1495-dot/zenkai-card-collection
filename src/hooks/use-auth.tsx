@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session } from "@supabase/supabase-js";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 type AuthState = { session: Session | null; ready: boolean };
@@ -15,6 +16,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const search = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      if (search.has("error") || search.has("error_code") || hash.has("error")) {
+        const description = search.get("error_description") ?? hash.get("error_description");
+        toast.error(description ? `La connexion a échoué : ${description}` : "La connexion a échoué. Réessaie.");
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+      }
+    }
+
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       setState({ session, ready: true });
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;

@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
   type ErrorComponentProps,
+  redirect,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -15,6 +16,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { isOAuthCallbackPath } from "@/lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -77,6 +79,11 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: ({ location }) => {
+    if (isOAuthCallbackPath(location.pathname)) {
+      throw redirect({ to: "/", replace: true });
+    }
+  },
   head: () => ({
     // Replace these placeholders with the app's name and description when first building the app.
     // Each content route, / included, must still set its own head(). Never add og:image or

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimeCard } from "./AnimeCard";
-import type { Card } from "@/lib/cards";
+import { cardArt, type Card } from "@/lib/cards";
 
 type Form = "base" | "awakened";
 
@@ -10,13 +10,18 @@ export function FormFlipCard({ card, form, onBusyChange }: { card: Card; form: F
   const [direction, setDirection] = useState<"forward" | "reverse" | null>(null);
   const [ready, setReady] = useState(false);
   const [landed, setLanded] = useState(false);
-  const stack = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const images = Array.from(stack.current?.querySelectorAll("img") ?? []);
-    Promise.all(images.map((image) => image.decode().catch(() => undefined))).then(() => {
-      if (!cancelled) setReady(images.every((image) => image.complete && image.naturalWidth > 0));
+    const sources = [cardArt(card, false), cardArt(card, true)].filter(Boolean);
+    Promise.all(
+      sources.map((source) => {
+        const image = new Image();
+        image.src = source;
+        return image.decode().then(() => true, () => false);
+      }),
+    ).then(() => {
+      if (!cancelled) setReady(true);
     });
     return () => { cancelled = true; };
   }, [card]);
@@ -37,13 +42,13 @@ export function FormFlipCard({ card, form, onBusyChange }: { card: Card; form: F
     onBusyChange(false);
   }
 
-  return <div ref={stack} className="form-morph-scene relative aspect-[2/3] w-full" data-form={form} data-ready={ready} data-direction={direction ?? "idle"} data-landed={landed}>
+  return <div className="form-morph-scene relative aspect-[2/3] w-full" data-form={form} data-ready={ready} data-direction={direction ?? "idle"} data-landed={landed}>
     <div className="form-morph-body relative size-full" onAnimationEnd={(event) => { if (event.target === event.currentTarget) finish(); }}>
       <div className="form-morph-base absolute inset-0" aria-hidden={form !== "base"}>
-        <AnimeCard card={card} preload />
+        <AnimeCard card={card} />
       </div>
       <div className="form-morph-awakened absolute inset-0" aria-hidden={form !== "awakened"}>
-        <AnimeCard card={card} transcended preload />
+        <AnimeCard card={card} transcended />
       </div>
       {direction && <div aria-hidden className="form-scan-beam pointer-events-none absolute inset-x-0">
         {[0, 1, 2, 3, 4, 5].map((spark) => <span key={spark} className="form-scan-spark absolute" />)}
