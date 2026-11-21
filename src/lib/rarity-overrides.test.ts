@@ -17,6 +17,22 @@ describe("user rarity overrides", () => {
     expect(characterRarity("Nami", "rare", id)).toBe(rarity);
   });
 
+  it("applies the newly configured ids over name rules", () => {
+    const additions = {
+      "al-12300": "mythique", "al-5833": "legendaire", "al-20594": "legendaire",
+      "al-13898": "mythique", "al-678": "legendaire", "al-4318": "legendaire",
+      "al-1900": "legendaire", "al-1902": "legendaire", "al-7302": "legendaire",
+      "al-52425": "legendaire", "al-26": "epique", "al-5835": "rare",
+      "al-29809": "rare", "al-41135": "rare",
+    };
+    for (const [id, rarity] of Object.entries(additions)) {
+      expect(normalizeCatalogCard({ ...card, id, rarity: "commune" })).toMatchObject({
+        rarity,
+        serverRarity: "commune",
+      });
+    }
+  });
+
   it("keeps local editor choices above the fixed list", () => {
     const fixedCard = { ...card, id: "al-245" };
     setUserRarityOverride("Nami", "epique");

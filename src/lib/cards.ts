@@ -74,6 +74,20 @@ export const USER_RARITY_OVERRIDES: Record<string, CatalogRarity> = {
   "al-169400": "epique",
   "al-196502": "legendaire",
   "al-42804": "legendaire",
+  "al-12300": "mythique",
+  "al-5833": "legendaire",
+  "al-20594": "legendaire",
+  "al-13898": "mythique",
+  "al-678": "legendaire",
+  "al-4318": "legendaire",
+  "al-1900": "legendaire",
+  "al-1902": "legendaire",
+  "al-7302": "legendaire",
+  "al-52425": "legendaire",
+  "al-26": "epique",
+  "al-5835": "rare",
+  "al-29809": "rare",
+  "al-41135": "rare",
 };
 export const USER_RARITY_OVERRIDES_KEY = "zenkai_admin_rarity_overrides";
 export const USER_RARITY_OVERRIDES_UPDATED = "zenkai:rarity-overrides-updated";

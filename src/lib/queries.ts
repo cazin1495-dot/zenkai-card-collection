@@ -19,6 +19,10 @@ const OP_LEGENDARY_IDS = parseIds("729");
 // One Piece — Antagonistes : Doflamingo, Crocodile, Katakuri, Kaido, Buggy, Barbe Noire
 const OP_ANTAGONIST_IDS = parseIds("19986,2745,123779,125667,2460,14251");
 
+const HXH_MYTHIC_IDS = parseIds("27,30,31,28,23277,57,23338,23278");
+const HXH_LEGENDARY_IDS = parseIds("33,3200,27996,58193,4423,23337");
+const HXH_ANTAGONIST_IDS = parseIds("31,23277,57,23278,33,3200,26165,24558,24560,58,12300");
+
 function rarityFromNonMythicRank(nonMythicRank: number): CatalogRarity {
   if (nonMythicRank < 4) return "legendaire";
   if (nonMythicRank < 9) return "epique";
@@ -178,11 +182,12 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v20"],
+  queryKey: ["cards-v21"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
     const op = await fetchAnimeCharacters(21, "One Piece", OP_MYTHIC_IDS, OP_LEGENDARY_IDS, OP_ANTAGONIST_IDS, 1000, "Pirate / Antagoniste", "Pirate / Protagoniste");
+    const hxh = await fetchAnimeCharacters(11061, "Hunter x Hunter", HXH_MYTHIC_IDS, HXH_LEGENDARY_IDS, HXH_ANTAGONIST_IDS, 900, "Antagoniste", "Hunter");
     const hsr = await fetchHsrFromBrowser();
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card));
     const existingIds = new Set(cleaned.map((card) => card.id));
@@ -192,6 +197,7 @@ export const cardsQuery = queryOptions({
       ...cleaned,
       ...jjk.filter((card) => !existingIds.has(card.id)),
       ...op.filter((card) => !existingIds.has(card.id)),
+      ...hxh.filter((card) => !existingIds.has(card.id)),
       ...hsr.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },

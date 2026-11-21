@@ -20,6 +20,62 @@ describe("catalog query", () => {
     localStorage.removeItem("zenkai_admin_rarity_overrides");
   });
 
+  it("loads and routes Hunter x Hunter characters, deduplicating the base catalogue", async () => {
+    const mythicIds = [27, 30, 31, 28, 23277, 57, 23338, 23278];
+    const legendaryIds = [33, 3200, 27996, 58193, 4423, 23337];
+    const antagonistIds = [31, 23277, 57, 23278, 33, 3200, 26165, 24558, 24560, 58, 12300];
+    const ids = [...mythicIds, ...legendaryIds, 26165, 24558, 24560, 58, 12300, 90003, 90004, 90005, 90006, 90007, 133702];
+    let hxhQuery = "";
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = typeof init?.body === "string" ? init.body : "";
+      if (body.includes("Media(id: 11061")) {
+        hxhQuery = body;
+        return {
+          ok: true,
+          json: async () => ({ data: { Media: { characters: { edges: ids.map((id) => ({
+            node: { id, name: { full: `HXH ${id}` }, image: { large: `https://example.com/${id}` }, favourites: 100 },
+          })) } } } }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    }));
+    setUserRarityOverride("al-31", "epique");
+    const client = new QueryClient();
+    client.setQueryData(["cards-v20"], [{ id: "stale" }]);
+    const cards = await client.fetchQuery(cardsQuery);
+    const hxh = cards.filter((card) => card.series === "Hunter x Hunter");
+    expect(hxhQuery).toContain("perPage: 25");
+    expect(ids).toHaveLength(25);
+    expect(hxh).toHaveLength(24);
+    expect(cards.filter((card) => card.id === "al-133702")).toHaveLength(1);
+    expect(cards.some((card) => card.id === "stale")).toBe(false);
+    expect(hxh.find((card) => card.id === "al-58")?.role).toBe("antagoniste");
+    expect(hxh.find((card) => card.id === "al-12300")?.role).toBe("antagoniste");
+    for (const card of hxh) {
+      const id = Number(card.id.slice(3));
+      const antagonist = antagonistIds.includes(id);
+      expect(card).toMatchObject({
+        category: "shonen",
+        role: antagonist ? "antagoniste" : "protagoniste",
+        title: `Hunter x Hunter · ${antagonist ? "Antagoniste" : "Hunter"}`,
+        image_url: `https://example.com/${id}`,
+        popularity: 100,
+      });
+      expect(inPack(card, "shonen")).toBe(true);
+      expect(inPack(card, "zenkai")).toBe(true);
+      expect(inPack(card, "antagoniste")).toBe(antagonist);
+      expect(inPack(card, "protagoniste")).toBe(!antagonist);
+      if (id === 31) {
+        expect(card).toMatchObject({ rarity: "epique", serverRarity: "mythique" });
+      } else if (mythicIds.includes(id)) {
+        expect(card.rarity).toBe("mythique");
+      } else if (legendaryIds.includes(id)) {
+        expect(card.rarity).toBe("legendaire");
+      }
+    }
+    client.clear();
+  });
+
   it("applies saved id overrides to database, AniList and HSR cards", async () => {
     setUserRarityOverride("nami", "epique");
     setUserRarityOverride("al-1", "rare");
@@ -95,7 +151,7 @@ describe("catalog query", () => {
     CUSTOM_RARITY["nami"] = "legendaire";
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    client.setQueryData(["cards-v19"], [
+    client.setQueryData(["cards-v20"], [
       { id: "nami", name: "Nami", title: "", description: "", rarity: "rare", sort_order: 1, category: "shonen" },
     ]);
     const wrapper = ({ children }: { children: ReactNode }) =>
