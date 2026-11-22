@@ -486,7 +486,7 @@ export function BoostersPage() {
                   <DialogHeader className="pr-8">
                     <DialogTitle>Ouvrir {packInfo.label}</DialogTitle>
                     <DialogDescription>
-                      {!ready ? "Chargement de la session…" : pack === "zenkai" ? "L'achat en Zen nécessite une prise en charge côté serveur." : "Tirages locaux sauvegardés dans cette collection."}
+                      {!ready ? "Chargement de la session…" : pack === "zenkai" ? "Taux doublés sur tout le catalogue · Paiement en Zen." : "Tirages locaux sauvegardés dans cette collection."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-3">
