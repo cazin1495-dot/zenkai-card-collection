@@ -53,12 +53,12 @@ export function CollectionPage() {
   const { session, guest } = useAuth();
   const [localView, setLocalView] = useState(false);
   const [albumView, setAlbumView] = useState(false);
-  const localCollection = !session || localView;
+  const localCollection = true;
   const userId = session?.user.id;
   const cards = useQuery(cardsQuery);
   const owned = useQuery({ ...collectionQuery(userId ?? ""), enabled: !!userId && !localCollection });
-  const guestOwned = useQuery({ queryKey: ["guest-collection"], queryFn: getGuestCollection, enabled: localCollection });
-  const plus = useQuery({ queryKey: ["guest-plus"], queryFn: getGuestPlus, enabled: localCollection });
+  const guestOwned = useQuery({ queryKey: ["guest-collection"], queryFn: getGuestCollection, enabled: true });
+  const plus = useQuery({ queryKey: ["guest-plus"], queryFn: getGuestPlus, enabled: true });
   const accountPlus = useZenkaiPlus();
   const localBonus = session ? accountPlus.state?.active === true : plus.data?.active === true;
   const queryClient = useQueryClient();
