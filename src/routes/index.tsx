@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
 import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
+import { getGuestState, updateGuestState } from "@/lib/guest-collection";
 import { recordBoosterOpen, recordSecretDraw } from "@/lib/quests";
 import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
 import { markNewBoosterCards, sortBoosterCardsByRarity } from "@/lib/booster-order";
@@ -240,12 +241,15 @@ export function BoostersPage() {
 
   async function open(count: number, category: string = pack) {
     if (busy) return;
-    if (betaBoosters < count) {
-      toast.error(`Stock insuffisant (${betaBoosters} / ${MAX_BETA_BOOSTERS} boosters). Attends le timer pour en récupérer !`);
-      return;
-    }
-    if (category === "zenkai") {
-      toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
+    const isZenkaiPack = category === "zenkai";
+    const zenkaiCost = count * ZENKAI_BOOSTER_COST;
+    if (isZenkaiPack) {
+      if (getGuestState().zen < zenkaiCost) {
+        toast.error(`Il te faut ${zenkaiCost.toLocaleString("fr-FR")} Zen pour ouvrir x${count} Booster Zenkai.`);
+        return;
+      }
+    } else if (betaBoosters < count) {
+      toast.error(`Stock insuffisant (${betaBoosters} / ${MAX_BETA_BOOSTERS} boosters). Attends le timer !`);
       return;
     }
     if (!session && !guest) {
@@ -282,13 +286,20 @@ export function BoostersPage() {
       return;
     }
     try {
-      const raw = localStorage.getItem("zenkai_beta_boosters_v1");
+      if (isZenkaiPack) {
+        updateGuestState((state) => {
+          if (state.zen < zenkaiCost) throw new Error("Solde Zen insuffisant.");
+          return { state: { ...state, zen: state.zen - zenkaiCost }, result: true };
+        });
+      } else {
+        const raw = localStorage.getItem("zenkai_beta_boosters_v1");
       const parsed = raw ? JSON.parse(raw) : { count: MAX_BETA_BOOSTERS, updatedAt: Date.now() };
       const nextCount = Math.max(0, betaBoosters - count);
       const nextUpdatedAt = betaBoosters >= MAX_BETA_BOOSTERS ? Date.now() : (parsed.updatedAt || Date.now());
       localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count: nextCount, updatedAt: nextUpdatedAt }));
       setBetaBoosters(nextCount);
       if (betaBoosters >= MAX_BETA_BOOSTERS) setNextBoosterSec(REGEN_SECONDS);
+      }
     } catch (error) {
       toast.error(error instanceof Error
         ? `Cartes sauvegardées, mais stock local indisponible : ${error.message}`
