@@ -111,7 +111,7 @@ export function BoosterPreviewDialog({
           <Eye aria-hidden /> Voir les cartes du pack
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[88dvh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto p-4 sm:p-6">
+      <DialogContent onOpenAutoFocus={(event) => event.preventDefault()} className="max-h-[88dvh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="pr-8">
           <DialogTitle>Contenu du pack {packLabel}</DialogTitle>
           <DialogDescription>Cartes disponibles et taux de drop par carte.</DialogDescription>
