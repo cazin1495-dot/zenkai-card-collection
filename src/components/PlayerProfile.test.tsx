@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerProfile } from "@/lib/player-profile";
 import { updateGuestState } from "@/lib/guest-collection";
 import { BETA_END, claimBetaAccess } from "@/lib/beta";
@@ -80,6 +80,28 @@ describe("personnalisation du profil", () => {
     localStorage.clear();
     fixtures.userId = null;
     fixtures.accountRows = [];
+    vi.spyOn(Date, "now").mockReturnValue(Date.parse(BETA_END) - 1000);
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("ne réinitialise pas la progression si la confirmation est annulée", async () => {
+    updateGuestState((state) => ({ state: { ...state, zen: 900 }, result: undefined }));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Profil" }));
+    await screen.findByText("Collection locale");
+    fireEvent.click(screen.getByRole("button", { name: "Réinitialiser ma progression Bêta (repartir de 0)" }));
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(JSON.parse(localStorage.getItem("zenkai_guest_collection")!).zen).toBe(900);
+  });
+
+  it("indique que la réinitialisation d'un compte connecté est indisponible", async () => {
+    fixtures.userId = "alice";
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Profil" }));
+    await screen.findByText("Collection du compte connecté");
+    expect(screen.getByRole("button", { name: "Réinitialiser ma progression Bêta (repartir de 0)" })).toBeDisabled();
+    expect(screen.getByText(/nécessite une prise en charge sécurisée côté serveur/)).toBeTruthy();
   });
 
   it("permet d'équiper le titre du pack de bienvenue bêta", async () => {

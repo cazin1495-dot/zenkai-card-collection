@@ -19,7 +19,7 @@ import { useLevel } from "@/hooks/use-level";
 import { useQuests } from "@/hooks/use-quests";
 import { useSecretQuests } from "@/hooks/use-secret-quests";
 import { getGuestCollection } from "@/lib/guest-collection";
-import { hasBetaWelcome } from "@/lib/beta";
+import { betaEnded, hasBetaWelcome, resetGuestBetaProgress } from "@/lib/beta";
 import { cardsQuery, collectionQuery } from "@/lib/queries";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
@@ -196,6 +196,17 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
       toast.error(
         reason instanceof Error ? reason.message : "Enregistrement du profil impossible.",
       );
+    }
+  }
+
+  function resetProgress() {
+    if (userId) return;
+    if (!window.confirm("Es-tu sûr de vouloir remettre tes cartes, tes Zen et ton niveau à zéro pour tester la Bêta depuis le début ? La progression locale partagée sur cet appareil sera aussi supprimée.")) return;
+    try {
+      resetGuestBetaProgress();
+      window.location.reload();
+    } catch (reason) {
+      toast.error(reason instanceof Error ? `Réinitialisation locale impossible : ${reason.message}` : "Réinitialisation locale impossible.");
     }
   }
 
@@ -488,6 +499,12 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
         <Button type="submit" variant="hero">
           Enregistrer le profil
         </Button>
+      </div>
+      <div className="text-center">
+        <Button type="button" variant="ghost" size="sm" className="h-auto whitespace-normal text-muted-foreground" disabled={!!userId || betaEnded()} onClick={resetProgress}>
+          Réinitialiser ma progression Bêta (repartir de 0)
+        </Button>
+        {userId && <p className="mt-1 text-xs text-muted-foreground">La réinitialisation des comptes connectés nécessite une prise en charge sécurisée côté serveur.</p>}
       </div>
 
       <Dialog

@@ -15,6 +15,10 @@ déconnectée. Les données serveur, y compris les comptes et cartes Google, ne 
 effacées par ce mécanisme : leur réinitialisation complète, y compris la progression
 préexistante, doit être configurée séparément dans Lovable avant le lancement officiel.
 Les autres appareils et navigateurs ne sont nettoyés qu'à leur prochaine visite.
+Pendant la bêta, le profil permet de réinitialiser la progression locale invitée de
+cet appareil à 500 Zen et au niveau 1, après confirmation. Les données locales
+partagées sont également effacées ; les comptes connectés ne peuvent pas encore
+être réinitialisés depuis ce bouton et nécessitent une opération serveur dans Lovable.
 
 La révélation affiche les cartes de la moins rare à la plus rare, puis le récapitulatif dans
 l'ordre inverse. Le badge « NOUVEAU » compare le tirage à la collection avant ouverture.

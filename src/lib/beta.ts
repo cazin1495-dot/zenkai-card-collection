@@ -1,4 +1,5 @@
 import { getGuestState, updateGuestState } from "./guest-collection";
+import { INITIAL_ZEN } from "./shards";
 
 export const BETA_END = "2026-11-29T15:30:00+01:00";
 export const BETA_ACCESS_KEY = "zenkai_beta_access_v2";
@@ -31,6 +32,21 @@ export function claimBetaAccess(code: string, now = Date.now()) {
 
 export function hasBetaWelcome() {
   return getGuestState().betaWelcomeClaimed === true;
+}
+
+export function resetGuestBetaProgress(now = Date.now()) {
+  if (betaEnded(now)) throw new Error("La bêta est terminée.");
+  const keys = [
+    "zenkai_guest_collection", "zenkai_guest_zen", "zenkai_player_xp",
+    "zenkai_market_auctions", "zenkai_daily_login", "zenkai_player_profile",
+    "zenkai:favorite-cards", "zenkai_quests", "zenkai_secrets", "zenkai_beta_welcomed",
+  ];
+  for (const key of keys) localStorage.removeItem(key);
+  localStorage.setItem("zenkai_guest_collection", JSON.stringify({
+    rows: [], zen: INITIAL_ZEN, xp: 0,
+    plus: { active: false, avatar: null, welcomeClaimed: false },
+    betaWelcomeClaimed: true,
+  }));
 }
 
 export function wipeBetaProgress(now = Date.now()) {
