@@ -499,7 +499,17 @@ export function BoostersPage() {
           </h1>
           <p className="mt-3 max-w-md text-center text-sm text-muted-foreground">
             {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
-          </p>
+      </p>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold text-amber-200 shadow-sm">
+        <span>🎴 {betaBoosters} / {MAX_BETA_BOOSTERS} boosters</span>
+        {betaBoosters < MAX_BETA_BOOSTERS ? (
+          <span className="text-amber-300/90">
+            • ⏳ +1 dans {String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:{String(nextBoosterSec % 60).padStart(2, "0")}
+          </span>
+        ) : (
+          <span className="text-emerald-300/90">• Stock max (1 booster / 10 min)</span>
+        )}
+      </div>
 
           {phase === "idle" && (
             <div className="mt-8 grid w-full min-w-0 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
