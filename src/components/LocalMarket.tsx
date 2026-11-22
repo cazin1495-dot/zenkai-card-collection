@@ -5,27 +5,27 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MarketSaleDialog } from "@/components/MarketSaleDialog";
+import { AnimeCard } from "@/components/AnimeCard";
 import { cardsQuery } from "@/lib/queries";
-import { getCardMarketPrice, getCardPopularityFactor, RARITY, subscribeUserRarityOverrides } from "@/lib/cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, getCardMarketPrice, getCardPopularityFactor, RARITY, subscribeUserRarityOverrides } from "@/lib/cards";
 import { getGuestCollection, getGuestState } from "@/lib/guest-collection";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
   bidOnGuestListing,
+  buyoutGuestAuction,
   buyGuestListing,
   cancelGuestListing,
+  auctionCountdown,
+  ensureGuestAuctions,
   getGuestMarket,
   initializeGuestMarket,
+  minimumAuctionBid,
   restockGuestMarket,
   settleGuestMarket,
   type MarketListing,
 } from "@/lib/guest-market";
 
 type MarketSnapshot = ReturnType<typeof getGuestMarket>;
-
-function countdown(endAt: number, now: number) {
-  const seconds = Math.max(0, Math.ceil((endAt - now) / 1000));
-  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 export function LocalMarket() {
   const queryClient = useQueryClient();
@@ -40,8 +40,8 @@ export function LocalMarket() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bids, setBids] = useState<Record<string, string>>({});
   const catalog = useMemo(
-    () => [...(cards.data ?? []), ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard)],
-    [cards.data],
+    () => [...(cards.data ?? (cards.isError ? DEMON_SLAYER_MYTHIC_CARDS : [])), ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard)],
+    [cards.data, cards.isError],
   );
   const byId = useMemo(() => new Map(catalog.map((card) => [card.id, card])), [catalog]);
 
@@ -57,14 +57,15 @@ export function LocalMarket() {
 
   useEffect(() => {
     refresh();
-    if (!cards.data?.length) return;
+    if (!cards.data?.length && !cards.isError) return;
     try {
-      if (getGuestState().market === undefined) initializeGuestMarket(cards.data);
+      if (getGuestState().market === undefined) initializeGuestMarket(cards.data ?? DEMON_SLAYER_MYTHIC_CARDS);
+      ensureGuestAuctions(catalog);
       refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Marché local indisponible.");
     }
-  }, [cards.data, refresh]);
+  }, [cards.data, cards.isError, catalog, refresh]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -87,16 +88,27 @@ export function LocalMarket() {
     const due = snapshot?.listings.some(
       (item) =>
         (item.endAt !== null && now >= item.endAt) ||
+        (item.rivalAt !== null && now >= item.rivalAt) ||
         (item.seller === "guest" && item.npcAt !== null && now >= item.npcAt),
     );
     if (!due || error) return;
     try {
-      settleGuestMarket(now).forEach((message) => toast.success(message));
+      settleGuestMarket(now).forEach((message) =>
+        message.includes(" a surenchéri sur ") ? toast.info(message) : toast.success(message),
+      );
+      if (catalog.length) ensureGuestAuctions(catalog, now);
       refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Clôture du marché impossible.");
     }
-  }, [snapshot, now, error, refresh]);
+  }, [snapshot, now, error, refresh, catalog]);
+
+  useEffect(() => {
+    if (!snapshot || error || !catalog.length ||
+        snapshot.listings.filter((item) => item.kind === "auction" && item.seller === "npc").length >= 6) return;
+    try { ensureGuestAuctions(catalog); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Renouvellement des enchères impossible."); }
+  }, [snapshot, error, catalog]);
 
   function run(action: () => void) {
     try {
@@ -108,10 +120,6 @@ export function LocalMarket() {
     }
   }
 
-  function minimumBid(item: MarketListing) {
-    return item.bid === null ? item.price : item.bid + 10;
-  }
-
   function placeBid(item: MarketListing, amount: number) {
     run(() => {
       const result = bidOnGuestListing(item.id, amount);
@@ -120,11 +128,9 @@ export function LocalMarket() {
         delete next[item.id];
         return next;
       });
-      toast.success(
-        result.outbid
-          ? `Rival fictif : ${result.amount} Zen. Ton offre a été remboursée.`
-          : "Enchère placée : Zen réservés.",
-      );
+      toast.success(result.purchased
+        ? `Achat immédiat : ${item.cardName} ajoutée à ta collection !`
+        : "Enchère placée : Zen réservés.");
     });
   }
 
@@ -143,13 +149,13 @@ export function LocalMarket() {
           disabled={!snapshot || !!error || owned.isError}
           onClick={() => setDialogOpen(true)}
         >
-          <Plus className="size-4" /> Mettre une carte en vente
+          <Plus className="size-4" /> {tab === "auction" ? "Créer une enchère" : "Mettre une carte en vente"}
         </Button>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
         Les offres sont débitées et réservées jusqu’à la clôture ; un rival fictif peut surenchérir.
-        Une vente fictive peut intervenir après 30 secondes. Clôture automatique à l’ouverture du
-        marché. Évite les transactions dans plusieurs onglets simultanément.
+        Une vente fictive peut intervenir après 30 secondes. Les enchères sont réglées pendant que
+        le site est ouvert, ou à sa prochaine ouverture. Évite les transactions dans plusieurs onglets simultanément.
       </p>
       <p className="mt-3 flex items-center gap-1 text-sm font-bold text-primary">
         <Gem className="size-4" /> {snapshot?.zen ?? "…"} Zen locaux disponibles
@@ -164,7 +170,7 @@ export function LocalMarket() {
       )}
       {cards.isError && (
         <p role="alert" className="mt-3 text-sm text-destructive">
-          Catalogue indisponible.{" "}
+          Catalogue distant indisponible : seules les cartes intégrées restent disponibles.{" "}
           <Button variant="link" onClick={() => cards.refetch()}>
             Réessayer
           </Button>
@@ -189,10 +195,10 @@ export function LocalMarket() {
           aria-pressed={tab === "auction"}
           onClick={() => setTab("auction")}
         >
-          <Gavel className="size-4" /> Enchères en cours
+          <Gavel className="size-4" /> Enchères
         </Button>
       </div>
-      {snapshot && !snapshot.listings.some((item) => item.seller === "npc") && (
+      {tab === "fixed" && snapshot && !snapshot.listings.some((item) => item.seller === "npc" && item.kind === "fixed") && (
         <Button
           className="mt-4"
           variant="glass"
@@ -215,14 +221,19 @@ export function LocalMarket() {
           .filter((item) => item.kind === tab)
           .map((item) => {
             const card = byId.get(item.cardId);
-            const minimum = minimumBid(item);
+            const canRaise = item.bid === null ||
+              Number.isSafeInteger(item.bid + Math.max(50, Math.ceil(item.bid * 0.1)));
+            const minimum = item.kind === "auction" && canRaise ? minimumAuctionBid(item) : item.price;
             const expired = item.endAt !== null && now >= item.endAt;
+            const countdown = item.endAt === null ? null : auctionCountdown(item.endAt, now);
             return (
               <article
                 key={item.id}
-                className="flex flex-col rounded-xl border border-border bg-surface p-3"
+                className="flex min-w-0 flex-col rounded-xl border border-amber-400/25 bg-gradient-to-b from-violet-950/50 to-surface p-2 sm:p-3"
               >
-                {card?.image_url && (
+                {card && (item.kind === "auction" || item.rarity === "transcendance") ? (
+                  <AnimeCard card={card} transcended={item.copy?.transcended} customTranscendance={item.rarity === "transcendance" && !item.copy?.transcended} compact />
+                ) : card?.image_url && (
                   <img
                     src={card.image_url}
                     alt=""
@@ -243,15 +254,16 @@ export function LocalMarket() {
                 </p>
                 {item.kind === "auction" && item.endAt !== null && (
                   <>
-                    <p className="mt-1 text-xs">
-                      Enchère :{" "}
-                      {item.bid === null
-                        ? "aucune"
-                        : `${item.bid} Zen · ${item.bidder === "guest" ? "Toi" : "Rival fictif"}`}
+                    <p className="mt-1 text-xs">Enchère actuelle : {item.bid === null ? "aucune" : `${item.bid} Zen`}</p>
+                    <p className="mt-1 text-xs">{item.bidCount} offre{item.bidCount > 1 ? "s" : ""} · Meilleur enchérisseur :{" "}
+                      <span className={item.bidder === "guest" ? "font-bold text-amber-300" : ""}>
+                        {item.bidder === "guest" ? "Toi" : item.bidder === "npc" ? item.bidderName ?? "Rival fictif" : "aucun"}
+                      </span>
                     </p>
-                    <p className="mt-1 text-xs text-accent">
-                      {expired ? "Terminée" : countdown(item.endAt, now)}
+                    <p className={`mt-1 text-xs ${countdown?.urgent ? "font-bold text-amber-400" : "text-muted-foreground"}`}>
+                      {countdown?.label}
                     </p>
+                    {item.seller === "guest" && item.buyoutPrice !== null && <p className="mt-1 text-xs text-amber-300">Achat immédiat : {item.buyoutPrice.toLocaleString("fr-FR")} Zen</p>}
                   </>
                 )}
                 <div className="mt-auto pt-3">
@@ -264,7 +276,7 @@ export function LocalMarket() {
                       variant="glass"
                       size="sm"
                       className="w-full"
-                      disabled={expired || !!error}
+                      disabled={expired || !!error || item.bid !== null}
                       onClick={() =>
                         run(() => {
                           cancelGuestListing(item.id);
@@ -291,15 +303,30 @@ export function LocalMarket() {
                     </Button>
                   ) : (
                     <div className="space-y-2">
-                      <Button
-                        variant="hero"
-                        size="sm"
-                        className="w-full"
-                        disabled={expired || !!error}
-                        onClick={() => placeBid(item, minimum)}
-                      >
-                        Enchérir (+10 Zen)
-                      </Button>
+                      {!canRaise && <p role="alert" className="text-xs text-destructive">Montant maximal atteint : impossible de surenchérir.</p>}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal"
+                          disabled={expired || !!error || !canRaise}
+                          onClick={() => placeBid(item, minimum)}
+                        >
+                          Enchérir (+50 Zen / +10 %)
+                        </Button>
+                        {item.buyoutPrice !== null && <Button
+                          variant="glass"
+                          size="sm"
+                          className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal border-amber-200 bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 hover:text-slate-950"
+                          disabled={expired || !!error}
+                          onClick={() => run(() => {
+                            buyoutGuestAuction(item.id);
+                            toast.success(`Achat immédiat : ${item.cardName} ajoutée à ta collection !`);
+                          })}
+                        >
+                          Achat immédiat · {item.buyoutPrice.toLocaleString("fr-FR")} Zen
+                        </Button>}
+                      </div>
                       <label className="sr-only" htmlFor={`bid-${item.id}`}>
                         Enchère personnalisée pour {item.cardName}
                       </label>
@@ -308,6 +335,7 @@ export function LocalMarket() {
                         type="number"
                         min={minimum}
                         step="1"
+                        disabled={!canRaise}
                         value={bids[item.id] ?? String(minimum)}
                         onChange={(event) =>
                           setBids((previous) => ({ ...previous, [item.id]: event.target.value }))
@@ -317,7 +345,7 @@ export function LocalMarket() {
                         variant="glass"
                         size="sm"
                         className="w-full"
-                        disabled={expired || !!error}
+                        disabled={expired || !!error || !canRaise}
                         onClick={() => placeBid(item, Number(bids[item.id] ?? minimum))}
                       >
                         Enchérir ce montant
@@ -334,6 +362,7 @@ export function LocalMarket() {
         <MarketSaleDialog
           cards={catalog}
           copies={owned.data ?? []}
+          initialKind={tab}
           onClose={() => setDialogOpen(false)}
           onPublished={(listing) => {
             setTab(listing.kind);

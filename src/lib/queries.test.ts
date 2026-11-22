@@ -2,7 +2,8 @@ import { createElement, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CUSTOM_RARITY, inPack, setUserRarityOverride, type Card } from "./cards";
+import { CUSTOM_RARITY, DEMON_SLAYER_MYTHIC_CARDS, inPack, isTranscendanceCatalogCard, setUserRarityOverride, type Card } from "./cards";
+import { CUSTOM_TRANSCENDANCE_CARDS } from "./transcendance-cards";
 import { cardsQuery, CUSTOM_RARITY as queryCustomRarity, useCards, useCardsByPack, useProfile, useUserCards } from "./queries";
 
 const mockFrom = vi.hoisted(() => vi.fn());
@@ -18,6 +19,108 @@ describe("catalog query", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     localStorage.removeItem("zenkai_admin_rarity_overrides");
+  });
+
+  it("includes Demon Slayer cards only as Mythique catalogue cards", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
+    const cards = await new QueryClient().fetchQuery(cardsQuery);
+    for (const hero of DEMON_SLAYER_MYTHIC_CARDS) {
+      const matches = cards.filter((card) => card.id === hero.id);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toMatchObject({ rarity: "mythique", category: "shonen", role: "protagoniste", series: "Demon Slayer" });
+      expect(isTranscendanceCatalogCard(matches[0]!)).toBe(false);
+      expect(CUSTOM_TRANSCENDANCE_CARDS.some((card) => card.id === hero.id)).toBe(false);
+      for (const pack of ["shonen", "protagoniste", "zenkai"] as const) expect(inPack(matches[0]!, pack)).toBe(true);
+    }
+  });
+
+  it("includes the eight Hashira with their own portraits and titles", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
+    const cards = await new QueryClient().fetchQuery(cardsQuery);
+    for (const [name, title, image] of [
+      ["Tengen Uzui", "Pilier du Son", "16/387706.jpg"],
+      ["Giyu Tomioka", "Pilier de l'Eau", "3/423445.jpg"],
+      ["Shinobu Kocho", "Pilier de l'Insecte", "3/386591.jpg"],
+      ["Muichiro Tokito", "Pilier de la Brume", "5/464903.jpg"],
+      ["Mitsuri Kanroji", "Pilier de l'Amour", "11/514229.jpg"],
+      ["Obanai Iguro", "Pilier du Serpent", "15/466014.jpg"],
+      ["Sanemi Shinazugawa", "Pilier du Vent", "11/556642.jpg"],
+      ["Gyomei Himejima", "Pilier de la Roche", "10/550017.jpg"],
+    ]) {
+      const matches = cards.filter((card) => card.name === name);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toMatchObject({
+        title: `Demon Slayer · ${title}`, rarity: "mythique", series: "Demon Slayer",
+        image_url: `https://cdn.myanimelist.net/images/characters/${image}`,
+      });
+    }
+  });
+
+  it("loads and normalizes 25 My Hero Academia cards for the album and requested packs", async () => {
+    const mythicIds = [89028, 88892, 89220, 89224, 89226, 126378, 128299, 148985];
+    const legendaryIds = [89221, 89225, 126158, 125619, 89589, 126357, 225724];
+    const antagonistIds = [89226, 126378, 125619, 89589, 126357, 125956, 225724, 126067];
+    const ids = [89220, 88892, 89028, 89225, 89224, 89243, 89221, 89226, 89249, 89223, 89897, 89898, 89241, 89247, 89222, 127427, 89895, 121529, 127042, 89900, 125956, 127425, 89244, 89899, 89896];
+    let mhaQuery = "";
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = typeof init?.body === "string" ? init.body : "";
+      if (body.includes("Media(id: 21459,")) {
+        mhaQuery = body;
+        return { ok: true, json: async () => ({ data: { Media: { characters: { edges: ids.map((id) => ({
+          node: { id, name: { full: `MHA ${id}` }, image: { large: `https://example.com/${id}` }, favourites: 100 },
+        })) } } } }) };
+      }
+      return { ok: true, json: async () => ({}) };
+    }));
+    setUserRarityOverride("al-89028", "rare");
+    const client = new QueryClient();
+    client.setQueryData(["cards-v21"], [{ id: "stale" }]);
+    const cards = await client.fetchQuery(cardsQuery);
+    const mha = cards.filter((card) => card.series === "My Hero Academia");
+    expect(mhaQuery).toContain("perPage: 25");
+    expect(ids).toHaveLength(25);
+    expect(mha).toHaveLength(25);
+    expect(mha.find((card) => card.id === "al-89224")?.role).toBe("protagoniste");
+    expect(mha.find((card) => card.id === "al-89226")?.role).toBe("antagoniste");
+    expect(mha.find((card) => card.id === "al-125956")?.role).toBe("antagoniste");
+    expect(cards.some((card) => card.id === "stale")).toBe(false);
+    for (const card of mha) {
+      const id = Number(card.id.slice(3));
+      const antagonist = antagonistIds.includes(id);
+      expect(card).toMatchObject({
+        category: "shonen",
+        role: antagonist ? "antagoniste" : "protagoniste",
+        title: `My Hero Academia · ${antagonist ? "Antagoniste" : "Héros"}`,
+        image_url: `https://example.com/${id}`,
+        popularity: 100,
+      });
+      expect(inPack(card, "shonen")).toBe(true);
+      expect(inPack(card, "zenkai")).toBe(true);
+      expect(inPack(card, "antagoniste")).toBe(antagonist);
+      expect(inPack(card, "protagoniste")).toBe(!antagonist);
+      if (id === 89028) {
+        expect(card).toMatchObject({ rarity: "rare", serverRarity: "mythique" });
+      } else if (mythicIds.includes(id)) {
+        expect(card.rarity).toBe("mythique");
+      } else if (legendaryIds.includes(id)) {
+        expect(card.rarity).toBe("legendaire");
+      }
+    }
+    client.clear();
+  });
+
+  it("keeps the existing database card when a My Hero Academia id is already present", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => ({
+      ok: true,
+      json: async () => typeof init?.body === "string" && init.body.includes("Media(id: 21459,")
+        ? { data: { Media: { characters: { edges: [{ node: { id: 133702, name: { full: "Duplicate" } } }] } } } }
+        : {},
+    })));
+    const client = new QueryClient();
+    const cards = await client.fetchQuery(cardsQuery);
+    expect(cards.filter((card) => card.id === "al-133702")).toHaveLength(1);
+    expect(cards.find((card) => card.id === "al-133702")?.name).toBe("Mahito");
+    client.clear();
   });
 
   it("loads and routes Hunter x Hunter characters, deduplicating the base catalogue", async () => {
@@ -97,7 +200,7 @@ describe("catalog query", () => {
       const body = typeof init?.body === "string" ? init.body : "";
       const names = body.includes("113415")
         ? [{ id: 133702, name: "Mahito" }, { id: 1, name: "Chousou" }]
-        : body.includes("Media(id: 21")
+        : body.includes("Media(id: 21,")
           ? [{ id: 36757, name: "Sabo" }]
           : null;
       return {

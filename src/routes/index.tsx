@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Clock, Gem, Package, Sparkles } from "lucide-react";
@@ -17,6 +17,7 @@ import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
 import { supabase } from "@/integrations/supabase/client";
 import { cardsQuery, collectionQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
+import { recordBoosterOpen, recordSecretDraw } from "@/lib/quests";
 import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
 import { markNewBoosterCards, sortBoosterCardsByRarity } from "@/lib/booster-order";
 import {
@@ -28,7 +29,7 @@ import {
   normalizeCatalogCard,
   OPEN_COUNTS,
   PACK_ARTWORK_BY_PACK,
-  CARD_BACK_BY_PACK,
+  getPackCardBack,
   PACKS,
   RARITY,
   rarityRank,
@@ -84,6 +85,25 @@ export function BoostersPage() {
   const [quantity, setQuantity] = useState<(typeof OPEN_COUNTS)[number]>(1);
   const [localZen, setLocalZen] = useState<number | null>(null);
   const [localZenError, setLocalZenError] = useState(false);
+  const tearRequested = useRef(false);
+  const finishOpeningWait = useRef<(() => void) | null>(null);
+  const accountCollection = useQuery({
+    ...collectionQuery(userId ?? ""),
+    enabled: ready && isPackPreviewOpen && !!userId,
+    staleTime: 0,
+    retry: false,
+  });
+  const guestCollection = useQuery({
+    queryKey: ["guest-collection"],
+    queryFn: getGuestCollection,
+    enabled: ready && isPackPreviewOpen && !userId,
+    staleTime: 0,
+    retry: false,
+  });
+  const previewCollection = userId ? accountCollection : guestCollection;
+  const ownedCardIds = ready && !previewCollection.isFetching && !previewCollection.isError && previewCollection.data
+    ? new Set(previewCollection.data.map((row) => row.card_id))
+    : null;
   const rarityOverrides = useRarityOverrides();
   const displayedPulled = useMemo(
     () => pulled.map((item) => ({ ...item, card: normalizeCatalogCard(item.card, rarityOverrides) })),
@@ -93,6 +113,17 @@ export function BoostersPage() {
     () => bestOpeningRarity(displayedPulled.map((p) => (p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity))),
     [displayedPulled],
   );
+
+  useEffect(() => {
+    if (!isPackPreviewOpen || !ready || userId) return;
+    const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["guest-collection"] }); };
+    window.addEventListener("zenkai:guest-updated", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("zenkai:guest-updated", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [isPackPreviewOpen, ready, userId, queryClient]);
 
   useEffect(() => {
     function refreshLocalZen() {
@@ -133,11 +164,35 @@ export function BoostersPage() {
     (!!userId && profile.isLoading);
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
+  const cardBack = getPackCardBack(pack);
   const best = bestRarity(
     displayedPulled.map((p) =>
       awake[p.userCardId] === "transcended" || p.transcended || p.customTranscendance ? "transcendance" : p.card.rarity,
     ),
   );
+
+  function requestTear() {
+    tearRequested.current = true;
+    finishOpeningWait.current?.();
+  }
+
+  async function revealAfterOpening() {
+    if (!tearRequested.current) {
+      await new Promise<void>((resolve) => {
+        const finish = () => {
+          window.clearTimeout(timer);
+          finishOpeningWait.current = null;
+          resolve();
+        };
+        const timer = window.setTimeout(finish, 600);
+        finishOpeningWait.current = finish;
+      });
+    }
+    tearRequested.current = false;
+    setPhase("tearing");
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    setPhase("reveal");
+  }
 
   async function open(count: number, category: string = pack) {
     if (busy) return;
@@ -156,8 +211,9 @@ export function BoostersPage() {
         return;
       }
       let localDraw: PulledCard[];
+      let ownedIdsBeforeOpen: string[];
       try {
-        const ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
+        ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
         localDraw = sortBoosterCardsByRarity(markNewBoosterCards(
           createLocalGuestDraw(cards, localPack.id, count),
           ownedIdsBeforeOpen,
@@ -170,7 +226,13 @@ export function BoostersPage() {
         toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
         return;
       }
+      try {
+        recordBoosterOpen(null, count, ownedIdsBeforeOpen, localDraw.map((item) => item.card.id));
+        recordSecretDraw(count, localDraw);
+      }
+      catch { toast.error("Tirage effectué, mais progression des missions et XP locales indisponible."); }
 
+      tearRequested.current = false;
       setPhase("opening");
       setPulled([]);
       setAwake(
@@ -187,16 +249,14 @@ export function BoostersPage() {
       setPulled(localDraw);
       setOpened(count);
       window.scrollTo({ top: 0, behavior: "smooth" });
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setPhase("tearing");
-      await new Promise((resolve) => setTimeout(resolve, 1800));
-      setPhase("reveal");
+      await revealAfterOpening();
       return;
     }
     if (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:")) {
       toast.error("Pas assez de boosters en stock.");
       return;
     }
+    tearRequested.current = false;
     setPhase("opening");
     setPulled([]);
     setAwake({});
@@ -219,6 +279,7 @@ export function BoostersPage() {
       return;
     }
     const { data, error } = response;
+    const openedAt = new Date();
     await new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started))));
 
     if (error || !data?.length) {
@@ -231,6 +292,8 @@ export function BoostersPage() {
       queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
       return;
     }
+    try { recordBoosterOpen(session.user.id, count, ownedIdsBeforeOpen, data.map((item) => item.card_id), openedAt); }
+    catch { toast.error("Booster ouvert, mais progression des missions et XP locales indisponible."); }
 
     const { data: copyStates, error: copyStatesError } = await supabase
       .from("user_cards")
@@ -273,6 +336,8 @@ export function BoostersPage() {
       void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
       return;
     }
+    try { recordSecretDraw(count, items); }
+    catch { toast.error("Booster ouvert, mais progression des succès secrets indisponible."); }
     const marked = sortBoosterCardsByRarity(markNewBoosterCards(items, ownedIdsBeforeOpen));
     setAwake(Object.fromEntries(marked.filter((item) => item.transcended).map((item) => [item.userCardId, "transcended" as const])));
     setPulled(marked);
@@ -285,11 +350,7 @@ export function BoostersPage() {
     await queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] });
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Show the actual draw's maximum aura before splitting the seam.
-    await new Promise((r) => setTimeout(r, 600));
-    setPhase("tearing");
-    await new Promise((r) => setTimeout(r, 1800));
-    setPhase("reveal");
+    await revealAfterOpening();
   }
 
   async function returnToBoosterSelection() {
@@ -363,7 +424,7 @@ export function BoostersPage() {
                     {localZenError ? "Solde local indisponible" : localZen === null ? "Chargement du solde…" : `${localZen.toLocaleString("fr-FR")} Zen disponibles (local)`}
                   </p>
                 )}
-                <div role="radiogroup" aria-label="Catégorie de booster" className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3">
+                <div role="radiogroup" aria-label="Catégorie de booster" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
                   {PACKS.filter((p) => packFilter === "all" || (packFilter === "zen" ? p.id === "zenkai" : p.id !== "zenkai")).map((p) => (
                     <PackOption key={p.id} info={p} selected={pack === p.id} onSelect={() => setPack(p.id)} />
                   ))}
@@ -371,7 +432,9 @@ export function BoostersPage() {
               </section>
               <aside aria-label="Détails du booster" className="h-fit min-w-0 rounded-2xl border border-amber-400/15 bg-surface p-4 shadow-xl lg:sticky lg:top-24">
                 <div className="flex items-center gap-3">
-                  <BoosterArtwork src={PACK_ARTWORK_BY_PACK[pack]} alt={`Pochette ${packInfo.label}`} className="h-20 w-14 shrink-0 rounded-lg object-cover" />
+                  <div className="h-20 w-14 shrink-0 overflow-hidden rounded-lg">
+                    <BoosterArtwork src={PACK_ARTWORK_BY_PACK[pack]} alt={`Pochette ${packInfo.label}`} />
+                  </div>
                   <div className="min-w-0"><h2 className="font-bold">{packInfo.label}</h2><p className="mt-1 text-xs text-muted-foreground">{packInfo.hint}</p></div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
@@ -385,7 +448,7 @@ export function BoostersPage() {
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{stock ? `${stock.count}/${STOCK_CAP}` : "—"}</strong><p className="text-[10px] text-muted-foreground">{guest ? "stock non suivi" : "boosters en stock"}</p></div>
                 </div>
                 <div className="mt-4 [&>button]:w-full">
-                  <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} />
+                  <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} ownedCardIds={ownedCardIds} ownershipError={previewCollection.isError} onRetryOwnership={() => { void previewCollection.refetch(); }} />
                 </div>
                 <div className="mt-5">
                   <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Chance par booster <span className="font-normal normal-case tracking-normal">· par carte</span></h3>
@@ -405,7 +468,10 @@ export function BoostersPage() {
                     <Button key={n} role="radio" aria-checked={quantity === n} variant={quantity === n ? "hero" : "glass"} className="min-w-0 flex-1 px-1" onClick={() => setQuantity(n)}>{n}x</Button>
                   ))}
                 </div>
-                <Button size="lg" className="mt-3 h-auto min-h-11 w-full whitespace-normal rounded-full bg-amber-400 px-3 text-center font-bold text-black hover:bg-amber-300" disabled={!ready || busy} onClick={() => open(quantity)}>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
+                  {[1, 10].map((count) => <Button key={count} size="lg" className="h-auto min-h-11 whitespace-normal px-2" disabled={!ready || busy} onClick={() => open(count)}>{pack === "zenkai" ? `Acheter x${count}` : `Ouvrir x${count}`}</Button>)}
+                </div>
+                <Button size="lg" className={cn("mt-3 h-auto min-h-11 w-full whitespace-normal rounded-full bg-amber-400 px-3 text-center font-bold text-black hover:bg-amber-300 sm:flex", quantity === 5 ? "flex" : "hidden")} disabled={!ready || busy} onClick={() => open(quantity)}>
                   {pack === "zenkai" ? `Acheter et ouvrir · ${(quantity * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : `Ouvrir · Gratuit${stock ? ` (${stock.count} restants)` : ""}`}
                 </Button>
                 {stock && <p className="mt-2 text-center text-xs text-muted-foreground"><Clock className="mr-1 inline size-3" />{stock.nextInMs === null ? "Stock plein" : `Prochain gratuit dans ${formatCountdown(stock.nextInMs)}`} · {game.data?.bonus_boosters ?? 0} bonus</p>}
@@ -427,7 +493,7 @@ export function BoostersPage() {
             awakened={awake}
             onAwaken={onAwaken}
             onDone={() => setPhase("summary")}
-            backTheme={{ image: CARD_BACK_BY_PACK[pack] }}
+            backTheme={{ image: cardBack }}
           />
         ) : phase === "summary" ? (
           <Summary
@@ -446,8 +512,11 @@ export function BoostersPage() {
                 accent={packInfo.accent}
                 category={packInfo.label}
                 artwork={PACK_ARTWORK_BY_PACK[pack]}
+                backImage={cardBack}
                 beam={tearBeam}
+                onTear={requestTear}
               />
+              {phase === "opening" && <p className="text-center text-xs text-muted-foreground">Glisse horizontalement pour déchirer le booster, ou laisse l'animation continuer.</p>}
           </div>
         )}
       </section>}
@@ -461,8 +530,8 @@ function PackOption({ info, selected, onSelect }: { info: (typeof PACKS)[number]
   return (
     <button type="button" role="radio" aria-label={info.label} aria-checked={selected} onClick={onSelect}
       className="group min-w-0 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
-      <div className={cn("relative aspect-[2/3] w-full overflow-hidden rounded-xl transition-transform duration-300 motion-safe:group-hover:[transform:perspective(900px)_rotateY(-4deg)_translateY(-4px)]", selected && "ring-2 ring-amber-400 shadow-[0_0_24px_-8px_rgba(251,191,36,0.7)]")}>
-        <BoosterArtwork src={PACK_ARTWORK_BY_PACK[info.id]} alt={`Booster ${info.label}`} className="h-full w-full rounded-xl object-cover" />
+      <div className={cn("relative mx-auto aspect-[2/3] w-full overflow-hidden rounded-xl transition-transform duration-300 motion-safe:group-hover:[transform:perspective(900px)_rotateY(-4deg)_translateY(-4px)]", selected && "ring-2 ring-amber-400 shadow-[0_0_24px_-8px_rgba(251,191,36,0.7)]")}>
+        <BoosterArtwork src={PACK_ARTWORK_BY_PACK[info.id]} alt={`Booster ${info.label}`} className="rounded-xl" />
         <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-3 pt-8 text-sm font-bold text-white">{info.label}</span>
       </div>
       <span className={cn("mt-3 block text-xs font-semibold", exclusive ? "text-amber-400" : "text-muted-foreground")}>{exclusive ? "500 Zen" : "Gratuit"}</span>

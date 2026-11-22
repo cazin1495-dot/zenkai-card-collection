@@ -66,13 +66,20 @@ describe("selling from collection", () => {
     fireEvent.change(within(dialog).getByLabelText("Mode de vente"), {
       target: { value: "auction" },
     });
-    fireEvent.change(within(dialog).getByLabelText("Durée"), { target: { value: "5" } });
+    expect(within(dialog).getByLabelText("Prix de départ en Zen")).toHaveValue(50);
+    expect(within(dialog).getByLabelText("Prix d'achat immédiat (optionnel, en Zen)")).toHaveValue(120);
+    fireEvent.change(within(dialog).getByLabelText("Prix d'achat immédiat (optionnel, en Zen)"), {
+      target: { value: "333" },
+    });
+    expect(within(dialog).getByLabelText("Durée")).toHaveValue("1440");
+    fireEvent.change(within(dialog).getByLabelText("Durée"), { target: { value: "720" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Publier l’annonce fictive" }));
     await waitFor(() => expect(getGuestCollection().map((row) => row.id)).toEqual(["older"]));
     const listing = getGuestMarket().listings.find((item) => item.seller === "guest")!;
     expect(listing.kind).toBe("auction");
     expect(listing.copy?.id).toBe("newer");
-    expect(listing.endAt! - listing.npcAt!).toBe(270_000);
+    expect(listing.buyoutPrice).toBe(333);
+    expect(listing.endAt! - listing.npcAt!).toBe(12 * 3_600_000 - 30_000);
     expect(mocks.success.mock.calls[0]?.[1].description.props.hash).toBe("encheres");
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Vendre Alpha" })).toBeEnabled());
@@ -101,6 +108,9 @@ describe("selling from collection", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByLabelText("Copie de ta collection")).toHaveValue("awakened");
     expect(within(dialog).getByLabelText("Prix en Zen")).toHaveValue(5000);
+    fireEvent.change(within(dialog).getByLabelText("Mode de vente"), { target: { value: "auction" } });
+    expect(within(dialog).getByLabelText("Prix de départ en Zen")).toHaveValue(4000);
+    expect(within(dialog).getByLabelText("Prix d'achat immédiat (optionnel, en Zen)")).toHaveValue(9500);
     expect(within(dialog).getByText(/Dernier exemplaire/)).toBeTruthy();
     vi.spyOn(window, "confirm").mockReturnValue(true);
     fireEvent.click(within(dialog).getByRole("button", { name: "Publier l’annonce fictive" }));

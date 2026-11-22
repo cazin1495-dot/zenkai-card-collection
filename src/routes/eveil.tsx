@@ -9,11 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { gameQuery, type GameState } from "@/lib/game";
 import { MAX_LEVEL, MILESTONES, xpRequired, REWARD_LABELS } from "@/lib/economy";
 import { formatCountdown } from "@/lib/cards";
+import { LocalLevel } from "@/components/LocalLevel";
+import { MissionsPanel } from "@/components/MissionsPanel";
 
 export const Route = createFileRoute("/eveil")({
   head: () => ({ meta: [
     { title: "Missions & Niveaux — ZENKAI" },
-    { name: "description", content: "Réclame tes missions quotidiennes, gagne des Zenkai Coins et progresse jusqu’au niveau 150." },
+    { name: "description", content: "Réclame tes missions et succès, gagne des Zen locaux et progresse en XP." },
     { property: "og:title", content: "Missions & Niveaux — ZENKAI" },
     { property: "og:description", content: "Tes récompenses quotidiennes et les dix paliers de progression ZENKAI." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
@@ -50,6 +52,11 @@ function MissionsPage() {
   return <div className="game-page mx-auto max-w-6xl px-4 py-8 sm:px-6">
     <p className="game-eyebrow"><Trophy className="size-4" /> PROGRESSION DU JOUEUR</p>
     <h1 className="mt-3 text-3xl font-black sm:text-4xl">Missions & Niveaux</h1>
+    <section aria-label="Profil local" className="mt-6 rounded-xl border border-amber-400/25 bg-violet-950/20 p-5"><LocalLevel /></section>
+    <MissionsPanel accountId={session?.user.id ?? null} />
+    <details className="mt-10 border-t border-border pt-5">
+    <summary className="cursor-pointer text-lg font-bold">Progression et missions du compte en ligne</summary>
+    <p className="mt-2 text-sm text-muted-foreground">Cette progression serveur, ses Coins et ses récompenses sont distincts du niveau, des missions et des Zen locaux ci-dessus.</p>
     {!session && <Button variant="hero" className="mt-6" asChild><Link to="/auth">Connexion</Link></Button>}
     {game.isError && <div role="alert" className="mt-5 flex items-center gap-3 text-sm text-destructive">Le profil n’a pas pu être chargé.<Button variant="glass" size="sm" onClick={() => game.refetch()}>Réessayer</Button></div>}
     {session && !state && !game.isError && <p className="mt-6 text-sm text-muted-foreground">Chargement du profil…</p>}
@@ -74,5 +81,6 @@ function MissionsPage() {
     </section>
     {state && Object.values(state.reward_packs).some(count => count > 0) && <section className="pb-8"><h2 className="text-xl font-bold">Récompenses disponibles</h2><div className="mt-4 flex flex-wrap gap-3">{Object.entries(state.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" asChild><Link to="/">{REWARD_LABELS[key]} ×{count}<Package className="size-4" /></Link></Button>)}</div></section>}
     <section className="border-t border-border py-8"><h2 className="text-xl font-bold">Les 10 paliers majeurs</h2><p className="mt-2 text-xs text-muted-foreground">Niveau classique · +100 Coins et +1 Booster</p><div className="mt-5 grid gap-x-8 sm:grid-cols-2">{MILESTONES.map(([level, title, reward]) => <div key={level} className="flex items-start gap-4 border-b border-border py-5"><span className={`grid size-11 shrink-0 place-items-center rounded-md border border-border text-sm font-bold ${state && state.level >= level ? "bg-accent text-accent-foreground" : "bg-foreground/5 text-muted-foreground"}`}>{level}</span><div className="min-w-0"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{reward}</p></div>{state && state.level >= level && <Check className="ml-auto size-4 shrink-0 text-accent" />}</div>)}</div></section>
+    </details>
   </div>;
 }

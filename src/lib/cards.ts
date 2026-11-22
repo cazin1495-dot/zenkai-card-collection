@@ -155,17 +155,123 @@ export type Card = {
   series?: string | null;
   role?: CardRole | null;
   image_url?: string | null;
+  image_position?: string;
+  image_scale?: number;
   quote?: string | null;
   voiceAudioUrl?: string | null;
   subtitleText?: string | null;
   popularity?: number;
 };
 
+export const DEMON_SLAYER_MYTHIC_CARDS: Card[] = [
+  {
+    id: "trans-ds-tanjiro", name: "Tanjiro Kamado", title: "Demon Slayer · Pourfendeur",
+    description: "Pourfendeur au grand cœur, Tanjiro manie les souffles de l'Eau et du Soleil pour protéger sa sœur.",
+    image_url: "https://cdn.myanimelist.net/images/characters/6/386735.jpg",
+    rarity: "mythique", sort_order: 1200, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "trans-ds-nezuko", name: "Nezuko Kamado", title: "Demon Slayer · Démon protecteur",
+    description: "Devenue démone, Nezuko protège les humains et combat aux côtés de son frère Tanjiro.",
+    image_url: "https://cdn.myanimelist.net/images/characters/2/378254.jpg",
+    rarity: "mythique", sort_order: 1201, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "trans-ds-zenitsu", name: "Zenitsu Agatsuma", title: "Demon Slayer · Pourfendeur de la Foudre",
+    description: "Malgré sa peur, Zenitsu déploie une vitesse fulgurante grâce au souffle de la Foudre.",
+    image_url: "https://cdn.myanimelist.net/images/characters/10/459689.jpg",
+    rarity: "mythique", sort_order: 1202, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "trans-ds-inosuke", name: "Inosuke Hashibira", title: "Demon Slayer · Pourfendeur de la Bête",
+    description: "Impétueux et instinctif, Inosuke combat avec deux lames et son souffle de la Bête.",
+    image_url: "https://cdn.myanimelist.net/images/characters/3/329560.jpg",
+    rarity: "mythique", sort_order: 1203, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "trans-ds-rengoku", name: "Kyojuro Rengoku", title: "Demon Slayer · Pilier de la Flamme",
+    description: "Pilier de la Flamme au courage ardent, Rengoku défend les autres avec une détermination inébranlable.",
+    image_url: "https://cdn.myanimelist.net/images/characters/10/423443.jpg",
+    rarity: "mythique", sort_order: 1204, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-tengen", name: "Tengen Uzui", title: "Demon Slayer · Pilier du Son",
+    description: "Ancien shinobi flamboyant, Tengen combat avec le souffle du Son et deux lames reliées par une chaîne.",
+    image_url: "https://cdn.myanimelist.net/images/characters/16/387706.jpg",
+    rarity: "mythique", sort_order: 1205, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-giyu", name: "Giyu Tomioka", title: "Demon Slayer · Pilier de l'Eau",
+    description: "Discret et déterminé, Giyu maîtrise le souffle de l'Eau pour protéger les autres.",
+    image_url: "https://cdn.myanimelist.net/images/characters/3/423445.jpg",
+    rarity: "mythique", sort_order: 1206, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-shinobu", name: "Shinobu Kocho", title: "Demon Slayer · Pilier de l'Insecte",
+    description: "Rapide et précise, Shinobu emploie le souffle de l'Insecte et des poisons contre les démons.",
+    image_url: "https://cdn.myanimelist.net/images/characters/3/386591.jpg",
+    rarity: "mythique", sort_order: 1207, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-muichiro", name: "Muichiro Tokito", title: "Demon Slayer · Pilier de la Brume",
+    description: "Jeune prodige du sabre, Muichiro désoriente ses adversaires grâce au souffle de la Brume.",
+    image_url: "https://cdn.myanimelist.net/images/characters/5/464903.jpg",
+    rarity: "mythique", sort_order: 1208, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-mitsuri", name: "Mitsuri Kanroji", title: "Demon Slayer · Pilier de l'Amour",
+    description: "Chaleureuse et dotée d'une force exceptionnelle, Mitsuri manie une lame souple avec le souffle de l'Amour.",
+    image_url: "https://cdn.myanimelist.net/images/characters/11/514229.jpg",
+    rarity: "mythique", sort_order: 1209, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-obanai", name: "Obanai Iguro", title: "Demon Slayer · Pilier du Serpent",
+    description: "Rigoureux et accompagné de Kaburamaru, Obanai manie le souffle du Serpent avec précision.",
+    image_url: "https://cdn.myanimelist.net/images/characters/15/466014.jpg",
+    rarity: "mythique", sort_order: 1210, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-sanemi", name: "Sanemi Shinazugawa", title: "Demon Slayer · Pilier du Vent",
+    description: "Déterminé et impétueux, Sanemi déchaîne le souffle du Vent contre les démons.",
+    image_url: "https://cdn.myanimelist.net/images/characters/11/556642.jpg",
+    rarity: "mythique", sort_order: 1211, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+  {
+    id: "ds-gyomei", name: "Gyomei Himejima", title: "Demon Slayer · Pilier de la Roche",
+    description: "Imposant et compatissant, Gyomei utilise le souffle de la Roche avec une hache et un fléau reliés par une chaîne.",
+    image_url: "https://cdn.myanimelist.net/images/characters/10/550017.jpg",
+    rarity: "mythique", sort_order: 1212, series: "Demon Slayer", category: "shonen", role: "protagoniste",
+    image_position: "center", image_scale: 0.92,
+  },
+];
+
+const DEMON_SLAYER_MYTHIC_IDS = new Set(DEMON_SLAYER_MYTHIC_CARDS.map((card) => card.id));
+const LEGACY_DEMON_SLAYER_TRANSCENDANCE_IDS = new Set(DEMON_SLAYER_MYTHIC_CARDS.filter((card) => card.id.startsWith("trans-ds-")).map((card) => card.id));
+export function isDemonSlayerMythicCardId(id: string): boolean {
+  return DEMON_SLAYER_MYTHIC_IDS.has(id);
+}
+export function isLegacyDemonSlayerTranscendanceCardId(id: string): boolean {
+  return LEGACY_DEMON_SLAYER_TRANSCENDANCE_IDS.has(id);
+}
+
 /** One owned copy coming out of a booster. */
 export type PulledCard = { userCardId: string; card: Card; transcended?: boolean; customTranscendance?: boolean; isNew?: boolean };
 
-export function isTranscendanceCatalogCard(card: { id: string; name?: string; rarity: string }): boolean {
+export function isTranscendanceCatalogCard(card: { id: string; name?: string; rarity: string; transcendance_series_number?: string }): boolean {
   const name = card.name?.trim().toLowerCase();
+  if (card.transcendance_series_number) return true;
   if (name === "goku black" && !card.id.toUpperCase().endsWith("-TR")) return false;
   return card.rarity.toLowerCase() === "transcendance"
     || card.id.toUpperCase().endsWith("-TR")
@@ -301,7 +407,7 @@ export function characterRarity(
 
 /** Applies local catalog overrides for known cards without creating duplicate records. */
 export function normalizeCatalogCard(card: Card, overrides = getUserRarityOverrides()): Card {
-  if (isTranscendanceCatalogCard(card) || card.transcendance_series_number) return card;
+  if (isTranscendanceCatalogCard(card)) return card;
   const baseRarity = card.serverRarity ?? card.rarity;
   if (card.name.trim().toLowerCase() === "goku black") {
     const rarity = characterRarity(card.name, "mythique", card.id, overrides);
@@ -324,6 +430,9 @@ export const TRANSCEND_CHANCE_LABEL = `${TRANSCEND_CHANCE_PERCENT} %`;
 export const GOKU_CARD_ID = "al-246";
 
 export function cardIdentity(card: Card, transcended = false) {
+  if (transcended && card.id === "al-30") {
+    return { name: "Gon Freecss · Serment Absolu", title: "Hunter x Hunter · Sacrifice Ultime" };
+  }
   if (transcended && card.id === GOKU_CARD_ID) {
     return { name: "Son Goku (Ultra Instinct)", title: "Ultra Instinct · Guerrier Saiyan" };
   }
@@ -386,6 +495,7 @@ export const CARD_ART: Record<string, string> = {
 };
 
 export function cardArt(card: Pick<Card, "id" | "image_url">, transcended = false) {
+  if (transcended && card.id === "al-30") return "/gon%20adulte.webp";
   if (transcended && card.id === GOKU_CARD_ID) return ultraInstinct.url;
   return card.image_url || CARD_ART[card.id] || "";
 }
@@ -410,16 +520,20 @@ export type PackId = "shonen" | "seinen" | "shojo" | "sport" | "antagoniste" | "
 
 export const PACK_ARTWORK = "/image_c1811ac7.jpg";
 export const PACK_ARTWORK_BY_PACK: Record<PackId, string> = {
-  shonen: PACK_ARTWORK, seinen: "/pack%20sienen%201.jpg", shojo: PACK_ARTWORK,
-  sport: "/pack-sport-2.png", antagoniste: "/pack%20antagoniste.png",
-  protagoniste: PACK_ARTWORK, zenkai: PACK_ARTWORK,
+  shonen: PACK_ARTWORK, seinen: "/pack-seinen-aligned.png", shojo: "/pack-shojo-aligned.png",
+  sport: "/pack-sport-aligned.png", antagoniste: "/pack-antagoniste-aligned.png",
+  protagoniste: "/pack-protagoniste.png", zenkai: PACK_ARTWORK,
 };
 export const CARD_BACK_BY_PACK: Record<PackId, string> = {
   shonen: "/image_39f4fe98.jpg", seinen: "/card-back-seinen.png",
-  shojo: "/image_39f4fe98.jpg", sport: "/carte%20sport.jpg",
-  antagoniste: "/pack%20antagoniste.png", protagoniste: "/image_39f4fe98.jpg",
+  shojo: "/card-back-shojo.png", sport: "/carte%20sport.jpg",
+  antagoniste: "/card-back-antagoniste.png", protagoniste: "/card-back-protagoniste.png",
   zenkai: "/image_39f4fe98.jpg",
 };
+
+export function getPackCardBack(packId: PackId): string {
+  return CARD_BACK_BY_PACK[packId];
+}
 
 export const PACKS: { id: PackId; label: string; hint: string; accent: string }[] = [
   { id: "shonen", label: "Shonen Mix", hint: "All-Star · Toutes les cartes de toutes les catégories réunies", accent: "var(--pack-shonen)" },

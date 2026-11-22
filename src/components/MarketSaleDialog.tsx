@@ -10,14 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getCardMarketPrice, type Card } from "@/lib/cards";
+import { getCardMarketPrice, isTranscendanceCatalogCard, type Card } from "@/lib/cards";
 import { getGuestCollection, getGuestState, type GuestOwnedRow } from "@/lib/guest-collection";
-import { initializeGuestMarket, listGuestCopy, type MarketListing } from "@/lib/guest-market";
+import { AUCTION_DURATIONS, AUCTION_PRICE_SUGGESTIONS, initializeGuestMarket, listGuestCopy, type MarketListing } from "@/lib/guest-market";
 
 type Props = {
   cards: Card[];
   copies: GuestOwnedRow[];
   initialCopyId?: string;
+  initialKind?: "fixed" | "auction";
   onClose: () => void;
   onPublished: (listing: MarketListing) => void;
 };
@@ -31,28 +32,30 @@ export function MarketSaleDialog({
   cards,
   copies,
   initialCopyId = "",
+  initialKind = "fixed",
   onClose,
   onPublished,
 }: Props) {
   const queryClient = useQueryClient();
   const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
   const selectable = copies.filter((copy) => byId.has(copy.card_id));
-  function suggestedPrice(id: string) {
+  function suggestedPrices(id: string, mode: "fixed" | "auction") {
     const copy = selectable.find((item) => item.id === id);
     const card = copy ? byId.get(copy.card_id) : undefined;
-    return card
-      ? String(
-          getCardMarketPrice({
-            ...card,
-            rarity: copy?.transcended || copy?.customTranscendance ? "transcendance" : card.rarity,
-          }),
-        )
-      : "";
+    if (!card || !copy) return { price: "", buyout: "" };
+    const rarity = copy.transcended || copy.customTranscendance || isTranscendanceCatalogCard(card)
+      ? "transcendance" : card.rarity;
+    const suggestion = AUCTION_PRICE_SUGGESTIONS[rarity];
+    return {
+      price: String(mode === "auction" ? suggestion.start : getCardMarketPrice({ ...card, rarity })),
+      buyout: String(suggestion.buyout),
+    };
   }
   const [copyId, setCopyId] = useState(initialCopyId);
-  const [price, setPrice] = useState(() => suggestedPrice(initialCopyId));
-  const [kind, setKind] = useState<"fixed" | "auction">("fixed");
-  const [duration, setDuration] = useState("2");
+  const [kind, setKind] = useState<"fixed" | "auction">(initialKind);
+  const [price, setPrice] = useState(() => suggestedPrices(initialCopyId, initialKind).price);
+  const [buyoutPrice, setBuyoutPrice] = useState(() => suggestedPrices(initialCopyId, initialKind).buyout);
+  const [duration, setDuration] = useState("1440");
   const selected = selectable.find((copy) => copy.id === copyId);
   const last = selected && copies.filter((copy) => sameForm(copy, selected)).length === 1;
 
@@ -65,6 +68,9 @@ export function MarketSaleDialog({
       const amount = Number(price);
       if (!Number.isSafeInteger(amount) || amount <= 0)
         throw new Error("Le prix doit être un nombre entier positif.");
+      const buyout = kind === "auction" && buyoutPrice.trim() !== "" ? Number(buyoutPrice) : null;
+      if (buyout !== null && (!Number.isSafeInteger(buyout) || buyout <= amount))
+        throw new Error("Le prix d'achat immédiat doit être un entier supérieur au prix de départ.");
       const isLast = current.filter((item) => sameForm(item, copy)).length === 1;
       if (
         isLast &&
@@ -72,7 +78,7 @@ export function MarketSaleDialog({
       )
         return;
       if (getGuestState().market === undefined) initializeGuestMarket(cards);
-      const listing = listGuestCopy(copy.id, card, kind, amount, Number(duration));
+      const listing = listGuestCopy(copy.id, card, kind, amount, Number(duration), Date.now(), buyout);
       void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
       onClose();
       onPublished(listing);
@@ -105,7 +111,9 @@ export function MarketSaleDialog({
           value={copyId}
           onChange={(event) => {
             setCopyId(event.target.value);
-            setPrice(suggestedPrice(event.target.value));
+            const suggested = suggestedPrices(event.target.value, kind);
+            setPrice(suggested.price);
+            setBuyoutPrice(suggested.buyout);
           }}
           className="h-10 rounded-md border border-border bg-background px-3 text-sm"
         >
@@ -134,7 +142,11 @@ export function MarketSaleDialog({
         <select
           id="market-kind"
           value={kind}
-          onChange={(event) => setKind(event.target.value === "auction" ? "auction" : "fixed")}
+          onChange={(event) => {
+            const nextKind = event.target.value === "auction" ? "auction" : "fixed";
+            if (price === suggestedPrices(copyId, kind).price) setPrice(suggestedPrices(copyId, nextKind).price);
+            setKind(nextKind);
+          }}
           className="h-10 rounded-md border border-border bg-background px-3 text-sm"
         >
           <option value="fixed">Vente directe</option>
@@ -153,6 +165,18 @@ export function MarketSaleDialog({
         />
         {kind === "auction" && (
           <>
+            <label htmlFor="market-buyout" className="text-sm font-semibold">
+              Prix d'achat immédiat (optionnel, en Zen)
+            </label>
+            <Input
+              id="market-buyout"
+              type="number"
+              min="1"
+              step="1"
+              value={buyoutPrice}
+              onChange={(event) => setBuyoutPrice(event.target.value)}
+              placeholder="Sans achat immédiat"
+            />
             <label htmlFor="market-duration" className="text-sm font-semibold">
               Durée
             </label>
@@ -162,9 +186,9 @@ export function MarketSaleDialog({
               onChange={(event) => setDuration(event.target.value)}
               className="h-10 rounded-md border border-border bg-background px-3 text-sm"
             >
-              <option value="2">2 min</option>
-              <option value="5">5 min</option>
-              <option value="15">15 min</option>
+              {AUCTION_DURATIONS.map((option) => (
+                <option key={option.minutes} value={option.minutes}>{option.label}</option>
+              ))}
             </select>
           </>
         )}

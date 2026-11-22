@@ -1,11 +1,14 @@
 import {
   getCardRecycleValue,
+  isLegacyDemonSlayerTranscendanceCardId,
   isTranscendanceCatalogCard,
   type Card,
   type CatalogRarity,
   type PulledCard,
 } from "./cards";
 import { GUEST_ZEN_KEY, INITIAL_ZEN } from "./shards";
+import { levelProgress } from "./level";
+import { readSecretQuests } from "./quests";
 
 export type GuestOwnedRow = {
   id: string;
@@ -17,8 +20,10 @@ export type GuestOwnedRow = {
 };
 
 export const GUEST_COLLECTION_KEY = "zenkai_guest_collection";
+export const PLAYER_XP_KEY = "zenkai_player_xp";
+export const MARKET_AUCTIONS_KEY = "zenkai_market_auctions";
 export type GuestPlus = { active: boolean; avatar: string | null; welcomeClaimed: boolean };
-export type GuestState = { rows: GuestOwnedRow[]; zen: number; plus: GuestPlus; market?: unknown };
+export type GuestState = { rows: GuestOwnedRow[]; zen: number; xp: number; plus: GuestPlus; market?: unknown; quests?: unknown; secrets?: unknown; betaWelcomeClaimed?: boolean };
 const DEFAULT_PLUS: GuestPlus = { active: false, avatar: null, welcomeClaimed: false };
 
 function isRow(value: unknown): value is GuestOwnedRow {
@@ -36,7 +41,7 @@ function isRow(value: unknown): value is GuestOwnedRow {
 }
 
 function readState(): GuestState {
-  if (typeof window === "undefined") return { rows: [], zen: INITIAL_ZEN, plus: DEFAULT_PLUS };
+  if (typeof window === "undefined") return { rows: [], zen: INITIAL_ZEN, xp: 0, plus: DEFAULT_PLUS };
   const raw = window.localStorage.getItem(GUEST_COLLECTION_KEY);
   const legacyZen = window.localStorage.getItem(GUEST_ZEN_KEY);
   const parsed: unknown = raw === null ? [] : JSON.parse(raw);
@@ -47,6 +52,8 @@ function readState(): GuestState {
   const candidate = state as Record<string, unknown>;
   const rows = candidate["rows"];
   const zen = candidate["zen"];
+  const legacyXp = window.localStorage.getItem(PLAYER_XP_KEY);
+  const xp = candidate["xp"] ?? (legacyXp === null ? 0 : Number(legacyXp));
   const plus = candidate["plus"] ?? DEFAULT_PLUS;
   if (
     !Array.isArray(rows) ||
@@ -54,7 +61,9 @@ function readState(): GuestState {
     typeof zen !== "number" ||
     !Number.isSafeInteger(zen) ||
     zen < 0 ||
-    new Set(rows.map((row) => row.id)).size !== rows.length
+    typeof xp !== "number" || !Number.isSafeInteger(xp) || xp < 0 ||
+    new Set(rows.map((row) => row.id)).size !== rows.length ||
+    (candidate["betaWelcomeClaimed"] !== undefined && typeof candidate["betaWelcomeClaimed"] !== "boolean")
   ) {
     throw new Error("Stockage invité invalide.");
   }
@@ -68,9 +77,15 @@ function readState(): GuestState {
     throw new Error("État Zenkai+ invité invalide.");
   }
   return {
-    rows,
+    rows: rows.map((row) => isLegacyDemonSlayerTranscendanceCardId(row.card_id) && row.customTranscendance
+      ? { ...row, customTranscendance: false }
+      : row),
     zen,
+    xp,
     market: candidate["market"],
+    quests: candidate["quests"],
+    secrets: candidate["secrets"],
+    ...(candidate["betaWelcomeClaimed"] === true ? { betaWelcomeClaimed: true } : {}),
     plus: {
       active: data["active"],
       avatar: data["avatar"],
@@ -79,9 +94,58 @@ function readState(): GuestState {
   };
 }
 
+function auctionProjection(market: unknown): string | null {
+  if (market === undefined) return null;
+  if (!market || typeof market !== "object" || !("listings" in market) || !Array.isArray(market.listings)) {
+    throw new Error("Données du marché local invalides.");
+  }
+  return JSON.stringify({
+    listings: market.listings.filter((item: unknown) =>
+      !!item && typeof item === "object" && "kind" in item && item.kind === "auction"),
+  });
+}
+
+export function syncGuestAuctionStorage(market: unknown) {
+  const projection = auctionProjection(market);
+  if (window.localStorage.getItem(MARKET_AUCTIONS_KEY) === projection) return;
+  if (projection === null) window.localStorage.removeItem(MARKET_AUCTIONS_KEY);
+  else window.localStorage.setItem(MARKET_AUCTIONS_KEY, projection);
+}
+
 function writeState(state: GuestState) {
-  window.localStorage.setItem(GUEST_COLLECTION_KEY, JSON.stringify(state));
+  const previous = readState();
+  const beforeSecrets = readSecretQuests(previous.secrets);
+  const afterSecrets = readSecretQuests(state.secrets);
+  const unlocked = afterSecrets.unlocked.filter((id) => !beforeSecrets.unlocked.includes(id));
+  const previousXp = window.localStorage.getItem(PLAYER_XP_KEY);
+  const xpChanged = previousXp !== String(state.xp);
+  const previousAuctions = window.localStorage.getItem(MARKET_AUCTIONS_KEY);
+  let auctionsWritten = false;
+  let xpWritten = false;
+  try {
+    syncGuestAuctionStorage(state.market);
+    auctionsWritten = previousAuctions !== auctionProjection(state.market);
+    if (xpChanged) {
+      window.localStorage.setItem(PLAYER_XP_KEY, String(state.xp));
+      xpWritten = true;
+    }
+    window.localStorage.setItem(GUEST_COLLECTION_KEY, JSON.stringify(state));
+  } catch (error) {
+    if (xpWritten) {
+      if (previousXp === null) window.localStorage.removeItem(PLAYER_XP_KEY);
+      else window.localStorage.setItem(PLAYER_XP_KEY, previousXp);
+    }
+    if (auctionsWritten) {
+      if (previousAuctions === null) window.localStorage.removeItem(MARKET_AUCTIONS_KEY);
+      else window.localStorage.setItem(MARKET_AUCTIONS_KEY, previousAuctions);
+    }
+    throw error;
+  }
   window.dispatchEvent(new Event("zenkai:guest-updated"));
+  for (const id of unlocked) window.dispatchEvent(new CustomEvent("zenkai:secret-unlocked", { detail: id }));
+  const from = levelProgress(previous.xp).level;
+  const to = levelProgress(state.xp).level;
+  if (to > from) window.dispatchEvent(new CustomEvent("zenkai:level-up", { detail: { from, to } }));
 }
 
 export function getGuestState(): GuestState {
@@ -92,7 +156,7 @@ export function updateGuestState<T>(
   update: (state: GuestState) => { state: GuestState; result: T },
 ): T {
   const { state, result } = update(readState());
-  if (!Number.isSafeInteger(state.zen) || state.zen < 0) throw new Error("Solde invité invalide.");
+  if (!Number.isSafeInteger(state.zen) || state.zen < 0 || !Number.isSafeInteger(state.xp) || state.xp < 0) throw new Error("Solde ou XP local invalide.");
   writeState(state);
   return result;
 }

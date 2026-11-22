@@ -1,9 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BoostersPage } from "./index";
-import type { Card } from "@/lib/cards";
+import { PACKS, PACK_ARTWORK_BY_PACK, type Card } from "@/lib/cards";
 import { addGuestCollectionCards, getGuestCollection, updateGuestState } from "@/lib/guest-collection";
+import { getQuestState, getSecretQuests } from "@/lib/quests";
+import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 
 const mocks = vi.hoisted(() => ({
   error: vi.fn(), rpc: vi.fn(),
@@ -23,7 +25,8 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, from: mocks.from } }));
 vi.mock("sonner", () => ({ toast: { error: mocks.error } }));
-vi.mock("@/lib/guest", () => ({
+vi.mock("@/lib/guest", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/guest")>(),
   createLocalGuestDraw: mocks.draw,
 }));
 vi.mock("@/lib/game", () => ({
@@ -46,10 +49,12 @@ const cards: Card[] = [
 function showPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   client.setQueryData(["cards"], cards);
-  return render(<QueryClientProvider client={client}><BoostersPage /></QueryClientProvider>);
+  const result = render(<QueryClientProvider client={client}><BoostersPage /></QueryClientProvider>);
+  return result;
 }
 
 describe("booster hub", () => {
+  afterEach(() => vi.restoreAllMocks());
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -113,6 +118,53 @@ describe("booster hub", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Solde local indisponible");
   });
 
+  it("updates Transcendance visibility when the guest collection changes", async () => {
+    const card = CUSTOM_TRANSCENDANCE_CARDS[0]!;
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+    expect(screen.queryByText(card.name)).toBeNull();
+    act(() => addGuestCollectionCards([{ userCardId: "owned-exclusive", card: customTranscendanceAsCard(card), customTranscendance: true }]));
+    expect(await screen.findByText(card.name)).toBeTruthy();
+    act(() => updateGuestState((state) => ({ state: { ...state, rows: [] }, result: undefined })));
+    await waitFor(() => expect(screen.queryByText(card.name)).toBeNull());
+  });
+
+  it("keeps guest Transcendances hidden when local collection data is invalid", async () => {
+    localStorage.setItem("zenkai_guest_collection", "{");
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(await screen.findByText(/Impossible de vérifier ta collection/)).toBeTruthy();
+    expect(screen.queryByText(CUSTOM_TRANSCENDANCE_CARDS[0]!.name)).toBeNull();
+    expect(screen.getAllByText("??? · Carte Transcendance").length).toBeGreaterThan(0);
+  });
+
+  it("uses the connected collection rather than the guest collection", async () => {
+    const card = CUSTOM_TRANSCENDANCE_CARDS[0]!;
+    addGuestCollectionCards([{ userCardId: "guest-exclusive", card: customTranscendanceAsCard(card), customTranscendance: true }]);
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.collection.mockResolvedValue([]);
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+    expect(screen.queryByText(card.name)).toBeNull();
+    expect(mocks.collection).toHaveBeenCalled();
+  });
+
+  it("reveals connected owned cards and keeps them hidden on collection errors", async () => {
+    const card = CUSTOM_TRANSCENDANCE_CARDS[0]!;
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.collection.mockRejectedValueOnce(new Error("network")).mockResolvedValue([{ card_id: card.id }]);
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de vérifier ta collection");
+    expect(screen.queryByText(card.name)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
+    expect(await screen.findByText(card.name)).toBeTruthy();
+  });
+
   it("shows the real connected stock and remaining regeneration time", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
@@ -126,6 +178,7 @@ describe("booster hub", () => {
     showPage();
     fireEvent.click(screen.getByRole("button", { name: "Ouvrir · Gratuit" }));
     const fullSkip = await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 });
+    expect(getQuestState(null).boosters).toBe(1);
     fireEvent.click(fullSkip);
     expect(screen.getByRole("heading", { name: "Récapitulatif" })).toBeTruthy();
     for (let index = 4; index > 0; index--) {
@@ -135,6 +188,153 @@ describe("booster hub", () => {
     expect(screen.getByRole("heading", { name: "Choisis ton booster" })).toBeTruthy();
   });
 
+  it("opens one booster from the mobile shortcut", () => {
+    vi.useFakeTimers();
+    const { unmount } = showPage();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Ouvrir x1" }));
+      expect(mocks.draw).toHaveBeenCalledWith(expect.anything(), "shonen", 1);
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
+  });
+
+  it("opens ten boosters from the mobile shortcut and tears on a horizontal gesture", async () => {
+    vi.useFakeTimers();
+    const { container, unmount } = showPage();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Ouvrir x10" }));
+      expect(mocks.draw).toHaveBeenCalledWith(expect.anything(), "shonen", 10);
+      const pack = screen.getByRole("button", { name: "Déchirer le booster" });
+      fireEvent(pack, new MouseEvent("pointerdown", { bubbles: true, clientX: 10 }));
+      fireEvent(pack, new MouseEvent("pointermove", { bubbles: true, clientX: 90 }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(600); });
+      expect(container.querySelector(".pack-first-card img")).toHaveAttribute("src", "/image_39f4fe98.jpg");
+      await act(async () => { await vi.advanceTimersByTimeAsync(1800); });
+      expect(screen.getByRole("button", { name: "Retourner la carte" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Full Skip" })).toBeTruthy();
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
+  });
+
+  it("selects Shojo with the same frame as Shonen and carries its artwork through the opening", async () => {
+    const { container } = showPage();
+    const shojo = screen.getByAltText("Booster Shojo");
+    const shonen = screen.getByAltText("Booster Shonen Mix");
+    expect(shojo).toHaveAttribute("src", "/pack-shojo-aligned.png");
+    expect(shojo.className).toBe(screen.getByAltText("Booster Seinen").className);
+    expect(shojo.parentElement?.className).toContain("aspect-[2/3]");
+    expect(shojo.parentElement?.className.replace(/ring-2.*$/, "").trim()).toBe(shonen.parentElement?.className.replace(/ring-2.*$/, "").trim());
+    fireEvent.click(screen.getByRole("radio", { name: "Shojo" }));
+    expect(screen.getByRole("radio", { name: "Shojo" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByAltText("Pochette Shojo")).toHaveClass("h-full", "w-full", "object-cover");
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir · Gratuit" }));
+    await waitFor(() => expect(container.querySelectorAll(".pack-art-image")).toHaveLength(2), { timeout: 3000 });
+    expect(container.querySelector(".pack-first-card img")).toHaveAttribute("src", "/card-back-shojo.png");
+    await screen.findByRole("button", { name: "Retourner la carte" }, { timeout: 5000 });
+    expect(container.querySelector(".flip-face img")).toHaveAttribute("src", "/card-back-shojo.png");
+    expect(container.querySelector(".rarity-glow-layer")).toBeTruthy();
+    expect(mocks.draw).toHaveBeenCalledWith(expect.anything(), "shojo", 1);
+  });
+
+  it("uses the same selection template and framing for all seven packs", () => {
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: "Tous" }));
+    const reference = screen.getByAltText("Booster Shonen Mix");
+    const template = reference.parentElement!.className.replace(/ring-2.*$/, "").trim();
+    for (const pack of PACKS) {
+      const artwork = screen.getByAltText(`Booster ${pack.label}`);
+      expect(artwork).toHaveAttribute("src", PACK_ARTWORK_BY_PACK[pack.id]);
+      expect(artwork).toHaveClass("h-full", "w-full", "object-cover", "object-center");
+      expect(artwork.className).toBe(reference.className);
+      expect(artwork.parentElement!.className.replace(/ring-2.*$/, "").trim()).toBe(template);
+      expect(artwork.parentElement).toHaveClass("aspect-[2/3]", "w-full", "overflow-hidden", "mx-auto");
+    }
+  });
+
+  it.each([
+    ["Seinen", "/card-back-seinen.png"],
+    ["Sport", "/carte%20sport.jpg"],
+    ["Antagoniste", "/card-back-antagoniste.png"],
+    ["Protagoniste", "/card-back-protagoniste.png"],
+  ])("keeps the %s card back from the tear through the 3D flip", async (pack, image) => {
+    const { container } = showPage();
+    if (pack === "Antagoniste") {
+      const artwork = screen.getByAltText("Booster Antagoniste");
+      expect(artwork).toHaveAttribute("src", "/pack-antagoniste-aligned.png");
+      expect(artwork).toHaveClass("h-full", "w-full", "object-cover", "object-center");
+      expect(artwork.parentElement).toHaveClass("aspect-[2/3]", "overflow-hidden");
+    }
+    if (pack === "Protagoniste") {
+      const artwork = screen.getByAltText("Booster Protagoniste");
+      expect(artwork).toHaveAttribute("src", "/pack-protagoniste.png");
+      expect(artwork).toHaveClass("h-full", "w-full", "object-cover", "object-center");
+      expect(artwork.parentElement).toHaveClass("aspect-[2/3]", "overflow-hidden");
+      expect(artwork.parentElement?.className).toBe(screen.getByAltText("Booster Seinen").parentElement?.className);
+    }
+    fireEvent.click(screen.getByRole("radio", { name: pack }));
+    if (pack === "Protagoniste") {
+      expect(screen.getByAltText("Pochette Protagoniste")).toHaveAttribute("src", "/pack-protagoniste.png");
+      expect(screen.getByAltText("Pochette Protagoniste")).toHaveClass("h-full", "w-full", "object-cover", "object-center");
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir · Gratuit" }));
+    await waitFor(() => expect(container.querySelector(".pack-first-card img")).toHaveAttribute("src", image), { timeout: 3000 });
+    if (pack === "Sport") {
+      expect(container.querySelector(".pack-first-card img")).toHaveClass("h-full", "w-full", "object-cover", "object-center", "rounded-[inherit]", "scale-[1.12]");
+    }
+    if (pack === "Antagoniste") {
+      const images = container.querySelectorAll(".pack-art-image");
+      expect(images).toHaveLength(2);
+      images.forEach((artwork) => {
+        expect(artwork).toHaveAttribute("src", "/pack-antagoniste-aligned.png");
+        expect(artwork).toHaveClass("object-cover", "object-center");
+        expect(artwork.closest(".pack-art")).toHaveClass("overflow-hidden");
+      });
+      expect(container.querySelector(".pack-first-card img")).toHaveClass("object-center", "rounded-[inherit]", "scale-[1.22]");
+    }
+    if (pack === "Protagoniste") {
+      const images = container.querySelectorAll(".pack-art-image");
+      expect(images).toHaveLength(2);
+      images.forEach((artwork) => {
+        expect(artwork).toHaveAttribute("src", "/pack-protagoniste.png");
+        expect(artwork).toHaveClass("h-full", "w-full", "object-cover", "object-center");
+      });
+      const back = container.querySelector(".pack-first-card img");
+      expect(back).toHaveClass("h-full", "w-full", "object-cover", "object-center", "rounded-[inherit]");
+      expect(back?.className).not.toMatch(/scale-/);
+      expect(container.querySelector('img[src="/image_39f4fe98.jpg"]')).toBeNull();
+    }
+    await screen.findByRole("button", { name: "Retourner la carte" }, { timeout: 5000 });
+    const back = container.querySelector(".flip-face img");
+    expect(back).toHaveAttribute("src", image);
+    if (pack === "Sport") {
+      expect(back).toHaveClass("h-full", "w-full", "object-cover", "object-center", "rounded-[inherit]", "scale-[1.12]");
+    }
+    if (pack === "Antagoniste") {
+      expect(back).toHaveClass("h-full", "w-full", "object-cover", "object-center", "rounded-[inherit]", "scale-[1.22]");
+    }
+    if (pack === "Protagoniste") {
+      expect(back).toHaveClass("h-full", "w-full", "object-cover", "object-center", "rounded-[inherit]");
+      expect(back?.className).not.toMatch(/scale-/);
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(container.querySelector(".flip-inner")).toHaveClass("flipped");
+    expect(container.querySelector(".flip-face img")).toBe(back);
+    if (pack === "Protagoniste") {
+      for (let i = 1; i < 5; i++) {
+        fireEvent.click(screen.getByRole("button", { name: "Carte suivante" }));
+        const nextBack = container.querySelector(".flip-face img");
+        expect(nextBack).toHaveAttribute("src", image);
+        expect(container.querySelector('img[src="/image_39f4fe98.jpg"]')).toBeNull();
+        fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+        expect(container.querySelector(".flip-face img")).toBe(nextBack);
+      }
+    }
+  });
+
   it.each([5, 10])("marks only first new guest draws in a %sx batch summary without persisting the simulation", async (count) => {
     addGuestCollectionCards([{ userCardId: "owned", card: cards[0]! }]);
     showPage();
@@ -142,6 +342,7 @@ describe("booster hub", () => {
     fireEvent.click(within(inspector).getByRole("radio", { name: `${count}x` }));
     fireEvent.click(within(inspector).getByRole("button", { name: "Ouvrir · Gratuit" }));
     fireEvent.click(await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 }));
+    expect(getSecretQuests().unlocked.includes("miracle")).toBe(count === 10);
     expect(screen.getAllByText("NOUVEAU")).toHaveLength(4);
     expect(screen.getAllByText("Carte 0")).toHaveLength(count);
     for (const element of screen.getAllByText("Carte 0")) {
@@ -161,6 +362,7 @@ describe("booster hub", () => {
     fireEvent.click(open);
     await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Collection indisponible : offline"));
     expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(getQuestState("player").boosters).toBe(0);
   });
 
   it("snapshots the server collection before opening and marks only the first new copy", async () => {
@@ -180,12 +382,37 @@ describe("booster hub", () => {
     await waitFor(() => expect(open).toBeEnabled());
     fireEvent.click(open);
     fireEvent.click(await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 }));
+    expect(getQuestState("player").boosters).toBe(1);
     expect(mocks.collection.mock.invocationCallOrder[0]).toBeLessThan(mocks.rpc.mock.invocationCallOrder[0]!);
     expect(screen.getAllByText("NOUVEAU")).toHaveLength(3);
     const duplicates = screen.getAllByText("Carte 2");
     expect(duplicates).toHaveLength(2);
     expect(duplicates.filter((element) => within(element.closest(".animate-card-in") as HTMLElement).queryByText("NOUVEAU"))).toHaveLength(1);
     expect(inQuery).toHaveBeenCalledOnce();
+  });
+
+  it("débloque Double Miracle après un tirage connecté x10", async () => {
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.profile = { boosters_stored: 15, stock_updated_at: new Date().toISOString() };
+    const draw = Array.from({ length: 50 }, (_, i) => ({
+      card_id: i === 0 || i === 1 ? "card-4" : "card-0",
+      user_card_id: `copy-${i}`, boosters_left: 5, stock_updated_at: new Date().toISOString(),
+    }));
+    mocks.rpc.mockResolvedValue({ data: draw, error: null });
+    const inQuery = vi.fn().mockResolvedValue({
+      data: draw.map((item) => ({ id: item.user_card_id, transcended: false })), error: null,
+    });
+    mocks.from.mockReturnValue({ select: () => ({ eq: () => ({ in: inQuery }) }) });
+    showPage();
+    const inspector = screen.getByRole("complementary", { name: "Détails du booster" });
+    const open = within(inspector).getByRole("button", { name: "Ouvrir · Gratuit" });
+    await waitFor(() => expect(open).toBeEnabled());
+    fireEvent.click(within(inspector).getByRole("radio", { name: "10x" }));
+    fireEvent.click(open);
+    await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 });
+    expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 10 });
+    expect(getSecretQuests().unlocked).toContain("miracle");
   });
 
   it("reports an RPC failure and allows a signed-in player to retry", async () => {

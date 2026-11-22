@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { AnimeCard } from "@/components/AnimeCard";
+import { AnimeCard, TranscendFrame, TranscendanceSparklesOverlay } from "@/components/AnimeCard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +29,9 @@ type Props = {
   packLabel: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  ownedCardIds: ReadonlySet<string> | null;
+  ownershipError?: boolean;
+  onRetryOwnership?: () => void;
   customCards?: readonly CustomTranscendanceCard[];
 };
 
@@ -44,6 +47,9 @@ export function BoosterPreviewDialog({
   packLabel,
   open,
   onOpenChange,
+  ownedCardIds,
+  ownershipError = false,
+  onRetryOwnership,
   customCards = CUSTOM_TRANSCENDANCE_CARDS,
 }: Props) {
   const [filter, setFilter] = useState<RarityFilter>("all");
@@ -91,6 +97,15 @@ export function BoosterPreviewDialog({
         </DialogHeader>
 
         {pack === "shonen" && <p className="text-xs text-muted-foreground">En ligne, la règle universelle doit encore être activée côté serveur : certaines cartes de cet aperçu peuvent être indisponibles au tirage.</p>}
+        {customForPack.length > 0 && <p className="text-xs text-muted-foreground">Les Transcendances exclusives sont disponibles dans la simulation invitée ; leur obtention en ligne dépend du serveur.</p>}
+        {customForPack.length > 0 && ownedCardIds === null && (
+          ownershipError ? (
+            <p role="alert" className="text-xs text-destructive">
+              Impossible de vérifier ta collection : les Transcendances restent masquées.{" "}
+              {onRetryOwnership && <button type="button" className="underline" onClick={onRetryOwnership}>Réessayer</button>}
+            </p>
+          ) : <p role="status" className="text-xs text-muted-foreground">Vérification de ta collection…</p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="sm" variant={favoritesOnly ? "hero" : "glass"} aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(!favoritesOnly)}>
             ★ Mes favoris ({favoriteCount})
@@ -136,13 +151,15 @@ export function BoosterPreviewDialog({
             {showMystery && <MysteryCard pack={pack} />}
             {visibleEntries.map((entry) => {
               const rarity = entry.customTranscendance ? "transcendance" : entry.card.rarity;
+              const concealed = rarity === "transcendance" && !ownedCardIds?.has(entry.card.id);
+              const favoriteName = concealed ? "une carte Transcendance mystère" : entry.card.name;
               return (
                 <article key={entry.id} className="mx-auto flex w-full max-w-44 flex-col items-center gap-2">
                   <div className="relative w-full">
-                    <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact />
+                    {concealed ? <MysteryTranscendanceCard /> : <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact />}
                     <button
                       type="button"
-                      aria-label={`${favoriteIds.has(entry.card.id) ? "Retirer" : "Ajouter"} ${entry.card.name} ${favoriteIds.has(entry.card.id) ? "des" : "aux"} favoris`}
+                      aria-label={`${favoriteIds.has(entry.card.id) ? "Retirer" : "Ajouter"} ${favoriteName} ${favoriteIds.has(entry.card.id) ? "des" : "aux"} favoris`}
                       aria-pressed={favoriteIds.has(entry.card.id)}
                       onClick={() => {
                         try {
@@ -191,6 +208,21 @@ export function BoosterPreviewDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MysteryTranscendanceCard() {
+  return (
+    <div className="reverse-card zenkai-transcendance-card relative aspect-[2.5/3.5] w-full overflow-hidden rounded-2xl shadow-[0_0_20px_rgba(175,82,222,0.45),0_0_12px_rgba(0,199,190,0.35)]">
+      <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,#251339_0%,#080611_48%,#000_100%)]">
+        <span aria-hidden className="font-display text-7xl font-black text-amber-300 drop-shadow-[0_0_18px_rgba(251,191,36,0.9)]">?</span>
+      </div>
+      <TranscendanceSparklesOverlay />
+      <TranscendFrame />
+      <div className="premium-glass-label absolute inset-x-0 bottom-0 z-30 p-1">
+        <p className="tcg-nameplate text-center font-display text-[9px] font-bold leading-tight">??? · Carte Transcendance</p>
+      </div>
+    </div>
   );
 }
 

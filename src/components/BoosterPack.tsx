@@ -1,7 +1,7 @@
-import type { CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { normalizeOpeningRarity, openingEffects, packSealToken } from "@/lib/pack-opening";
-import { PACK_ARTWORK } from "@/lib/cards";
+import { CARD_BACK_BY_PACK, PACK_ARTWORK } from "@/lib/cards";
 import { BoosterArtwork } from "@/components/BoosterArtwork";
 
 export type PackState = "idle" | "opening" | "tearing";
@@ -14,16 +14,21 @@ export function BoosterPack({
   accent = "var(--primary)",
   category = "ZENKAI",
   artwork = PACK_ARTWORK,
+  backImage = CARD_BACK_BY_PACK.shonen,
   beam,
   className,
+  onTear,
 }: {
   state?: PackState;
   accent?: string;
   category?: string;
   artwork?: string;
+  backImage?: string;
   beam?: string | null;
   className?: string;
+  onTear?: () => void;
 }) {
+  const startX = useRef<number | null>(null);
   const beamColor = packSealToken(beam);
   const rarity = normalizeOpeningRarity(beam);
   const style = {
@@ -41,7 +46,7 @@ export function BoosterPack({
       <BoosterArtwork
         src={artwork}
         alt=""
-        className="pack-art-image h-full w-full scale-x-[1.15] scale-y-[1.12] rounded-xl object-cover drop-shadow-[0_15px_35px_rgba(168,85,247,0.35)]"
+        className="pack-art-image rounded-xl drop-shadow-[0_15px_35px_rgba(168,85,247,0.35)]"
       />
     </div>
   );
@@ -50,7 +55,30 @@ export function BoosterPack({
     <div
       data-rarity={rarity}
       data-state={state}
-      className={cn("pack-opening-scene rarity-opening relative overflow-visible", className)}
+      role={state === "opening" && onTear ? "button" : undefined}
+      tabIndex={state === "opening" && onTear ? 0 : undefined}
+      aria-label={state === "opening" && onTear ? "Déchirer le booster" : undefined}
+      onPointerDown={(event) => {
+        if (state !== "opening" || !onTear) return;
+        startX.current = event.clientX;
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        if (startX.current === null || state !== "opening" || !onTear) return;
+        if (Math.abs(event.clientX - startX.current) >= 50) {
+          startX.current = null;
+          onTear();
+        }
+      }}
+      onPointerUp={() => { startX.current = null; }}
+      onPointerCancel={() => { startX.current = null; }}
+      onKeyDown={(event) => {
+        if (state === "opening" && onTear && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onTear();
+        }
+      }}
+      className={cn("pack-opening-scene rarity-opening relative touch-pan-y overflow-visible", className)}
       style={style}
     >
       <div aria-hidden className="pack-dynamic-aura pointer-events-none absolute" />
@@ -68,11 +96,18 @@ export function BoosterPack({
       >
         {tearing ? (
           <>
-            <div aria-hidden className="pack-first-card absolute left-1/2 top-1/2 mx-auto h-[268px] w-48 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-transparent">
+            <div aria-hidden className="pack-first-card absolute left-1/2 top-1/2 mx-auto h-[268px] w-48 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-transparent">
               <img
-                src="/image_39f4fe98.jpg"
+                src={backImage}
                 alt=""
-                className="h-full w-full scale-[1.12] rounded-2xl bg-transparent object-cover"
+                className={cn(
+                  "h-full w-full bg-transparent object-cover object-center",
+                  backImage === CARD_BACK_BY_PACK.protagoniste
+                    ? "rounded-[inherit]"
+                    : backImage === CARD_BACK_BY_PACK.shojo || backImage === CARD_BACK_BY_PACK.antagoniste
+                    ? "scale-[1.22] rounded-[inherit]"
+                    : cn("scale-[1.12]", backImage === CARD_BACK_BY_PACK.sport ? "rounded-[inherit]" : "rounded-xl"),
+                )}
               />
             </div>
             <div

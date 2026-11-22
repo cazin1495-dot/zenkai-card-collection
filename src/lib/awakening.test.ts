@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AWAKENING_DURATION_MS, AWAKENING_ALTERNATION_DELAYS, AWAKENING_ALTERNATION_MS, AWAKENING_FLASH_MS, AWAKENING_LANDING_MS, awakeningAlternation, awakeningPhraseIndex, canRevealEvolution, playAwakeningAudio } from "./awakening";
-import { cardArt } from "./cards";
+import { cardArt, cardIdentity, type Card } from "./cards";
 import ultraInstinct from "@/assets/goku-ultra-instinct.png.asset.json";
 
 describe("original awakening audio", () => {
@@ -58,5 +58,12 @@ describe("original awakening audio", () => {
     expect(cardArt(card, true)).toBe(ultraInstinct.url);
     expect(cardArt(card, false)).toBe("original.png");
     expect(cardArt({ id: "other", image_url: "other.png" }, true)).toBe("other.png");
+  });
+  it("uses Gon adult art and identity only for a transcended Gon copy", () => {
+    const gon: Card = { id: "al-30", name: "Gon Freecss", title: "Hunter", rarity: "mythique", description: "", sort_order: 0, image_url: "/gon.webp" };
+    expect(cardArt(gon)).toBe("/gon.webp");
+    expect(cardIdentity(gon)).toEqual({ name: "Gon Freecss", title: "Hunter" });
+    expect(cardArt(gon, true)).toBe("/gon%20adulte.webp");
+    expect(cardIdentity(gon, true)).toEqual({ name: "Gon Freecss · Serment Absolu", title: "Hunter x Hunter · Sacrifice Ultime" });
   });
 });

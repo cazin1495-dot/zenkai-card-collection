@@ -4,6 +4,93 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.secret-reveal {
+  animation: secret-reveal-screen 0.3s ease both;
+}
+.secret-reveal::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.27), rgba(253, 224, 71, 0.12) 35%, transparent 70%);
+  animation: secret-reveal-glow 1s ease-out both;
+}
+.secret-reveal-plaque {
+  animation: secret-reveal-plaque 0.8s both;
+}
+.secret-reveal-plaque > span {
+  animation: secret-reveal-sparkle 1.4s ease-in-out infinite alternate;
+}
+.secret-reveal-hint {
+  animation: secret-reveal-sparkle 2s ease-in-out infinite alternate;
+}
+@keyframes secret-reveal-screen {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes secret-reveal-plaque {
+  0% { opacity: 0; transform: scale(0.65); }
+  65% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes secret-reveal-glow {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0.45; }
+}
+@keyframes secret-reveal-sparkle {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .secret-reveal, .secret-reveal::before, .secret-reveal-plaque, .secret-reveal-plaque > span, .secret-reveal-hint { animation: none; }
+}
+
+.profile-frame {
+  position: relative;
+  flex: none;
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #cbd5e1, #475569);
+}
+.profile-frame-solar {
+  background: linear-gradient(135deg, #fef08a, #f59e0b, #fde047);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+}
+.profile-frame-imperial {
+  background: linear-gradient(120deg, #a855f7, #e9d5ff, #7e22ce, #a855f7);
+  background-size: 250% 250%;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+  animation: profile-frame-shimmer 5s linear infinite;
+}
+.profile-frame-rainbow {
+  background: linear-gradient(120deg, #f472b6, #fde047, #4ade80, #38bdf8, #c084fc, #f472b6);
+  background-size: 250% 250%;
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.6);
+  animation: profile-frame-shimmer 5s linear infinite;
+}
+.profile-frame-image {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  place-items: center;
+  border: 2px solid #160c28;
+  border-radius: 9999px;
+  background: #26113e;
+  color: #fde047;
+  font-size: 2rem;
+  font-weight: 900;
+}
+.profile-frame-image img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.profile-frame-sparkle { position: absolute; right: -3px; top: -3px; color: #fde047; animation: secret-reveal-sparkle 2s ease-in-out infinite alternate; }
+@keyframes profile-frame-shimmer { from { background-position: 0% 50%; } to { background-position: 250% 50%; } }
+@media (prefers-reduced-motion: reduce) {
+  .profile-frame-imperial, .profile-frame-rainbow, .profile-frame-sparkle { animation: none; }
+}
+
 /*
  * Zenkai design system — dark, neon-edged anime card collecting.
  * Ink-black base, ember-red primary, electric cyan accent, rarity tokens.
@@ -170,7 +257,6 @@
   --gradient-awakening-column: linear-gradient(90deg, transparent, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 40%, color-mix(in oklab, var(--flash) 34%, transparent) 50%, color-mix(in oklab, var(--rarity-transcendance) 22%, transparent) 60%, transparent);
   --gradient-premium-frame: linear-gradient(135deg, var(--rarity-transcendance) 3%, var(--accent) 24%, var(--rarity-transcendance) 43%, var(--rarity-legendaire) 68%, var(--accent) 88%, var(--rarity-transcendance));
   --texture-tcg-metal: repeating-linear-gradient(115deg, transparent 0 2px, color-mix(in oklab, var(--letterbox) 30%, transparent) 2px 3px), var(--gradient-premium-frame);
-  --texture-tcg-engraving: repeating-linear-gradient(125deg, transparent 0 14px, var(--accent) 14px 14.5px, transparent 14.5px 28px), repeating-linear-gradient(55deg, transparent 0 14px, var(--rarity-legendaire) 14px 14.5px, transparent 14.5px 28px), var(--gradient-reverse-reflection);
   --gradient-tcg-plaque: linear-gradient(115deg, color-mix(in oklab, var(--letterbox) 82%, transparent), color-mix(in oklab, var(--surface-raised) 80%, transparent));
   --gradient-tcg-sweep: linear-gradient(125deg, transparent 40%, color-mix(in oklab, var(--accent) 15%, transparent) 47%, color-mix(in oklab, var(--flash) 40%, transparent) 50%, color-mix(in oklab, var(--rarity-legendaire) 15%, transparent) 53%, transparent 60%);
   --shadow-tcg-ornament: 0 0 3px color-mix(in oklab, var(--rarity-legendaire) 35%, transparent);
@@ -378,12 +464,6 @@
   inherits: false;
   initial-value: 0deg;
 }
-@property --tcg-prism-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
 @utility holo-sheen {
   background-image: var(--gradient-holo);
   background-size: 250% 100%;
@@ -626,6 +706,263 @@
 .pack-opening-scene[data-rarity="epique"] .pack-seal-light,
 .pack-opening-scene[data-rarity="legendaire"] .pack-seal-light,
 .pack-opening-scene[data-rarity="mythique"] .pack-seal-light { height: 5px; }
+.transcendence-blackout {
+  background: rgba(0, 0, 0, 0.98);
+  animation: transcendence-blackout 3s linear both;
+}
+.transcendence-blackout-content { animation: transcendence-impact 400ms ease-out; }
+.transcendence-rift {
+  position: absolute;
+  width: 100vw;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ff4ecd, #fde047, #00f5d4, #c084fc, transparent);
+  box-shadow: 0 0 18px #c084fc, 0 0 38px #00f5d4;
+  animation: transcendence-rift 3s ease-out both;
+}
+.transcendence-invocation-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: transcendence-ring-visibility 3s linear both, transcendence-ring-spin 7s linear infinite;
+}
+.transcendence-invocation-ring-gold {
+  width: min(72vw, 22rem);
+  border: 1px dashed #fde047;
+  box-shadow: 0 0 16px rgba(253, 224, 71, 0.7), inset 0 0 12px rgba(253, 224, 71, 0.4);
+}
+.transcendence-invocation-ring-rainbow {
+  width: min(86vw, 27rem);
+  padding: 2px;
+  background: conic-gradient(#ff4ecd, #fde047, #4ade80, #00f5d4, #c084fc, #ff4ecd);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation-direction: normal, reverse;
+}
+.transcendence-blackout-title-glow {
+  position: relative;
+  text-align: center;
+  filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.85));
+  animation: transcendence-invocation-exit 3s linear both;
+}
+.transcendence-blackout-title {
+  max-width: 100%;
+  padding: 0 0.25em;
+  font-size: clamp(0.9rem, 4.4vw, 3.75rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.transcendence-blackout-letter {
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(90deg, #ff3b87, #ffcc00, #34c759, #00c7be, #af52de, #ff3b87);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: transcendence-letter-reveal 240ms ease-out both, transcendence-title-color 2s linear infinite;
+}
+.transcendence-blackout-subtitle,
+.transcendence-blackout-rate-note { color: #fff3ca; letter-spacing: 0.24em; animation: transcendence-subtitle 3s ease-out both; }
+.transcendence-blackout-subtitle { margin-top: 0.75rem; font-size: clamp(0.6rem, 1.6vw, 0.8rem); font-weight: 800; }
+.transcendence-blackout-rate-note { margin-top: 0.25rem; font-size: 0.55rem; }
+.transcendence-blackout-stars { position: absolute; width: min(90vw, 48rem); height: 9rem; }
+.transcendence-blackout-stars span {
+  position: absolute;
+  color: #fde047;
+  font-size: 1.25rem;
+  text-shadow: 0 0 12px currentColor;
+  animation: transcendence-blackout-star 3s ease-out both;
+}
+.transcendence-blackout-stars span:nth-child(1) { left: 7%; top: 10%; color: #ff4ecd; }
+.transcendence-blackout-stars span:nth-child(2) { left: 23%; bottom: 4%; color: #00f5d4; }
+.transcendence-blackout-stars span:nth-child(3) { left: 42%; top: 0; color: #fde047; }
+.transcendence-blackout-stars span:nth-child(4) { right: 37%; bottom: 0; color: #c084fc; }
+.transcendence-blackout-stars span:nth-child(5) { right: 18%; top: 5%; color: #4ade80; }
+.transcendence-blackout-stars span:nth-child(6) { right: 4%; bottom: 12%; color: #fff; }
+.transcendence-blackout-flash {
+  background: radial-gradient(circle, #fff 0%, #fde68a 18%, #c4b5fd 42%, transparent 75%);
+  opacity: 0;
+  animation: transcendence-blackout-flash 3s ease-out both;
+}
+.transcendence-shockwave {
+  position: absolute;
+  width: 300vmax;
+  aspect-ratio: 1;
+  padding: 3px;
+  border-radius: 50%;
+  background: conic-gradient(#ff4ecd, #fde047, #4ade80, #00f5d4, #c084fc, #ff4ecd);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 12px #fff);
+  opacity: 0;
+  animation: transcendence-shockwave 3s linear both;
+}
+.transcendence-shockwave-second { animation-name: transcendence-shockwave-second; }
+body:has(.transcendence-slam-overlay) > main,
+body:has(.transcendence-slam-overlay) > header {
+  animation: transcendence-camera-impact 3s linear both;
+}
+.transcendence-card-settled { transform: scale(1.04); }
+.transcendence-card-arrival { animation: transcendence-card-arrival 3s ease-out both; }
+.transcendence-divine-rays {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: min(150vw, 650px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(253, 224, 71, 0.3) 0deg, transparent 9deg, rgba(192, 132, 252, 0.27) 20deg, transparent 30deg, rgba(0, 245, 212, 0.2) 40deg, transparent 45deg);
+  mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.7) 50%, transparent 72%);
+  animation: transcendence-divine-rotate 24s linear infinite;
+}
+.transcendence-ultimate-seal {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  display: grid;
+  justify-items: center;
+  padding: 3px 8px;
+  border: 1px solid rgba(253, 224, 71, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(110deg, #281421, #483310, #25163e);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.7), 0 0 22px rgba(192, 132, 252, 0.4);
+  color: #fde68a;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: transcendence-ultimate-seal 3s ease-out both;
+}
+.transcendence-ultimate-seal small { font-size: 7px; letter-spacing: 0.12em; }
+.transcendence-arrival-stars {
+  position: absolute;
+  z-index: 1;
+  inset: -20% -45%;
+  animation: transcendence-arrival-stars 3s linear both;
+}
+.transcendence-arrival-stars span {
+  position: absolute;
+  color: #fde047;
+  font-size: 0.85rem;
+  text-shadow: 0 0 10px currentColor;
+  animation: transcendence-star-float 2.4s ease-out 2.2s infinite;
+}
+.transcendence-arrival-stars span:nth-child(6n + 1) { color: #ff4ecd; }
+.transcendence-arrival-stars span:nth-child(6n + 2) { color: #00f5d4; }
+.transcendence-arrival-stars span:nth-child(6n + 3) { color: #fde047; }
+.transcendence-arrival-stars span:nth-child(6n + 4) { color: #c084fc; }
+.transcendence-arrival-stars span:nth-child(6n + 5) { color: #4ade80; }
+.transcendence-arrival-stars span:nth-child(6n) { color: #fff; }
+.transcendence-arrival-stars span:nth-child(1) { left: 8%; top: 5%; }
+.transcendence-arrival-stars span:nth-child(2) { right: 12%; top: 9%; animation-delay: 2.5s; }
+.transcendence-arrival-stars span:nth-child(3) { left: 23%; top: 17%; animation-delay: 2.7s; }
+.transcendence-arrival-stars span:nth-child(4) { right: 25%; top: 24%; animation-delay: 2.4s; }
+.transcendence-arrival-stars span:nth-child(5) { left: 4%; top: 36%; animation-delay: 2.6s; }
+.transcendence-arrival-stars span:nth-child(6) { right: 5%; top: 40%; animation-delay: 2.3s; }
+.transcendence-arrival-stars span:nth-child(7) { left: 15%; top: 53%; animation-delay: 2.8s; }
+.transcendence-arrival-stars span:nth-child(8) { right: 17%; top: 59%; animation-delay: 2.5s; }
+.transcendence-arrival-stars span:nth-child(9) { left: 5%; top: 70%; animation-delay: 2.4s; }
+.transcendence-arrival-stars span:nth-child(10) { right: 7%; top: 77%; animation-delay: 2.7s; }
+.transcendence-arrival-stars span:nth-child(11) { left: 25%; top: 92%; animation-delay: 2.3s; }
+.transcendence-arrival-stars span:nth-child(12) { right: 29%; top: 94%; animation-delay: 2.6s; }
+@keyframes transcendence-impact {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-1px); }
+}
+@keyframes transcendence-rift {
+  0% { opacity: 0; transform: scaleX(0.02) scaleY(1); }
+  10% { opacity: 1; transform: scaleX(1) scaleY(1); }
+  20% { opacity: 0; transform: scaleX(1) scaleY(5); }
+  100% { opacity: 0; transform: scaleX(1) scaleY(5); }
+}
+@keyframes transcendence-ring-visibility {
+  0%, 13% { opacity: 0; }
+  22%, 68% { opacity: 0.8; }
+  76%, 100% { opacity: 0; }
+}
+@keyframes transcendence-ring-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes transcendence-invocation-exit {
+  0%, 68% { opacity: 1; }
+  76%, 100% { opacity: 0; }
+}
+@keyframes transcendence-letter-reveal {
+  from { opacity: 0; transform: translateY(0.3em) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes transcendence-subtitle {
+  0%, 32% { opacity: 0; }
+  42%, 100% { opacity: 1; }
+}
+@keyframes transcendence-blackout {
+  0%, 73.33% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes transcendence-title-color {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+@keyframes transcendence-blackout-star {
+  0%, 17% { opacity: 0; transform: scale(0.5); }
+  38%, 66% { opacity: 1; transform: scale(1); }
+  76%, 100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes transcendence-blackout-flash {
+  0%, 73.33% { opacity: 0; transform: scale(0.1); }
+  80% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes transcendence-shockwave {
+  0%, 90% { opacity: 0; transform: translate(-50%, -50%) scale(0.005); }
+  92% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes transcendence-shockwave-second {
+  0%, 91.33% { opacity: 0; transform: translate(-50%, -50%) scale(0.005); }
+  93% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes transcendence-camera-impact {
+  0%, 90%, 100% { transform: none; }
+  91.5% { transform: translate(-4px, 2px); }
+  93% { transform: translate(4px, -2px); }
+  95% { transform: translate(-3px, 1px); }
+  97% { transform: translate(2px, -1px); }
+}
+@keyframes transcendence-divine-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes transcendence-ultimate-seal {
+  0%, 73.33% { opacity: 0; }
+  90%, 100% { opacity: 1; }
+}
+@keyframes transcendence-card-arrival {
+  0%, 73.33% { opacity: 0; transform: perspective(1000px) scale(0.2) rotateY(720deg); }
+  84% { opacity: 1; transform: perspective(1000px) scale(1.18) rotateY(0); }
+  90%, 100% { opacity: 1; transform: perspective(1000px) scale(1.04) rotateY(0); }
+}
+@keyframes transcendence-arrival-stars {
+  0%, 73.33% { opacity: 0; }
+  90%, 100% { opacity: 1; }
+}
+@keyframes transcendence-star-float {
+  0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+  20%, 65% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-35px) scale(1.2); }
+}
 .card-reveal-flip .flip-inner { transition: transform 650ms cubic-bezier(0.22, 0.7, 0.3, 1); }
 .card-reveal-premium .card-reveal-flip .flip-inner { transition-duration: 950ms; transition-timing-function: cubic-bezier(0.45, 0.03, 0.2, 1); }
 .rarity-glow-layer { position: absolute; z-index: 0; inset: -18%; overflow: visible; pointer-events: none; border-radius: 2rem; }
@@ -723,11 +1060,11 @@
 .card-reveal-transcendence[data-transcendence-id="luffy-gear-5-transcendance"] .rarity-glow-flash {
   background: radial-gradient(ellipse, #fff 0%, #fffef5 22%, #fef3c7 40%, #fbbf24 58%, transparent 76%);
 }
-.transcendence-reveal-flash { background: radial-gradient(ellipse, color-mix(in oklab, #fff 94%, transparent), color-mix(in oklab, #22d3ee 50%, transparent) 38%, transparent 76%); mix-blend-mode: screen; animation: transcendence-reveal-flash 600ms ease-out both; }
+.transcendence-reveal-flash { position: absolute; inset: 12%; border-radius: 2rem; box-shadow: 0 0 35px 12px rgba(251, 191, 36, 0.8), 0 0 65px 24px rgba(168, 85, 247, 0.6); animation: transcendence-reveal-flash 800ms ease-out both; }
 @keyframes transcendence-reveal-flash {
   0% { opacity: 0; scale: 0.88; }
   18% { opacity: 0.95; scale: 1.03; }
-  100% { opacity: 0; scale: 1.14; }
+  100% { opacity: 0; scale: 1.25; }
 }
 .card-reveal-transcendence .transcendence-card-anticipation { transform-origin: center; animation: transcendence-back-vibration 1.1s ease-in-out 2; }
 @keyframes transcendence-back-vibration {
@@ -900,145 +1237,84 @@
   --transcendence-aura-tertiary: #fbbf24;
   --gradient-prismatic: repeating-linear-gradient(115deg, #fff 0%, #fef3c7 12%, #fbbf24 24%, #fffef5 36%, #fff 48%);
 }
-/* Full-art finish: energy stays on the edge; varnish reacts only to tilt. */
+/* Full-art finish: the frame stays on the edge. */
 .reverse-card { background: var(--surface); box-shadow: var(--shadow-reverse-card); }
-.flip-front.reverse-card { box-shadow: 0 0 0 1px color-mix(in oklab, #e2e8f0 72%, transparent), 0 0 20px 3px color-mix(in oklab, #22d3ee 30%, transparent), 0 0 34px 6px color-mix(in oklab, #a855f7 24%, transparent); }
-.reverse-art { position: absolute; inset: 0; width: 100%; height: 100%; }
-.transcendence-cosmic-bg {
-  z-index: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--transcendence-aura-secondary, #8b5cf6) 18%, transparent), transparent 62%),
-    radial-gradient(ellipse at 50% 88%, color-mix(in oklab, var(--transcendence-aura-primary, #22d3ee) 14%, transparent), transparent 52%),
-    linear-gradient(160deg, #090b18, #171124 55%, #080b14);
+.flip-front.reverse-card { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.45); }
+.flip-front.zenkai-transcendance-card {
+  border-radius: 14px;
+  box-shadow: 0 0 20px rgba(175, 82, 222, 0.45), 0 0 12px rgba(0, 199, 190, 0.35);
 }
+.reverse-art { position: absolute; inset: 0; width: 100%; height: 100%; }
 .premium-energy-frame {
-  --tcg-prism-angle: 0deg;
   z-index: 30;
   border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(from var(--tcg-prism-angle), #e2e8f0 0deg, #fbbf24 95deg, #22d3ee 185deg, #8b5cf6 275deg, #e2e8f0 360deg);
+  padding: 5px;
+  background-image:
+    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%),
+    linear-gradient(135deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #af52de, #ff2d55);
+  background-size: 250% 250%;
   mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0);
+  -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: tcg-prism-rotate 6s linear infinite;
+  animation: transcendence-rainbow-frame 8s ease-in-out infinite alternate;
 }
-.holo-tilt[data-transcendence-id="goku-black-rose-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #e2e8f0 0deg, #f0abfc 95deg, #d946ef 185deg, #7e22ce 275deg, #e2e8f0 360deg);
+@keyframes transcendence-rainbow-frame {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
 }
-.holo-tilt[data-transcendence-id="naruto-baryon-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #fff7ed 0deg, #fb923c 95deg, #ef4444 185deg, #9f1239 275deg, #fff7ed 360deg);
-}
-.holo-tilt[data-transcendence-id="borushiki-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #e0f2fe 0deg, #38bdf8 95deg, #6366f1 185deg, #7c3aed 275deg, #e0f2fe 360deg);
-}
-.holo-tilt[data-transcendence-id="ichigo-bankai-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #fee2e2 0deg, #dc2626 95deg, #111827 185deg, #fbbf24 275deg, #fee2e2 360deg);
-}
-.holo-tilt[data-transcendence-id="sukuna-fuga-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #7f1d1d 0deg, #dc2626 95deg, #fb923c 185deg, #ffedd5 275deg, #7f1d1d 360deg);
-}
-.holo-tilt[data-transcendence-id="luffy-gear-5-transcendance"] .premium-energy-frame {
-  background: conic-gradient(from var(--tcg-prism-angle), #fff 0deg, #fef3c7 95deg, #fbbf24 185deg, #fffef5 275deg, #fff 360deg);
-}
-@keyframes tcg-prism-rotate { to { --tcg-prism-angle: 360deg; } }
 .premium-awakened-aura {
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--transcendence-aura-primary, #22d3ee) 80%, transparent),
-    -4px 0 22px color-mix(in oklab, var(--transcendence-aura-secondary, #8b5cf6) 35%, transparent),
-    5px 3px 24px color-mix(in oklab, var(--transcendence-aura-tertiary, #fbbf24) 28%, transparent);
+  box-shadow: 0 0 20px rgba(175, 82, 222, 0.45), 0 0 12px rgba(0, 199, 190, 0.35);
   animation: premium-aura-pulse 3.2s ease-in-out infinite;
 }
-.reverse-foil {
-  z-index: 10;
-  z-index: 10;
-  border-radius: inherit;
-  background: var(--gradient-reverse-reflection);
-  background-size: 250% 250%;
-  background-position: var(--holo-x) var(--holo-y);
-  mix-blend-mode: color-dodge;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
+.holo-tilt[data-transcendence-id="trans-shigaraki"] > .premium-awakened-aura,
+.flip-front.zenkai-transcendance-card[data-transcendence-id="trans-shigaraki"] {
+  box-shadow: 0 0 20px rgba(91, 63, 119, 0.5), 0 0 12px rgba(160, 50, 62, 0.3);
 }
-.holo-tilt[data-active="true"] .reverse-foil { opacity: 0.16; }
-.holo-prism {
-  z-index: 2;
-  z-index: 10;
-  border-radius: inherit;
-  background-image: var(--gradient-prismatic);
-  background-size: 300% 300%;
-  background-position: var(--holo-x) var(--holo-y);
-  mix-blend-mode: color-dodge;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
+.flip-front[data-transcendence-id="trans-shigaraki"] .premium-glass-label {
+  border-color: #8b737d;
+  background: linear-gradient(135deg, #17121c, #302735 55%, #160e12);
 }
-.holo-tilt[data-active="true"] .holo-prism { opacity: 0.38; }
-.holo-glitter {
-  z-index: 3;
-  border-radius: inherit;
-  background-image: var(--gradient-glitter), var(--gradient-glitter);
-  background-size: 11px 13px, 19px 23px;
-  background-position: var(--holo-x) var(--holo-y), var(--holo-y) var(--holo-x);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
-}
-.holo-tilt[data-active="true"] .holo-glitter { opacity: 0.3; }
-.tcg-inner-frame { inset: 6px; z-index: 30; border-radius: 10px; padding: 1px; background: var(--texture-tcg-metal); mask: linear-gradient(var(--letterbox) 0 0) content-box, linear-gradient(var(--letterbox) 0 0); mask-composite: exclude; opacity: 0.85; }
-.tcg-corners { z-index: 30; }
-.tcg-corner { position: absolute; width: 25px; height: 25px; background: var(--gradient-premium-frame); clip-path: polygon(0 0,100% 0,100% 8%,30% 8%,8% 30%,8% 100%,0 100%); filter: drop-shadow(var(--shadow-tcg-ornament)); }
-.tcg-corner[data-corner="0"] { top: 6px; left: 6px; }
-.tcg-corner[data-corner="1"] { top: 6px; right: 6px; transform: rotate(90deg); }
-.tcg-corner[data-corner="2"] { bottom: 6px; right: 6px; transform: rotate(180deg); }
-.tcg-corner[data-corner="3"] { bottom: 6px; left: 6px; transform: rotate(270deg); }
-.tcg-engraving { z-index: 10; background: var(--texture-tcg-engraving); background-size: 180% 180%; background-position: var(--holo-x, 50%) var(--holo-y, 50%); mix-blend-mode: color-dodge; opacity: 0.025; transition: opacity 180ms ease-out; }
-.holo-tilt[data-active="true"] .tcg-engraving { opacity: 0.12; }
-.tcg-light-sweep { z-index: 10; background: var(--gradient-tcg-sweep); background-size: 300% 300%; mix-blend-mode: color-dodge; animation: tcg-light-sweep 4s ease-in-out infinite; }
-.tcg-universe-emblem { color: var(--rarity-legendaire); background: var(--gradient-tcg-plaque); border: 1px solid var(--rarity-legendaire); border-radius: 50%; box-shadow: var(--shadow-tcg-ornament); }
+.tcg-inner-frame { inset: 5px; z-index: 30; border: 1px solid rgba(0, 0, 0, 0.6); border-radius: 9px; }
 .tcg-collector-number { color: var(--rarity-transcendance); letter-spacing: 0; }
-.reverse-card[data-compact="true"] .tcg-corner { width: 14px; height: 14px; }
-@keyframes tcg-light-sweep { 0%, 65% { background-position: 150% 150%; opacity: 0; } 72% { opacity: 0.13; } 92% { background-position: -50% -50%; opacity: 0.13; } 100% { background-position: -50% -50%; opacity: 0; } }
 .premium-glass-label {
   background: var(--gradient-premium-label);
   backdrop-filter: blur(2px);
   mask-image: linear-gradient(transparent, var(--letterbox) 18%);
 }
 .reverse-card .premium-glass-label {
-  background: linear-gradient(to top, color-mix(in oklab, var(--letterbox) 96%, transparent), color-mix(in oklab, var(--letterbox) 62%, transparent) 58%, transparent);
+  left: 7px;
+  right: 7px;
+  bottom: 7px;
+  border: 1.5px solid #fbbf24;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #100c14, #241a2b 55%, #08070b);
+  box-shadow: inset 0 1px rgba(255, 230, 150, 0.2), 0 2px 6px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  mask-image: none;
 }
-.premium-rarity-badge {
-  color: var(--rarity-transcendance);
-  background: color-mix(in oklab, var(--letterbox) 78%, transparent);
-  box-shadow: var(--shadow-premium-badge);
-  backdrop-filter: blur(5px);
-  letter-spacing: 0;
+.reverse-card .tcg-nameplate {
+  color: #fde68a;
+  text-shadow: 0 1px #704413, 0 0 8px rgba(251, 191, 36, 0.4);
 }
-.premium-rarity-badge svg { color: var(--rarity-legendaire); fill: color-mix(in oklab, var(--rarity-legendaire) 28%, transparent); }
-.premium-energy-particles { z-index: 10; overflow: hidden; border-radius: inherit; }
-.premium-holo-sweep {
-  background: linear-gradient(115deg, transparent 38%, color-mix(in oklab, #fff 28%, transparent) 49%, color-mix(in oklab, var(--accent, #fbbf24) 18%, transparent) 52%, transparent 62%);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transform: translateX(-115%) skewX(-8deg);
+.reverse-card .premium-glass-label p:not(.tcg-nameplate) { color: #e7d6a5; }
+.relic-seal {
+  color: #fde047;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-shadow: 0 1px #704413, 0 0 5px rgba(251, 191, 36, 0.5);
+  white-space: nowrap;
 }
-.holo-tilt[data-active="true"] .premium-holo-sweep {
-  opacity: 0.32;
-  animation: premium-holo-sweep 2.8s ease-in-out both;
+.reverse-card .tcg-collector-number { color: #f5d992; }
+.reverse-card .premium-rarity-badge {
+  color: #160c17;
+  border: 1px solid rgba(251, 191, 36, 0.65);
+  background: linear-gradient(to right, #fcd34d, #fef08a, #f59e0b);
+  box-shadow: inset 0 1px rgba(255, 248, 231, 0.65), 0 0 12px rgba(251, 191, 36, 0.8);
+  font-weight: 900;
+  letter-spacing: 0.1em;
 }
-@keyframes premium-holo-sweep {
-  0% { transform: translateX(-115%) skewX(-8deg); }
-  100% { transform: translateX(115%) skewX(-8deg); }
-}
-.premium-energy-spark {
-  width: 2px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--rarity-transcendance);
-  box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 55%, transparent);
-  animation: premium-spark-rise 4s linear infinite;
-}
-.premium-energy-spark:nth-child(3n + 1) { background: var(--accent); }
-.premium-energy-spark:nth-child(3n + 2) { background: var(--flash); }
-.premium-energy-spark:nth-child(3n) { background: var(--rarity-legendaire); }
+.premium-rarity-badge svg { color: #382114; fill: #704413; }
 .form-morph-scene {
   --scan-duration: 1200ms;
   --scan-ease: ease-in-out;
@@ -1104,8 +1380,7 @@
 .form-flip-scene[data-direction="reverse"] .form-flip-rotor { animation: form-flip-reverse 950ms linear both; }
 .form-flip-scene:not([data-direction="idle"]) .holo-tilt { transform: none; }
 .form-flip-scene .form-flip-face .flame-aura { display: none; }
-.form-flip-scene:not([data-direction="idle"]) .premium-awakened-aura,
-.form-flip-scene:not([data-direction="idle"]) .premium-energy-particles { visibility: hidden; }
+.form-flip-scene:not([data-direction="idle"]) .premium-awakened-aura { visibility: hidden; }
 .form-flip-charge { box-shadow: var(--shadow-form-charge); animation: form-flip-charge 950ms ease-out both; }
 .form-flip-impact { box-shadow: var(--shadow-form-impact); animation: form-flip-impact 250ms ease-out 800ms both; }
 .form-flip-impact-ring { left: 50%; top: 50%; width: 130%; aspect-ratio: 1; border: 1px solid var(--accent); border-radius: 50%; box-shadow: var(--shadow-form-impact); animation: premium-form-ring 500ms ease-out 800ms both; }
@@ -1137,11 +1412,6 @@
 .premium-form-sweep::after { content: ""; position: absolute; inset: -60% -40%; background: var(--gradient-form-sweep); animation: premium-form-sweep 480ms ease-out both; }
 .premium-form-ring { left: 50%; top: 50%; width: 140%; aspect-ratio: 1; border: 1px solid var(--accent); border-radius: 50%; box-shadow: var(--shadow-form-ring); animation: premium-form-ring 600ms ease-out both; }
 @keyframes premium-aura-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.9; } }
-@keyframes premium-spark-rise {
-  0% { opacity: 0; transform: translateY(20px); }
-  20%, 60% { opacity: 0.7; }
-  100% { opacity: 0; transform: translate(5px, -95px); }
-}
 @keyframes premium-form-flash {
   0% { opacity: 0; }
   18% { opacity: 0.8; }
@@ -1156,27 +1426,10 @@
   from { opacity: 0.85; transform: translate(-50%, -50%) scale(0.5); }
   to { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
 }
-.holo-prism {
-  background-image: var(--gradient-prismatic);
-  background-size: 300% 300%;
-  background-position: var(--holo-x) var(--holo-y);
-  mix-blend-mode: color-dodge;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
-}
-.holo-glitter {
-  background-image: var(--gradient-glitter), var(--gradient-glitter);
-  background-size: 11px 13px, 19px 23px;
-  background-position: var(--holo-x) var(--holo-y), var(--holo-y) var(--holo-x);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
-}
 .holo-tilt[data-active="true"] .divine-card-sheen {
   animation: none;
   background-position: var(--holo-x) var(--holo-y);
 }
-.holo-tilt[data-active="true"] .holo-prism { opacity: 0.4; }
 .cinema-fade-in { animation: cinema-fade-in 400ms ease-out both; }
 .anime-speed-lines {
   background-image: var(--gradient-speed-lines);
@@ -1291,6 +1544,14 @@
 .opening-afterglow[data-rarity="transcendance"] .opening-afterglow-halo { background: var(--gradient-prismatic); opacity: 0.35; }
 @keyframes cinema-reveal-flash { 0% { opacity: 0; } 15% { opacity: 0.65; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
+  .transcendence-blackout, .transcendence-slam-overlay { display: none; }
+  body:has(.transcendence-slam-overlay) > main,
+  body:has(.transcendence-slam-overlay) > header { animation: none; }
+  .transcendence-card-arrival { animation: none; }
+  .transcendence-card-settled { transform: none; }
+  .transcendence-divine-rays { animation: none; transform: translate(-50%, -50%); opacity: 0.35; }
+  .transcendence-ultimate-seal { animation: none; }
+  .transcendence-arrival-stars { display: none; }
   .premium-energy-frame { animation: none; }
   .transcendence-card-anticipation { animation: none; }
   .transcendence-reveal-flash { display: none; }
@@ -1316,7 +1577,7 @@
   .card-reveal-flip .flip-inner { transition-duration: 150ms; }
   .premium-awakened-aura { animation: none; }
   .form-portrait { transition: opacity 150ms ease-out; transform: none; }
-  .form-energy-transition, .premium-form-flash, .premium-energy-spark, .tcg-light-sweep { display: none; }
+  .form-energy-transition, .premium-form-flash { display: none; }
   .awakening-orbit, .awakening-dust, .awakening-central-card, .awakening-settle { animation: none; }
   .awakening-central-card[data-phase] { animation: none; transform: none; filter: none; }
   .awakening-central-card[data-phase="alternating"] .awakening-alternate-evolved { opacity: 0; }

@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { CardReveal } from "./CardReveal";
 import type { PulledCard } from "@/lib/cards";
 import { sortBoosterCardsByRarity } from "@/lib/booster-order";
+import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: vi.fn() } }));
 
 const cards: PulledCard[] = [
@@ -12,8 +13,68 @@ const cards: PulledCard[] = [
 ].map((card, i) => ({ userCardId: `uc-${i}`, card }));
 
 describe("booster reveal one card at a time", () => {
-  afterEach(() => localStorage.removeItem("zenkai:favorite-cards"));
+  afterEach(() => {
+    localStorage.removeItem("zenkai:favorite-cards");
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
+  it("reveals the Gon exclusive with Transcendance effects", () => {
+    const gon = CUSTOM_TRANSCENDANCE_CARDS.find((card) => card.id === "trans-gon");
+    if (!gon) throw new Error("Gon Transcendance absent.");
+    const { container } = render(<CardReveal cards={[{ userCardId: "gon", card: customTranscendanceAsCard(gon), customTranscendance: true }]} onDone={() => {}} />);
+    expect(container.querySelector(".card-reveal-transcendence")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("img", { name: gon.name })).toHaveAttribute("src", "/gon%20adulte.webp");
+    expect(container.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(container.querySelector(".zenkai-transcendance-card")).toBeTruthy();
+    expect(container.querySelector(".zenkai-transcendance-holo")).toBeNull();
+    expect(container.querySelectorAll(".transcendance-sparkles-overlay")).toHaveLength(1);
+    expect(container.querySelector(".relic-seal")).toBeTruthy();
+    expect(container.querySelector(".holo-prism")).toBeNull();
+  });
+  it("reveals Deku with the Transcendance cinematic and rainbow effects", () => {
+    const deku = CUSTOM_TRANSCENDANCE_CARDS.find((card) => card.id === "trans-deku");
+    if (!deku) throw new Error("Deku Transcendance absent.");
+    const { container } = render(<CardReveal cards={[{ userCardId: "deku", card: customTranscendanceAsCard(deku), customTranscendance: true }]} onDone={() => {}} />);
+    expect(container.querySelector(".card-reveal-transcendence")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: deku.name })).toHaveAttribute("src", "/deku%20vigilante.jpg");
+    expect(container.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(container.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+  });
+  it("reveals Bakugo with the Transcendance cinematic and centered portrait", () => {
+    const bakugo = CUSTOM_TRANSCENDANCE_CARDS.find((card) => card.id === "trans-bakugo");
+    if (!bakugo) throw new Error("Bakugo Transcendance absent.");
+    const { container } = render(<CardReveal cards={[{ userCardId: "bakugo", card: customTranscendanceAsCard(bakugo), customTranscendance: true }]} onDone={() => {}} />);
+    expect(container.querySelector(".card-reveal-transcendence")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: bakugo.name })).toHaveAttribute("src", "/katchan.jpg");
+    expect(screen.getByRole("img", { name: bakugo.name })).toHaveStyle({ objectPosition: "center", transform: "scale(0.92)" });
+    expect(container.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(container.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+  });
+  it("reveals Shigaraki with the Transcendance cinematic", () => {
+    const shigaraki = CUSTOM_TRANSCENDANCE_CARDS.find((card) => card.id === "trans-shigaraki");
+    if (!shigaraki) throw new Error("Shigaraki Transcendance absent.");
+    const { container } = render(<CardReveal cards={[{ userCardId: "shigaraki", card: customTranscendanceAsCard(shigaraki), customTranscendance: true }]} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: shigaraki.name })).toHaveAttribute("src", "/shigaraki.jpg");
+    expect(container.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(container.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+  });
+  it("recognizes a catalog Transcendance and places its reveal burst behind the card", () => {
+    const card = { ...cards[0]!.card, transcendance_series_number: "ZEN-099-TR" };
+    const { container } = render(<CardReveal cards={[{ userCardId: "catalog", card }]} onDone={() => {}} />);
+    expect(container.querySelector(".card-reveal-transcendence")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(container.querySelector(".rarity-glow-layer .transcendence-reveal-flash")).toBeTruthy();
+    expect(container.querySelector(".zenkai-transcendance-card")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+  });
   it("reveals the favorite badge alongside new only after flipping the matching card", () => {
     localStorage.setItem("zenkai:favorite-cards", JSON.stringify(["riku"]));
     render(<CardReveal cards={[{ ...cards[0]!, isNew: true }, cards[1]!]} onDone={() => {}} />);
@@ -93,6 +154,7 @@ describe("booster reveal one card at a time", () => {
     expect(container.querySelector(".rarity-glow-flash")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
     expect(container.querySelector(".rarity-glow-flash")).toBeTruthy();
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
   });
 
   it("adds golden particles around a legendary card before it is revealed", () => {
@@ -349,18 +411,96 @@ describe("booster reveal one card at a time", () => {
     expect(screen.getByText("NOUVEAU")).toHaveClass("bg-amber-400", "text-black", "rounded-full");
   });
 
-  it("allows full skip during an already-confirmed copy's local cinema", () => {
+  it("plays the sequence for each Transcendance, including after a rarity skip", () => {
+    vi.useFakeTimers();
     const sequence: PulledCard[] = [
-      { ...cards[0]!, transcended: true },
-      { ...cards[2]!, userCardId: "next", customTranscendance: true },
+      ...Array.from({ length: 8 }, (_, index) => ({ ...cards[0]!, userCardId: `common-${index}` })),
+      { ...cards[1]!, userCardId: "exclusive", customTranscendance: true },
+      { ...cards[2]!, userCardId: "evolved", transcended: true },
     ];
-    const onDone = vi.fn();
-    render(<CardReveal cards={sequence} onDone={onDone} />);
+    const { container } = render(<CardReveal cards={sequence} onDone={() => {}} />);
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Skip → Prochaine Transcendance" }));
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
+    const scene = container.querySelector(".card-reveal-transcendence");
+    if (!(scene instanceof HTMLDivElement)) throw new Error("Expected the Transcendance reveal scene.");
+    vi.spyOn(scene, "getBoundingClientRect").mockReturnValue({
+      x: 100, y: 50, left: 100, top: 50, right: 300, bottom: 330, width: 200, height: 280, toJSON: () => ({}),
+    });
     fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
-    expect(screen.getByLabelText("Cinématique Transcendance")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    expect(document.querySelector(".transcendence-rift")).toBeTruthy();
+    expect(document.querySelectorAll(".transcendence-invocation-ring")).toHaveLength(2);
+    const shockwaves = document.querySelectorAll<HTMLElement>(".transcendence-shockwave");
+    expect(shockwaves).toHaveLength(2);
+    for (const wave of shockwaves) expect(wave).toHaveStyle({ left: "200px", top: "190px" });
+    expect(document.querySelector(".transcendence-blackout-title")).toHaveTextContent("✦ TRANSCENDANCE ✦");
+    expect(document.querySelector(".transcendence-blackout-subtitle")).toHaveTextContent("ÉVEIL ULTIME · 0,05 %");
+    expect(container.querySelector(".transcendence-card-arrival .zenkai-transcendance-card")).toBeTruthy();
+    expect(container.querySelector(".transcendence-divine-rays")).toBeTruthy();
+    expect(container.querySelector(".transcendence-ultimate-seal")).toHaveTextContent("✦ TRANSCENDANCE ULTIME · 0,05 % ✦");
+    expect(container.querySelector(".transcendence-ultimate-seal")).toHaveTextContent("TAUX STANDARD");
+    expect(container.querySelectorAll(".transcendence-arrival-stars span")).toHaveLength(12);
+    expect(screen.getByRole("button", { name: /Carte suivante/ })).toBeDisabled();
+    const revealedCard = screen.getByRole("button", { name: "Kaito Ren, Transcendance" });
+    expect(revealedCard).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(revealedCard);
+    expect(screen.getByLabelText("Carte 9 sur 10")).toBeTruthy();
+    act(() => vi.advanceTimersByTime(2999));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
+    expect(container.querySelector(".transcendence-card-arrival")).toBeNull();
+    expect(container.querySelector(".transcendence-card-settled")).toBeTruthy();
+    expect(container.querySelector(".transcendence-divine-rays")).toBeTruthy();
+    expect(container.querySelector(".transcendence-ultimate-seal")).toBeTruthy();
+    expect(container.querySelector(".transcendence-arrival-stars")).toBeTruthy();
+    expect(document.querySelector(".transcendence-slam-overlay")).toBeNull();
+    expect(screen.getByRole("button", { name: "Kaito Ren, Transcendance" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: /Carte suivante/ }));
+    expect(container.querySelector(".transcendence-divine-rays, .transcendence-ultimate-seal, .transcendence-arrival-stars")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    act(() => vi.advanceTimersByTime(3000));
+    expect(screen.getByRole("button", { name: "Ryujin, Transcendance" })).toBeEnabled();
+  });
+
+  it("plays the sequence on swipe and lets the next click advance", () => {
+    vi.useFakeTimers();
+    render(<CardReveal cards={[{ ...cards[0]!, customTranscendance: true }, cards[1]!]} onDone={() => {}} />);
+    const hidden = screen.getByRole("button", { name: "Retourner la carte" });
+    hidden.setPointerCapture = vi.fn();
+    fireEvent(hidden, new MouseEvent("pointerdown", { bubbles: true, clientX: 0 }));
+    fireEvent(hidden, new MouseEvent("pointermove", { bubbles: true, clientX: 80 }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
+    act(() => vi.advanceTimersByTime(3000));
+    fireEvent.click(screen.getByRole("button", { name: "Riku Tanaka, Transcendance" }));
+    expect(screen.getByLabelText("Carte 2 sur 2")).toBeTruthy();
+  });
+
+  it("allows full skip during the sequence and cancels its timer", () => {
+    vi.useFakeTimers();
+    const onDone = vi.fn();
+    render(<CardReveal cards={[{ ...cards[0]!, transcended: true }]} onDone={onDone} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.getByRole("status", { name: "Révélation Transcendance" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Full Skip" })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: /Skip →/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
     expect(onDone).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
+    expect(document.querySelector(".transcendence-slam-overlay")).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("reveals immediately without a blackout when reduced motion is requested", () => {
+    const originalMatchMedia = window.matchMedia;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      ...originalMatchMedia(query),
+      matches: query === "(prefers-reduced-motion: reduce)",
+    }));
+    render(<CardReveal cards={[{ ...cards[0]!, customTranscendance: true }]} onDone={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retourner la carte" }));
+    expect(screen.queryByRole("status", { name: "Révélation Transcendance" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Riku Tanaka, Transcendance" })).toBeEnabled();
   });
 });

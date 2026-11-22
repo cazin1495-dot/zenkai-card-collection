@@ -1,22 +1,45 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { LockKeyhole } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+/* Boutique complète : décommenter ces imports et ShopPage, puis utiliser ShopPage dans Route.
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShoppingBag, Coins, Package } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { gameQuery, type GameState } from "@/lib/game";
 import { BOOSTER_COST } from "@/lib/economy";
 import packArt from "@/assets/zenkai-booster-pack.png.asset.json";
+*/
 
 export const Route = createFileRoute("/boutique")({
   head: () => ({ meta: [
-    { title: "Boutique — ZENKAI" }, { name: "description", content: "Achète des boosters de cinq cartes anime pour 100 Zenkai Coins chacun." },
-    { property: "og:title", content: "Boutique — ZENKAI" }, { property: "og:description", content: "Tes Zenkai Coins contre des boosters de collection." },
+    { title: "Boutique — ZENKAI" }, { name: "description", content: "La Boutique Zenkai ouvrira prochainement." },
+    { property: "og:title", content: "Boutique — ZENKAI" }, { property: "og:description", content: "La Boutique Zenkai ouvrira prochainement." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }), component: ShopPage,
+  ] }), component: ShopComingSoon,
 });
+
+export function ShopComingSoon() {
+  return (
+    <div className="mx-auto flex min-h-[65vh] max-w-3xl items-center justify-center px-4 py-12 sm:px-6">
+      <section className="w-full rounded-3xl border border-amber-400/40 bg-gradient-to-br from-violet-950 via-slate-950 to-violet-950 p-8 text-center shadow-[0_0_35px_rgba(168,85,247,0.2)] sm:p-12">
+        <div className="mx-auto grid size-20 place-items-center rounded-full border border-amber-400/50 bg-amber-400/10 text-amber-300 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
+          <LockKeyhole aria-hidden className="size-10" />
+        </div>
+        <h1 className="mt-6 font-display text-2xl font-black text-amber-200 sm:text-3xl">La Boutique ouvrira prochainement...</h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-violet-100/80 sm:text-base">Prépare tes Zen ! Des packs exclusifs, des cadres d'avatar rares et des coffrets spéciaux arriveront dès l'ouverture officielle de Zenkai.</p>
+        <Button variant="hero" className="mt-8 h-auto whitespace-normal" asChild>
+          <Link to="/">Retourner ouvrir des boosters</Link>
+        </Button>
+      </section>
+    </div>
+  );
+}
+
+/*
 function ShopPage() {
   const { session } = useAuth();
   const userId = session?.user.id ?? "";
@@ -44,3 +67,4 @@ function ShopPage() {
     </section>
   </div>;
 }
+*/

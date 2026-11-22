@@ -19,6 +19,8 @@ import { getGuestCollection, getGuestPlus, guestDuplicates, guestRecycleGroups, 
 import { MarketSaleDialog } from "@/components/MarketSaleDialog";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import { useFavoriteCards } from "@/lib/favorites";
+import { AnimeAlbum } from "@/components/AnimeAlbum";
+import { recordQuestActivity } from "@/lib/quests";
 
 export const Route = createFileRoute("/collection")({
   head: () => ({
@@ -50,6 +52,7 @@ const DEFAULT_RECYCLE_RARITIES: readonly CatalogRarity[] = ["commune", "non_comm
 export function CollectionPage() {
   const { session, guest } = useAuth();
   const [localView, setLocalView] = useState(false);
+  const [albumView, setAlbumView] = useState(false);
   const localCollection = !session || localView;
   const userId = session?.user.id;
   const cards = useQuery(cardsQuery);
@@ -94,6 +97,8 @@ export function CollectionPage() {
       try {
         const gained = recycleGuestCollection([copy.id], cards.data, { total: value }, session ? getPlus(session.user.id, false).active : undefined);
         toast.success(`Doublon recyclé · +${gained} Zen locaux`);
+        try { recordQuestActivity(null, "recycled", 1); }
+        catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       } catch (error) {
         toast.error(error instanceof Error ? `Recyclage impossible : ${error.message}` : "Recyclage impossible.");
       } finally {
@@ -111,6 +116,8 @@ export function CollectionPage() {
       const { data, error } = await supabase.rpc("recycle_copy", { _copy: copy.id });
       if (error) throw error;
       toast.success(`Doublon recyclé · +${data} Coins`);
+      try { recordQuestActivity(userId, "recycled", 1); }
+      catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       await Promise.all([queryClient.invalidateQueries({ queryKey: ["collection", userId] }), queryClient.invalidateQueries({ queryKey: ["game", userId] })]);
     } catch { toast.error("Recyclage impossible. Le dernier exemplaire est protégé."); }
     finally { setRecycling(null); }
@@ -166,6 +173,10 @@ export function CollectionPage() {
     setSaleCopyId(copy.id);
   }
   const ownedInView = list.filter((entry) => entry.count > 0).length;
+  const albumCatalog = useMemo(() => [...new Map([
+    ...(cards.data ?? []),
+    ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard),
+  ].map((card) => [card.id, card])).values()], [cards.data]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
@@ -201,13 +212,21 @@ export function CollectionPage() {
       {cards.isError && <p role="alert" className="mt-3 text-sm text-destructive">Catalogue indisponible. <Button variant="link" onClick={() => cards.refetch()}>Réessayer</Button></p>}
       {localCollection && cards.data && missingMetadata && <p role="alert" className="mt-3 text-sm text-destructive">Certaines cartes locales sont absentes du catalogue : recyclage global indisponible.</p>}
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div role="group" aria-label="Vue de la collection" className="mt-6 flex gap-2">
+        <Button variant={!albumView ? "hero" : "glass"} aria-pressed={!albumView} onClick={() => setAlbumView(false)}>Grille classique</Button>
+        <Button variant={albumView ? "hero" : "glass"} aria-pressed={albumView} onClick={() => setAlbumView(true)}>Album par Anime</Button>
+      </div>
+      {albumView ? (
+        cards.data && ownedRows ? <AnimeAlbum cards={albumCatalog} copies={ownedRows} userId={localCollection ? null : userId ?? null} /> :
+          <p className="mt-6 text-sm text-muted-foreground">Chargement du catalogue et de la collection…</p>
+      ) : <>
+      <div aria-label="Filtrer par pack" className="mt-6 flex max-w-full gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
         {FILTERS.map((f) => (
           <Button variant="ghost"
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={cn(
-              "h-auto rounded-md border border-border px-3 py-2 text-xs font-semibold transition-colors",
+              "h-auto min-h-11 shrink-0 rounded-md border border-border px-3 py-2 text-xs font-semibold transition-colors",
               filter === f.id ? "bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -230,9 +249,9 @@ export function CollectionPage() {
         </Button>
       </div>
       {!localCollection && <p className="mt-2 text-xs text-muted-foreground">Le recyclage groupé en Zen concerne uniquement la collection locale.</p>}
-      <div role="group" aria-label="Filtrer par rareté" className="mt-4 flex flex-wrap gap-2">
+      <div role="group" aria-label="Filtrer par rareté" className="mt-4 flex max-w-full gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
         {(["all", ...RARITY_ORDER] as const).map((rarity) => (
-          <Button key={rarity} variant={rarityFilter === rarity ? "hero" : "glass"} size="sm" aria-pressed={rarityFilter === rarity} onClick={() => setRarityFilter(rarity)}>
+          <Button key={rarity} variant={rarityFilter === rarity ? "hero" : "glass"} size="sm" className="min-h-11 shrink-0 sm:min-h-0" aria-pressed={rarityFilter === rarity} onClick={() => setRarityFilter(rarity)}>
             {rarity === "all" ? "Toutes" : RARITY[rarity].label} {rarity === "all" ? packEntries.filter((entry) => entry.count > 0).length : rarityCounts.get(rarity) ?? 0}
           </Button>
         ))}
@@ -249,7 +268,7 @@ export function CollectionPage() {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+      <div className="mt-8 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6">
         {list.map((entry) => {
           const { card, count, rarity } = entry;
           const evolved = rarity === "transcendance";
@@ -265,8 +284,9 @@ export function CollectionPage() {
           </div>;
         })}
       </div>
+      </>}
       {detail && <Dialog open onOpenChange={(open) => { if (!open) setDetail(null); }}>
-        <DialogContent className="max-w-sm border-primary/40 bg-surface">
+        <DialogContent className="max-h-[90dvh] max-w-sm overflow-y-auto border-primary/40 bg-surface p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle>{cardIdentity(detail.card, detail.transcended).name}</DialogTitle>
             <DialogDescription>{detail.card.description || RARITY[detail.rarity].label} · ×{detail.count}</DialogDescription>
@@ -315,6 +335,8 @@ function RecycleDialog({ cards, copies, active, userId, onClose }: {
   function submit() {
     try {
       const gain = recycleGuestCollection(selectedCopies.map((copy) => copy.id), cards, { rarities, total }, userId ? getPlus(userId, false).active : undefined);
+      try { recordQuestActivity(null, "recycled", selectedCopies.length); }
+      catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
       onClose();
       toast.success(`${selectedCopies.length} doublons recyclés ! +${gain} Zen ajoutés`);
@@ -326,7 +348,7 @@ function RecycleDialog({ cards, copies, active, userId, onClose }: {
   }
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl border-primary/40 bg-surface">
+    <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl border-primary/40 bg-surface">
       <DialogHeader>
         <DialogTitle>Recycler les doublons</DialogTitle>
         <DialogDescription>La copie locale la plus ancienne de chaque carte est conservée. Les Transcendances sont exclues.</DialogDescription>

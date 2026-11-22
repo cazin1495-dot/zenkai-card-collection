@@ -13,6 +13,7 @@ import {
   TRANSCEND_CHANCE_LABEL,
   TRANSCEND_CHANCE_PERCENT,
   formatCountdown,
+  getPackCardBack,
   getCardMarketPrice,
   getCardPopularityFactor,
   getCardRecycleValue,
@@ -200,6 +201,16 @@ describe("booster content", () => {
 
 describe("packs", () => {
   const villain = { category: "shonen", role: "antagoniste" } as Card;
+  it("uses themed card backs for Seinen, Shojo, Sport, Antagoniste and Protagoniste", () => {
+    expect(getPackCardBack("seinen")).toBe("/card-back-seinen.png");
+    expect(getPackCardBack("shojo")).toBe("/card-back-shojo.png");
+    expect(getPackCardBack("sport")).toBe("/carte%20sport.jpg");
+    expect(getPackCardBack("antagoniste")).toBe("/card-back-antagoniste.png");
+    expect(getPackCardBack("protagoniste")).toBe("/card-back-protagoniste.png");
+    for (const pack of ["shonen", "zenkai"] as const) {
+      expect(getPackCardBack(pack)).toBe("/image_39f4fe98.jpg");
+    }
+  });
   it("keeps the six original packs alongside the Zenkai pack", () => {
     expect(PACKS.map((pack) => pack.id)).toEqual([
       "shonen",

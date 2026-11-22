@@ -14,6 +14,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SecretQuestEffects } from "@/components/SecretQuestEffects";
+import { AuctionEffects } from "@/components/AuctionEffects";
+import { BetaGate } from "@/components/BetaGate";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { isOAuthCallbackPath } from "@/lib/auth";
@@ -125,7 +128,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="overflow-x-clip">
         {children}
         <Scripts />
       </body>
@@ -141,11 +144,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <BetaGate>
+        <SecretQuestEffects />
+        <AuctionEffects />
         <SiteHeader />
-        <main>
+        <main className="min-w-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </main>
+        </BetaGate>
         <Toaster position="top-center" />
       </AuthProvider>
     </QueryClientProvider>

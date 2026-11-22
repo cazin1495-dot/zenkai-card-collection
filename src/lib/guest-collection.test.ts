@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Card } from "./cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, type Card } from "./cards";
 import {
   addGuestCollectionCards,
   getGuestBalance,
@@ -61,6 +61,23 @@ describe("guest collection", () => {
     expect(() => recycleGuestCollection(["first"], [card])).toThrow();
     expect(getGuestCollection()).toHaveLength(3);
     expect(getGuestBalance()).toBe(500);
+  });
+
+  it("reclassifies old Demon Slayer exclusives without losing copies or awakened state", () => {
+    const hero = DEMON_SLAYER_MYTHIC_CARDS[0]!;
+    addGuestCollectionCards([
+      { userCardId: "old", card: hero, customTranscendance: true },
+      { userCardId: "duplicate", card: hero, customTranscendance: true },
+      { userCardId: "awakened", card: hero, transcended: true },
+      { userCardId: "other", card, customTranscendance: true },
+      { userCardId: "hashira", card: DEMON_SLAYER_MYTHIC_CARDS[5]!, customTranscendance: true },
+    ]);
+    const rows = getGuestCollection();
+    expect(rows.find((row) => row.id === "old")).toMatchObject({ card_id: hero.id, customTranscendance: false, transcended: false });
+    expect(rows.find((row) => row.id === "awakened")).toMatchObject({ transcended: true });
+    expect(rows.find((row) => row.id === "other")).toMatchObject({ customTranscendance: true });
+    expect(rows.find((row) => row.id === "hashira")).toMatchObject({ customTranscendance: true });
+    expect(guestDuplicates(rows, [hero, card]).map((row) => row.id)).toEqual(["duplicate"]);
   });
 
   it("preserves the chronologically oldest copy even with different timestamp offsets", () => {

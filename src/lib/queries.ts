@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserRarityOverrides, inPack, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, getUserRarityOverrides, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
 import { getCards } from "./cards.functions";
 
 export { CUSTOM_RARITY } from "./cards";
@@ -22,6 +22,10 @@ const OP_ANTAGONIST_IDS = parseIds("19986,2745,123779,125667,2460,14251");
 const HXH_MYTHIC_IDS = parseIds("27,30,31,28,23277,57,23338,23278");
 const HXH_LEGENDARY_IDS = parseIds("33,3200,27996,58193,4423,23337");
 const HXH_ANTAGONIST_IDS = parseIds("31,23277,57,23278,33,3200,26165,24558,24560,58,12300");
+
+const MHA_MYTHIC_IDS = parseIds("89028,88892,89220,89224,89226,126378,128299,148985");
+const MHA_LEGENDARY_IDS = parseIds("89221,89225,126158,125619,89589,126357,225724");
+const MHA_ANTAGONIST_IDS = parseIds("89226,126378,125619,89589,126357,125956,225724,126067");
 
 function rarityFromNonMythicRank(nonMythicRank: number): CatalogRarity {
   if (nonMythicRank < 4) return "legendaire";
@@ -182,22 +186,25 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v21"],
+  queryKey: ["cards-v24"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
     const op = await fetchAnimeCharacters(21, "One Piece", OP_MYTHIC_IDS, OP_LEGENDARY_IDS, OP_ANTAGONIST_IDS, 1000, "Pirate / Antagoniste", "Pirate / Protagoniste");
     const hxh = await fetchAnimeCharacters(11061, "Hunter x Hunter", HXH_MYTHIC_IDS, HXH_LEGENDARY_IDS, HXH_ANTAGONIST_IDS, 900, "Antagoniste", "Hunter");
+    const mha = await fetchAnimeCharacters(21459, "My Hero Academia", MHA_MYTHIC_IDS, MHA_LEGENDARY_IDS, MHA_ANTAGONIST_IDS, 1000, "Antagoniste", "Héros");
     const hsr = await fetchHsrFromBrowser();
-    const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card));
+    const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
     const overrides = getUserRarityOverrides();
     return [
       ...cleaned,
+      ...DEMON_SLAYER_MYTHIC_CARDS,
       ...jjk.filter((card) => !existingIds.has(card.id)),
       ...op.filter((card) => !existingIds.has(card.id)),
       ...hxh.filter((card) => !existingIds.has(card.id)),
+      ...mha.filter((card) => !existingIds.has(card.id)),
       ...hsr.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },

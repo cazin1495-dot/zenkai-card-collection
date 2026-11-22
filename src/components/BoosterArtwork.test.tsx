@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BoosterArtwork } from "./BoosterArtwork";
 import { PACK_ARTWORK } from "@/lib/cards";
 
@@ -26,5 +26,17 @@ describe("BoosterArtwork fallback", () => {
     fireEvent.error(getByRole("img"));
     rerender(<BoosterArtwork src="/pack-sport-2.png" alt="Booster" />);
     expect(getByRole("img")).toHaveAttribute("src", "/pack-sport-2.png");
+  });
+
+  it("reports a failed Protagoniste image without replacing it with another pack", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { getByRole } = render(<BoosterArtwork src="/pack-protagoniste.png" alt="Booster Protagoniste" />);
+      fireEvent.error(getByRole("img"));
+      expect(getByRole("img")).toHaveAttribute("src", "/pack-protagoniste.png");
+      expect(error).toHaveBeenCalledWith("Impossible de charger la pochette Protagoniste :", "/pack-protagoniste.png");
+    } finally {
+      error.mockRestore();
+    }
   });
 });

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
-import { normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
 import { BoosterPreviewDialog } from "./BoosterPreviewDialog";
-import type { CustomTranscendanceCard } from "@/lib/transcendance-cards";
+import { CUSTOM_TRANSCENDANCE_CARDS, type CustomTranscendanceCard } from "@/lib/transcendance-cards";
 
 const cards: Card[] = [
   { id: "common", name: "Héros", title: "Shonen", rarity: "commune", description: "", sort_order: 1, category: "shonen" },
@@ -21,7 +21,7 @@ const cards: Card[] = [
   }),
 ];
 
-function PreviewHarness({ customCards, pack = "shonen", catalog = cards }: { customCards?: readonly CustomTranscendanceCard[]; pack?: PackId; catalog?: Card[] }) {
+function PreviewHarness({ customCards, pack = "shonen", catalog = cards, ownedCardIds = new Set((customCards ?? CUSTOM_TRANSCENDANCE_CARDS).map((card) => card.id)) }: { customCards?: readonly CustomTranscendanceCard[]; pack?: PackId; catalog?: Card[]; ownedCardIds?: ReadonlySet<string> | null }) {
   const [open, setOpen] = useState(false);
   return (
     <BoosterPreviewDialog
@@ -29,6 +29,7 @@ function PreviewHarness({ customCards, pack = "shonen", catalog = cards }: { cus
       pack={pack}
       packLabel={pack === "antagoniste" ? "Antagoniste" : pack === "protagoniste" ? "Protagoniste" : "Shonen Mix"}
       {...(customCards === undefined ? {} : { customCards })}
+      ownedCardIds={ownedCardIds}
       open={open}
       onOpenChange={setOpen}
     />
@@ -41,6 +42,43 @@ describe("booster content preview", () => {
     localStorage.removeItem("zenkai_admin_rarity_overrides");
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it("conceals unowned Transcendances without leaking their identity or art, including in favorites", () => {
+    const hidden: CustomTranscendanceCard = {
+      id: "secret-exclusive", name: "Personnage secret", anime: "Série secrète",
+      image_url: "/secret-portrait.png", pack_ids: ["shonen"], rarity: "Transcendance", series_number: "SECRET-001",
+    };
+    render(<PreviewHarness customCards={[hidden]} ownedCardIds={new Set()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const dialog = screen.getByRole("dialog");
+    const article = screen.getByText("??? · Carte Transcendance").closest("article")!;
+    expect(article.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(article.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(article.querySelector("img")).toBeNull();
+    expect(dialog.innerHTML).not.toContain("Personnage secret");
+    expect(dialog.innerHTML).not.toContain("Série secrète");
+    expect(dialog.innerHTML).not.toContain("secret-portrait.png");
+    expect(dialog.innerHTML).not.toContain("SECRET-001");
+    expect(screen.getByText("Héros")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter une carte Transcendance mystère aux favoris" }));
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (1)" }));
+    expect(screen.getByText("??? · Carte Transcendance")).toBeTruthy();
+    expect(dialog.innerHTML).not.toContain("Personnage secret");
+  });
+
+  it("reveals only the owned Transcendance and hides it again when ownership is unknown", () => {
+    const exclusive: CustomTranscendanceCard = {
+      id: "exclusive", name: "Carte acquise", anime: "Anime",
+      image_url: "/acquise.png", pack_ids: ["shonen"], rarity: "Transcendance", series_number: "OWN-001",
+    };
+    const { rerender } = render(<PreviewHarness customCards={[exclusive]} ownedCardIds={new Set(["exclusive"])} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.getByRole("img", { name: "Carte acquise" })).toHaveAttribute("src", "/acquise.png");
+    rerender(<PreviewHarness customCards={[exclusive]} ownedCardIds={null} />);
+    expect(screen.getByText("??? · Carte Transcendance")).toBeTruthy();
+    expect(screen.queryByText("Carte acquise")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent("Vérification de ta collection");
   });
 
   it("edits and exports local catalogue rarities without altering Transcendance cards", async () => {
@@ -104,6 +142,71 @@ describe("booster content preview", () => {
     expect(screen.getByText("Autre")).toBeTruthy();
     expect(screen.getByText("Sport exclusif")).toBeTruthy();
     expect(screen.getByText(/règle universelle doit encore être activée/)).toBeTruthy();
+  });
+
+  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows Gon Transcendance with its sparkles in %s", (pack) => {
+    render(<PreviewHarness pack={pack} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const name = "Gon Freecss · Serment Absolu";
+    const article = screen.getByText(name).closest("article");
+    expect(article).toHaveTextContent("Transcendance");
+    expect(article?.querySelector(".zenkai-transcendance-card")).toBeTruthy();
+    expect(article?.querySelector(".zenkai-transcendance-holo")).toBeNull();
+    expect(article?.querySelectorAll(".transcendance-sparkles-overlay")).toHaveLength(1);
+    expect(article?.querySelector(".tcg-inner-frame")).toBeTruthy();
+    expect(article?.querySelector(".relic-seal")).toBeTruthy();
+    expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(article?.querySelector(".holo-prism")).toBeNull();
+    expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/gon%20adulte.webp");
+  });
+
+  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows Deku Transcendance in %s", (pack) => {
+    render(<PreviewHarness pack={pack} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const name = "Izuku Midoriya · Vigilante";
+    const article = screen.getByText(name).closest("article");
+    expect(article).toHaveTextContent("Transcendance");
+    expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/deku%20vigilante.jpg");
+  });
+
+  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows Bakugo Transcendance in %s", (pack) => {
+    render(<PreviewHarness pack={pack} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const name = "Katsuki Bakugo · Dynamight";
+    const article = screen.getByText(name).closest("article");
+    expect(article).toHaveTextContent("Transcendance");
+    expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/katchan.jpg");
+    expect(screen.getByRole("img", { name })).toHaveClass("object-cover");
+    expect(screen.getByRole("img", { name })).toHaveStyle({ objectPosition: "center", transform: "scale(0.92)" });
+  });
+
+  it.each(["shonen", "antagoniste", "zenkai"] as const)("shows Shigaraki Transcendance in %s", (pack) => {
+    render(<PreviewHarness pack={pack} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const name = "Shigaraki Transcendant";
+    const article = screen.getByText(name).closest("article");
+    expect(article).toHaveTextContent("Transcendance");
+    expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/shigaraki.jpg");
+  });
+
+  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows the Demon Slayer cards in %s", (pack) => {
+    render(<PreviewHarness pack={pack} catalog={[...cards, ...DEMON_SLAYER_MYTHIC_CARDS]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const names = ["Tanjiro Kamado", "Nezuko Kamado", "Zenitsu Agatsuma", "Inosuke Hashibira", "Kyojuro Rengoku", "Tengen Uzui", "Giyu Tomioka", "Shinobu Kocho", "Muichiro Tokito", "Mitsuri Kanroji", "Obanai Iguro", "Sanemi Shinazugawa", "Gyomei Himejima"];
+    fireEvent.click(screen.getByRole("button", { name: /Mythique.*%/ }));
+    for (const name of names) {
+      const article = screen.getByText(name).closest("article");
+      expect(article).toHaveTextContent("Mythique");
+      expect(article?.querySelector(".premium-energy-frame")).toBeNull();
+    }
+    fireEvent.click(screen.getByRole("button", { name: /Transcendance.*%/ }));
+    for (const name of names) expect(screen.queryByText(name)).toBeNull();
   });
 
   it("persists favorites and combines the pack and rarity filters", () => {

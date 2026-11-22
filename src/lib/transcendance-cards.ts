@@ -4,7 +4,12 @@ export type CustomTranscendanceCard = {
   id: string;
   name: string;
   anime: string;
+  title?: string;
+  description?: string;
+  popularity?: number;
   image_url: string;
+  image_position?: string;
+  image_scale?: number;
   pack_ids: PackId[];
   rarity: "Transcendance";
   series_number: string;
@@ -79,6 +84,57 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     rarity: "Transcendance",
     series_number: "ZEN-007-TR",
   },
+  {
+    id: "trans-gon",
+    name: "Gon Freecss · Serment Absolu",
+    anime: "Hunter x Hunter",
+    title: "Hunter x Hunter · Sacrifice Ultime",
+    description: "Tout le potentiel d'une vie libéré en un seul instant d'ombre et de lumière.",
+    popularity: 99500,
+    image_url: "/gon%20adulte.webp",
+    pack_ids: ["shonen", "protagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-008-TR",
+  },
+  {
+    id: "trans-deku",
+    name: "Izuku Midoriya · Vigilante",
+    anime: "My Hero Academia",
+    title: "My Hero Academia · Héros Solitaire",
+    description: "Portant seul le poids du One For All dans l'ombre, déterminé à protéger tout le monde.",
+    popularity: 99400,
+    image_url: "/deku%20vigilante.jpg",
+    pack_ids: ["shonen", "protagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-009-TR",
+  },
+  {
+    id: "trans-bakugo",
+    name: "Katsuki Bakugo · Dynamight",
+    anime: "My Hero Academia",
+    title: "My Hero Academia · Explosion Ultime",
+    description: "La fureur explosive d'un génie du combat prêt à tout surpasser pour la victoire.",
+    popularity: 99350,
+    image_url: "/katchan.jpg",
+    image_position: "center",
+    image_scale: 0.92,
+    pack_ids: ["shonen", "protagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-010-TR",
+  },
+  {
+    id: "trans-shigaraki",
+    name: "Shigaraki Transcendant",
+    anime: "My Hero Academia",
+    title: "My Hero Academia · Héritier de la Destruction",
+    description: "Animé par la désintégration, Shigaraki menace de réduire le monde des héros en cendres.",
+    image_url: "/shigaraki.jpg",
+    image_position: "center",
+    image_scale: 0.92,
+    pack_ids: ["shonen", "antagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-011-TR",
+  },
 ];
 
 const GENRES: readonly Genre[] = ["shonen", "seinen", "shojo", "sport"];
@@ -89,14 +145,17 @@ export function customTranscendanceAsCard(card: CustomTranscendanceCard): Card {
   return {
     id: card.id,
     name: card.name,
-    title: card.anime,
+    title: card.title ?? card.anime,
     rarity: "mythique",
-    description: "Carte Transcendance exclusive.",
+    description: card.description ?? "Carte Transcendance exclusive.",
     sort_order: -1,
     category,
     series: card.anime,
     role,
     image_url: card.image_url,
+    ...(card.image_position !== undefined ? { image_position: card.image_position } : {}),
+    ...(card.image_scale !== undefined ? { image_scale: card.image_scale } : {}),
+    ...(card.popularity !== undefined ? { popularity: card.popularity } : {}),
     transcendance_series_number: card.series_number,
   };
 }
