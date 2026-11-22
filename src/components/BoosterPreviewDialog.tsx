@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AnimeCard, TranscendFrame, TranscendanceSparklesOverlay } from "@/components/AnimeCard";
@@ -37,6 +37,8 @@ type Props = {
 
 type RarityFilter = Rarity | "all";
 
+const PREVIEW_PAGE_SIZE = 24;
+
 function rateLabel(rarity: Rarity, pack: PackId) {
   return `${String(effectiveDropRate(rarity, pack)).replace(".", ",")} %`;
 }
@@ -55,6 +57,15 @@ export function BoosterPreviewDialog({
   const [filter, setFilter] = useState<RarityFilter>("all");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [pagination, setPagination] = useState({ pack, filter, favoritesOnly, open, count: PREVIEW_PAGE_SIZE });
+  const visibleCount =
+    pagination.pack === pack && pagination.filter === filter &&
+    pagination.favoritesOnly === favoritesOnly && pagination.open === open
+      ? pagination.count
+      : PREVIEW_PAGE_SIZE;
+  useEffect(() => {
+    setPagination({ pack, filter, favoritesOnly, open, count: PREVIEW_PAGE_SIZE });
+  }, [pack, filter, favoritesOnly, open]);
   const overrides = useRarityOverrides();
   const { favoriteCardIds, toggleFavorite } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
@@ -149,7 +160,7 @@ export function BoosterPreviewDialog({
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {showMystery && <MysteryCard pack={pack} />}
-            {visibleEntries.map((entry) => {
+            {visibleEntries.slice(0, visibleCount).map((entry) => {
               const rarity = entry.customTranscendance ? "transcendance" : entry.card.rarity;
               const concealed = rarity === "transcendance" && !ownedCardIds?.has(entry.card.id);
               const favoriteName = concealed ? "une carte Transcendance mystère" : entry.card.name;
@@ -205,6 +216,13 @@ export function BoosterPreviewDialog({
               );
             })}
           </div>
+        )}
+        {visibleEntries.length > visibleCount && (
+          <Button type="button" variant="glass" onClick={() => setPagination({
+            pack, filter, favoritesOnly, open, count: visibleCount + PREVIEW_PAGE_SIZE,
+          })}>
+            Voir plus de cartes (+24)
+          </Button>
         )}
       </DialogContent>
     </Dialog>

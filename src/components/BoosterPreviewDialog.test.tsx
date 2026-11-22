@@ -44,6 +44,65 @@ describe("booster content preview", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders catalogue cards in batches of 24 with lazy, asynchronous images", () => {
+    const catalog: Card[] = Array.from({ length: 55 }, (_, index) => ({
+      id: `page-${index}`,
+      name: `Carte ${index}`,
+      title: "",
+      rarity: "rare",
+      description: "",
+      sort_order: index,
+      category: "seinen",
+      image_url: `/card-${index}.jpg`,
+    }));
+    render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+
+    const images = () => screen.getByRole("dialog").querySelectorAll("article img");
+    expect(images()).toHaveLength(24);
+    for (const image of images()) {
+      expect(image).toHaveAttribute("loading", "lazy");
+      expect(image).toHaveAttribute("decoding", "async");
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
+    expect(images()).toHaveLength(48);
+    fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
+    expect(images()).toHaveLength(55);
+    expect(screen.queryByRole("button", { name: "Voir plus de cartes (+24)" })).toBeNull();
+  });
+
+  it("resets the batch when the rarity, favorites, pack or dialog changes", () => {
+    const catalog: Card[] = Array.from({ length: 50 }, (_, index) => ({
+      id: `page-${index}`,
+      name: `Carte ${index}`,
+      title: "",
+      rarity: "rare",
+      description: "",
+      sort_order: index,
+      category: "seinen",
+      image_url: `/card-${index}.jpg`,
+    }));
+    localStorage.setItem("zenkai:favorite-cards", JSON.stringify(catalog.map((card) => card.id)));
+    const { rerender } = render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const showMore = () => fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
+    const images = () => screen.getByRole("dialog").querySelectorAll("article img");
+    showMore();
+    expect(images()).toHaveLength(48);
+    fireEvent.click(screen.getByRole("button", { name: /^Rare/ }));
+    expect(images()).toHaveLength(24);
+    showMore();
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (50)" }));
+    expect(images()).toHaveLength(24);
+    showMore();
+    rerender(<PreviewHarness catalog={catalog} customCards={[]} pack="seinen" />);
+    expect(images()).toHaveLength(24);
+    showMore();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(images()).toHaveLength(24);
+  });
+
   it("conceals unowned Transcendances without leaking their identity or art, including in favorites", () => {
     const hidden: CustomTranscendanceCard = {
       id: "secret-exclusive", name: "Personnage secret", anime: "Série secrète",

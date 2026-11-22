@@ -65,6 +65,7 @@ function CardIllustration({
         alt={alt}
         aria-hidden={ariaHidden}
         loading={loading}
+        decoding={loading === "lazy" ? "async" : undefined}
         onLoad={() => setLoadedSource(src)}
         onError={() => setFailedSource(src)}
         className={cn(className, "object-cover")}
