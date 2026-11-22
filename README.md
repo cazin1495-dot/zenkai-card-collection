@@ -65,6 +65,8 @@ réduit affiche la carte directement. Le sceau indique le taux standard, hors bo
 L'album par anime regroupe les cartes du catalogue chargé par série et compte les
 identifiants distincts possédés (pas les formes). Les cartes sans série sont exclues ;
 certaines exclusivités locales ne sont pas encore obtenables sur un compte connecté.
+Une liste recherchable permet de choisir un anime et d'afficher ses cartes et sa
+récompense avant de revenir à la liste.
 Les récompenses d'album et les quêtes sont enregistrées sur cet appareil, séparément
 pour la collection locale et chaque compte, et créditent le solde de Zen local partagé,
 jamais les Coins du serveur. Le titre d'album est conservé dans l'album. Les quêtes
