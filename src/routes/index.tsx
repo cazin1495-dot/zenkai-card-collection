@@ -491,7 +491,7 @@ export function BoostersPage() {
                   </DialogHeader>
                   <div className="grid gap-3">
                     {[1, 5, 10].map((count) => (
-                      <Button key={count} variant="hero" className="min-h-12" disabled={!ready || busy || pack === "zenkai"} onClick={() => {
+                      <Button key={count} variant="hero" className="min-h-12" disabled={!ready || busy} onClick={() => {
                         setIsPackChoiceOpen(false);
                         void open(count);
                       }}>
