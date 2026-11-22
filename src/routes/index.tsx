@@ -201,8 +201,8 @@ export function BoostersPage() {
       toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
       return;
     }
-    if (!session) {
-      if (!guest) {
+    if (!session || true) {
+      if (!session && !guest) {
         navigate({ to: "/auth" });
         return;
       }
