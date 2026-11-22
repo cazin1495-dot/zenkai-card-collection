@@ -23,7 +23,6 @@ import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
 import { markNewBoosterCards, sortBoosterCardsByRarity } from "@/lib/booster-order";
 import {
   bestRarity,
-  boosterStock,
   CARDS_PER_BOOSTER,
   formatCountdown,
   effectiveDropRate,
@@ -35,7 +34,6 @@ import {
   RARITY,
   rarityRank,
   PITY_LIMIT,
-  STOCK_CAP,
   ZENKAI_BOOSTER_COST,
   type Card,
   type PackId,
@@ -74,7 +72,6 @@ export function BoostersPage() {
   const game = useQuery({ ...gameQuery(userId ?? ""), enabled: !!userId });
   const pity = useQuery({ ...pityQuery(userId ?? ""), enabled: !!userId });
 
-  const [now, setNow] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [pack, setPack] = useState<PackId>("shonen");
   const [packFilter, setPackFilter] = useState<PackFilter>("free");
@@ -141,16 +138,6 @@ export function BoostersPage() {
     };
   }, []);
 
-  useEffect(() => {
-    setNow(Date.now());
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const stock =
-    profile.data && now !== null
-      ? boosterStock(profile.data.boosters_stored, profile.data.stock_updated_at, now)
-      : null;
   const busy =
     phase === "opening" ||
     phase === "tearing" ||
@@ -301,6 +288,7 @@ export function BoostersPage() {
       const nextUpdatedAt = betaBoosters >= MAX_BETA_BOOSTERS ? Date.now() : (parsed.updatedAt || Date.now());
       localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count: nextCount, updatedAt: nextUpdatedAt }));
       setBetaBoosters(nextCount);
+      if (betaBoosters >= MAX_BETA_BOOSTERS) setNextBoosterSec(REGEN_SECONDS);
     } catch (error) {
       toast.error(error instanceof Error
         ? `Cartes sauvegardées, mais stock local indisponible : ${error.message}`
@@ -342,7 +330,6 @@ export function BoostersPage() {
     setPulled([]);
     setAwake({});
     setOpened(1);
-    setNow(Date.now());
     setPhase("idle");
 
     setReturningToBoosters(true);
@@ -445,7 +432,11 @@ export function BoostersPage() {
                     <p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Garantie non définie" : "avant Mythique sûre"}</p>
                     {pack !== "zenkai" && pityCount !== null && <div role="progressbar" aria-label="Garantie Mythique" aria-valuemin={0} aria-valuemax={PITY_LIMIT} aria-valuenow={pityCount} className="mt-2 h-1 rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400" style={{ width: `${pityCount / PITY_LIMIT * 100}%` }} /></div>}
                   </div>
-                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{stock ? `${stock.count}/${STOCK_CAP}` : "—"}</strong><p className="text-[10px] text-muted-foreground">{guest ? "stock non suivi" : "boosters en stock"}</p></div>
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3">
+                    <strong>{betaBoosters}/{MAX_BETA_BOOSTERS}</strong>
+                    <p className="text-[10px] text-muted-foreground">boosters en stock</p>
+                    {betaBoosters < MAX_BETA_BOOSTERS && <p className="mt-1 text-[10px] text-muted-foreground">+1 dans {formatCountdown(nextBoosterSec * 1000)}</p>}
+                  </div>
                 </div>
                 <div className="mt-4 [&>button]:w-full">
                   <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} ownedCardIds={ownedCardIds} ownershipError={guestCollection.isError} onRetryOwnership={() => { void guestCollection.refetch(); }} />
@@ -472,9 +463,9 @@ export function BoostersPage() {
                   {[1, 10].map((count) => <Button key={count} size="lg" className="h-auto min-h-11 whitespace-normal px-2" disabled={!ready || busy} onClick={() => open(count)}>{pack === "zenkai" ? `Acheter x${count}` : `Ouvrir x${count}`}</Button>)}
                 </div>
                 <Button size="lg" className={cn("mt-3 h-auto min-h-11 w-full whitespace-normal rounded-full bg-amber-400 px-3 text-center font-bold text-black hover:bg-amber-300 sm:flex", quantity === 5 ? "flex" : "hidden")} disabled={!ready || busy} onClick={() => open(quantity)}>
-                  {pack === "zenkai" ? `Acheter et ouvrir · ${(quantity * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : `Ouvrir · Gratuit${stock ? ` (${stock.count} restants)` : ""}`}
+                  {pack === "zenkai" ? `Acheter et ouvrir · ${(quantity * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : `Ouvrir · Gratuit${profile.data ? ` (${betaBoosters} restants)` : ""}`}
                 </Button>
-                {stock && <p className="mt-2 text-center text-xs text-muted-foreground"><Clock className="mr-1 inline size-3" />{stock.nextInMs === null ? "Stock plein" : `Prochain gratuit dans ${formatCountdown(stock.nextInMs)}`} · {game.data?.bonus_boosters ?? 0} bonus</p>}
+                {profile.data && <p className="mt-2 text-center text-xs text-muted-foreground"><Clock className="mr-1 inline size-3" />{betaBoosters >= MAX_BETA_BOOSTERS ? "Stock plein" : `Prochain gratuit dans ${formatCountdown(nextBoosterSec * 1000)}`} · {game.data?.bonus_boosters ?? 0} bonus</p>}
                 {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" className="mt-2 w-full" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
                 {pack === "zenkai" && <p className="mt-2 text-xs text-muted-foreground">Achat indisponible : les règles Zen doivent être ajoutées au serveur.</p>}
                 {guest && <p className="mt-2 text-xs text-muted-foreground">Mode invité : tirages simulés, cartes sauvegardées dans la collection locale.</p>}

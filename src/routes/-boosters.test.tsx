@@ -103,7 +103,7 @@ describe("booster hub", () => {
     showPage();
     fireEvent.click(screen.getByRole("button", { name: "Boosters Zen" }));
     expect(screen.getByText("500 Zen disponibles (local)")).toBeTruthy();
-    expect(screen.getByText("stock non suivi")).toBeTruthy();
+    expect(screen.getByText("boosters en stock")).toBeTruthy();
     act(() => updateGuestState((state) => ({ state: { ...state, zen: 1250 }, result: undefined })));
     expect(screen.getByText(/1[\s\u202f]250 Zen disponibles \(local\)/)).toBeTruthy();
     localStorage.setItem("zenkai_guest_collection", JSON.stringify({ rows: [], zen: 0 }));
@@ -151,13 +151,62 @@ describe("booster hub", () => {
     expect(mocks.collection).not.toHaveBeenCalled();
   });
 
-  it("shows the real connected stock and remaining regeneration time", async () => {
+  it("shows local stock in the booster details even when the connected profile differs", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
     mocks.profile = { boosters_stored: 4, stock_updated_at: new Date().toISOString() };
     showPage();
-    expect(await screen.findByText("4/15")).toBeTruthy();
-    expect(screen.getByText(/Prochain gratuit dans (0[0-9]:[0-5][0-9]|10:00)/)).toBeTruthy();
+    const inspector = screen.getByRole("complementary", { name: "Détails du booster" });
+    expect(within(inspector).getByText("15/15")).toBeTruthy();
+    expect(within(inspector).queryByText(/^\+1 dans/)).toBeNull();
+    expect(await screen.findByText(/Stock plein/)).toBeTruthy();
+    expect(within(inspector).getByRole("button", { name: "Ouvrir · Gratuit (15 restants)" })).toBeTruthy();
+  });
+
+  it.each([false, true])("updates shared local stock across packs (connected: %s)", async (connected) => {
+    vi.useFakeTimers();
+    if (connected) {
+      mocks.auth.session = { user: { id: "player" } };
+      mocks.auth.guest = false;
+      mocks.profile = { boosters_stored: 4, stock_updated_at: new Date().toISOString() };
+    }
+    const { unmount } = showPage();
+    try {
+      const inspector = () => screen.getByRole("complementary", { name: "Détails du booster" });
+      expect(within(inspector()).getByText("15/15")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Ouvrir x1" }));
+      expect(screen.getByText(/14 \/ 15 boosters/)).toBeTruthy();
+      expect(screen.getByText(/⏳ \+1 dans 10:00/)).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+      fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
+      await act(async () => { fireEvent.click(screen.getByRole("button", { name: "← Boosters" })); });
+      expect(within(inspector()).getByText("14/15")).toBeTruthy();
+      expect(within(inspector()).getByText("+1 dans 09:57")).toBeTruthy();
+      if (connected) {
+        expect(within(inspector()).getByRole("button", { name: "Ouvrir · Gratuit (14 restants)" })).toBeTruthy();
+        expect(within(inspector()).getByText(/Prochain gratuit dans 09:57/)).toBeTruthy();
+      }
+
+      mocks.draw.mockImplementationOnce((catalog: Card[], _pack: string, count: number) =>
+        Array.from({ length: count * 5 }, (_, i) => ({ userCardId: `second-draw-${i}`, card: catalog[i % catalog.length] })),
+      );
+      fireEvent.click(screen.getByRole("radio", { name: "Shojo" }));
+      const dialog = screen.getByRole("dialog", { name: "Ouvrir Shojo" });
+      fireEvent.click(within(dialog).getByRole("button", { name: "Ouvrir x5 · Gratuit" }));
+      expect(mocks.draw).toHaveBeenLastCalledWith(expect.anything(), "shojo", 5);
+      expect(screen.getByText(/9 \/ 15 boosters/)).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+      fireEvent.click(screen.getByRole("button", { name: "Full Skip" }));
+      await act(async () => { fireEvent.click(screen.getByRole("button", { name: "← Boosters" })); });
+      expect(within(inspector()).getByText("9/15")).toBeTruthy();
+      expect(within(inspector()).getByText("+1 dans 09:54")).toBeTruthy();
+      if (connected) {
+        expect(within(inspector()).getByRole("button", { name: "Ouvrir · Gratuit (9 restants)" })).toBeTruthy();
+      }
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
   });
 
   it("reveals a simulated guest booster and returns from the rarity-sorted summary", async () => {
