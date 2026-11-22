@@ -249,6 +249,10 @@ export function BoostersPage() {
       );
       setPulled(localDraw);
       setOpened(count);
+      const prevXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
+      localStorage.setItem("zenkai_beta_xp", String(prevXp + count * 15));
+      const prevOp = Number(localStorage.getItem("zenkai_beta_opened") || "0");
+      localStorage.setItem("zenkai_beta_opened", String(prevOp + count));
       window.scrollTo({ top: 0, behavior: "smooth" });
       await revealAfterOpening();
       return;
