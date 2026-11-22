@@ -1,7 +1,7 @@
 import { CARDS_PER_BOOSTER, inPack, isTranscendanceCatalogCard, rarityFromRoll, type Card, type PackId, type PulledCard } from "./cards";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscendanceInPack, type CustomTranscendanceCard } from "./transcendance-cards";
 
-/** Unpersisted visual-only draws for development guest sessions. */
+/** Unpersisted visual-only draws for local guest sessions. */
 export function createLocalGuestDraw(
   cards: Card[],
   pack: PackId,

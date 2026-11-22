@@ -29,6 +29,7 @@ export function BoosterPack({
   onTear?: () => void;
 }) {
   const startX = useRef<number | null>(null);
+  const swiped = useRef(false);
   const beamColor = packSealToken(beam);
   const rarity = normalizeOpeningRarity(beam);
   const style = {
@@ -60,6 +61,7 @@ export function BoosterPack({
       aria-label={state === "opening" && onTear ? "Déchirer le booster" : undefined}
       onPointerDown={(event) => {
         if (state !== "opening" || !onTear) return;
+        swiped.current = false;
         startX.current = event.clientX;
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }}
@@ -67,11 +69,19 @@ export function BoosterPack({
         if (startX.current === null || state !== "opening" || !onTear) return;
         if (Math.abs(event.clientX - startX.current) >= 50) {
           startX.current = null;
+          swiped.current = true;
           onTear();
         }
       }}
       onPointerUp={() => { startX.current = null; }}
       onPointerCancel={() => { startX.current = null; }}
+      onClick={() => {
+        if (swiped.current) {
+          swiped.current = false;
+          return;
+        }
+        if (state === "opening") onTear?.();
+      }}
       onKeyDown={(event) => {
         if (state === "opening" && onTear && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault();

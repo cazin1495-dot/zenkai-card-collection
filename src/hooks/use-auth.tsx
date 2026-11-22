@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { isLocalGuestMode, setLocalGuestMode } from "@/lib/auth";
+import { canUseLocalGuestMode, isLocalGuestMode, setLocalGuestMode } from "@/lib/auth";
 
 type AuthState = { session: Session | null; ready: boolean; guest: boolean };
 type AuthContextValue = AuthState & { enterGuestMode: () => void; leaveGuestMode: () => void };
@@ -53,7 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router, queryClient]);
 
   function enterGuestMode() {
-    if (!import.meta.env.DEV || state.session) return;
+    if (state.session || !canUseLocalGuestMode()) {
+      toast.error("Le mode invité local n'est pas disponible.");
+      return;
+    }
     setLocalGuestMode(true);
     setState((current) => ({ ...current, guest: true }));
   }

@@ -1,4 +1,5 @@
 import { lovable } from "@/integrations/lovable/index";
+import { betaEnded, hasBetaAccess } from "./beta";
 
 export function signInWithGoogle() {
   return lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
@@ -6,9 +7,13 @@ export function signInWithGoogle() {
 
 const LOCAL_GUEST_KEY = "zenkai:local-guest";
 
+export function canUseLocalGuestMode() {
+  return import.meta.env.DEV || (typeof window !== "undefined" && !betaEnded() && hasBetaAccess());
+}
+
 export function isLocalGuestMode() {
   return (
-    import.meta.env.DEV &&
+    canUseLocalGuestMode() &&
     typeof window !== "undefined" &&
     window.localStorage.getItem(LOCAL_GUEST_KEY) === "true"
   );
@@ -16,7 +21,7 @@ export function isLocalGuestMode() {
 
 export function setLocalGuestMode(enabled: boolean) {
   if (typeof window === "undefined") return;
-  if (enabled && import.meta.env.DEV) window.localStorage.setItem(LOCAL_GUEST_KEY, "true");
+  if (enabled && canUseLocalGuestMode()) window.localStorage.setItem(LOCAL_GUEST_KEY, "true");
   else window.localStorage.removeItem(LOCAL_GUEST_KEY);
 }
 

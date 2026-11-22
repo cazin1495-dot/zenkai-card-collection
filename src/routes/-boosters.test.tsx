@@ -200,6 +200,36 @@ describe("booster hub", () => {
     }
   });
 
+  it.each([1, 10])("chooses x%s by tapping the pack artwork", (count) => {
+    vi.useFakeTimers();
+    const { unmount } = showPage();
+    try {
+      fireEvent.click(screen.getByAltText("Booster Shojo"));
+      const dialog = screen.getByRole("dialog", { name: "Ouvrir Shojo" });
+      expect(dialog).toHaveClass("z-[999]");
+      fireEvent.click(within(dialog).getByRole("button", { name: `Ouvrir x${count} · Gratuit` }));
+      expect(mocks.draw).toHaveBeenCalledWith(expect.anything(), "shojo", count);
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(screen.getByRole("button", { name: "Déchirer le booster" }).closest("section")).toHaveClass("fixed", "inset-0", "z-[1000]");
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
+  });
+
+  it("opens the selected mobile pack preview and reports unavailable Zen purchases", async () => {
+    showPage();
+    fireEvent.click(screen.getByRole("radio", { name: "Seinen" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(await screen.findByRole("dialog", { name: "Contenu du pack Seinen" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Boosters Zen" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Booster Zenkai" }));
+    const dialog = screen.getByRole("dialog", { name: "Ouvrir Booster Zenkai" });
+    expect(within(dialog).getByRole("button", { name: "Ouvrir x1 · 500 Zen" })).toBeDisabled();
+    expect(within(dialog).getByText(/nécessite une prise en charge côté serveur/)).toBeTruthy();
+  });
+
   it("opens ten boosters from the mobile shortcut and tears on a horizontal gesture", async () => {
     vi.useFakeTimers();
     const { container, unmount } = showPage();
@@ -229,6 +259,7 @@ describe("booster hub", () => {
     expect(shojo.parentElement?.className).toContain("aspect-[2/3]");
     expect(shojo.parentElement?.className.replace(/ring-2.*$/, "").trim()).toBe(shonen.parentElement?.className.replace(/ring-2.*$/, "").trim());
     fireEvent.click(screen.getByRole("radio", { name: "Shojo" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Ouvrir Shojo" })).getByRole("button", { name: "Close" }));
     expect(screen.getByRole("radio", { name: "Shojo" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByAltText("Pochette Shojo")).toHaveClass("h-full", "w-full", "object-cover");
     fireEvent.click(screen.getByRole("button", { name: "Ouvrir · Gratuit" }));
@@ -252,6 +283,10 @@ describe("booster hub", () => {
       expect(artwork.className).toBe(reference.className);
       expect(artwork.parentElement!.className.replace(/ring-2.*$/, "").trim()).toBe(template);
       expect(artwork.parentElement).toHaveClass("aspect-[2/3]", "w-full", "overflow-hidden", "mx-auto");
+      fireEvent.click(artwork);
+      const dialog = screen.getByRole("dialog", { name: `Ouvrir ${pack.label}` });
+      expect(within(dialog).getByRole("button", { name: /Ouvrir x1 ·/ })).toBeTruthy();
+      fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     }
   });
 
@@ -276,6 +311,7 @@ describe("booster hub", () => {
       expect(artwork.parentElement?.className).toBe(screen.getByAltText("Booster Seinen").parentElement?.className);
     }
     fireEvent.click(screen.getByRole("radio", { name: pack }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: `Ouvrir ${pack}` })).getByRole("button", { name: "Close" }));
     if (pack === "Protagoniste") {
       expect(screen.getByAltText("Pochette Protagoniste")).toHaveAttribute("src", "/pack-protagoniste.png");
       expect(screen.getByAltText("Pochette Protagoniste")).toHaveClass("h-full", "w-full", "object-cover", "object-center");
@@ -423,8 +459,54 @@ describe("booster hub", () => {
     const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
     await waitFor(() => expect(open).toBeEnabled());
     fireEvent.click(open);
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Impossible d'ouvrir le booster. Réessaie dans un instant."));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Réponse du serveur indisponible : offline. Vérifie ta collection avant de réessayer."));
     expect(screen.getByRole("button", { name: /Ouvrir · Gratuit/ })).toBeEnabled();
     expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 1 });
+    expect(mocks.draw).not.toHaveBeenCalled();
+  });
+
+  it("reports a lost server response without creating a second local draw", async () => {
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.rpc.mockRejectedValue(new Error("network"));
+    showPage();
+    fireEvent.click(screen.getByRole("button", { name: /Ouvrir · Gratuit/ }));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith(
+      "Réponse du serveur indisponible : network. Vérifie ta collection avant de réessayer.",
+    ));
+    expect(mocks.draw).not.toHaveBeenCalled();
+    expect(getGuestCollection()).toEqual([]);
+  });
+
+  it("lets the server decide availability when the cached stock is zero", async () => {
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.profile = { boosters_stored: 0, stock_updated_at: new Date().toISOString() };
+    mocks.rpc.mockResolvedValue({ data: null, error: { message: "not_enough_boosters" } });
+    showPage();
+    await screen.findByText("0/15");
+    fireEvent.click(screen.getByRole("radio", { name: "Shonen Mix" }));
+    const dialog = screen.getByRole("dialog", { name: "Ouvrir Shonen Mix" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Ouvrir x1 · Gratuit" }));
+    await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 1 }));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Pas assez de boosters en stock."));
+  });
+
+  it("leaves the opening screen and reports a failed copy lookup after a committed draw", async () => {
+    mocks.auth.session = { user: { id: "player" } };
+    mocks.auth.guest = false;
+    mocks.rpc.mockResolvedValue({
+      data: [{ card_id: "card-0", user_card_id: "copy", boosters_left: 14, stock_updated_at: new Date().toISOString() }],
+      error: null,
+    });
+    const inQuery = vi.fn().mockRejectedValue(new Error("réseau indisponible"));
+    mocks.from.mockReturnValue({ select: () => ({ eq: () => ({ in: inQuery }) }) });
+    showPage();
+    const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
+    await waitFor(() => expect(open).toBeEnabled());
+    fireEvent.click(open);
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining("réseau indisponible. Consulte ta collection.")));
+    expect(screen.getByRole("button", { name: /Ouvrir · Gratuit/ })).toBeEnabled();
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
   });
 });

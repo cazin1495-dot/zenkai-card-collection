@@ -18,14 +18,16 @@ Les autres appareils et navigateurs ne sont nettoyés qu'à leur prochaine visit
 
 La révélation affiche les cartes de la moins rare à la plus rare, puis le récapitulatif dans
 l'ordre inverse. Le badge « NOUVEAU » compare le tirage à la collection avant ouverture.
-Sur mobile, la navigation principale est accessible en bas de l'écran. Pendant l'ouverture,
-un glissement horizontal déchire la pochette ou retourne la carte ; la déchirure continue
-aussi automatiquement sans geste.
+Sur mobile, la navigation principale est accessible en bas de l'écran. Cliquer ou toucher
+une pochette ouvre le choix de quantité et l'aperçu du pack. Pendant l'ouverture, un appui ou un
+glissement horizontal déchire la pochette ; la déchirure continue aussi automatiquement.
+Un glissement retourne la carte.
 Le pack Protagoniste utilise sa pochette dédiée dans le sélecteur et pendant la déchirure,
 ainsi que son dos de carte exclusif pendant la déchirure et la révélation.
 Les pochettes sont cadrées sur le gabarit Shonen pour garder les mêmes dimensions et
 marges dans le sélecteur et pendant l'ouverture.
-En mode invité, l'ouverture reste une simulation non sauvegardée ; le Booster Zenkai nécessite
+En développement et pendant la bêta après validation du code, le mode invité permet
+des ouvertures gratuites simulées et non sauvegardées ; le Booster Zenkai nécessite
 une prise en charge sécurisée du Zen par le serveur et n'est pas encore disponible.
 Les raretés de certains personnages sont surchargées dans le catalogue affiché et les
 simulations locales. La table `CUSTOM_RARITY` dans `src/lib/cards.ts` accepte des noms

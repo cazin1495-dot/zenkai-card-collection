@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BoosterPack } from "@/components/BoosterPack";
 import { BoosterArtwork } from "@/components/BoosterArtwork";
 import { BoosterPreviewDialog } from "@/components/BoosterPreviewDialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OpeningAura } from "@/components/OpeningAura";
 import { CardReveal, NewCardBadge } from "@/components/CardReveal";
 import { InspectableCard } from "@/components/Transcendance";
@@ -78,6 +79,7 @@ export function BoostersPage() {
   const [pack, setPack] = useState<PackId>("shonen");
   const [packFilter, setPackFilter] = useState<PackFilter>("free");
   const [isPackPreviewOpen, setIsPackPreviewOpen] = useState(false);
+  const [isPackChoiceOpen, setIsPackChoiceOpen] = useState(false);
   const [pulled, setPulled] = useState<PulledCard[]>([]);
   const [opened, setOpened] = useState(1);
   const [awake, setAwake] = useState<Awake>({});
@@ -160,8 +162,7 @@ export function BoostersPage() {
     phase === "opening" ||
     phase === "tearing" ||
     phase === "reveal" ||
-    returningToBoosters ||
-    (!!userId && profile.isLoading);
+    returningToBoosters;
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
   const cardBack = getPackCardBack(pack);
@@ -252,10 +253,6 @@ export function BoostersPage() {
       await revealAfterOpening();
       return;
     }
-    if (stock && stock.count + (game.data?.bonus_boosters ?? 0) < count && !category.startsWith("reward:")) {
-      toast.error("Pas assez de boosters en stock.");
-      return;
-    }
     tearRequested.current = false;
     setPhase("opening");
     setPulled([]);
@@ -275,7 +272,11 @@ export function BoostersPage() {
       response = await supabase.rpc("open_boosters", { _category: category, _count: count });
     } catch (error) {
       setPhase("idle");
-      toast.error(error instanceof Error ? `Ouverture impossible : ${error.message}` : "Ouverture impossible. Réessaie.");
+      toast.error(error instanceof Error
+        ? `Réponse du serveur indisponible : ${error.message}. Vérifie ta collection avant de réessayer.`
+        : "Réponse du serveur indisponible. Vérifie ta collection avant de réessayer.");
+      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
       return;
     }
     const { data, error } = response;
@@ -287,32 +288,46 @@ export function BoostersPage() {
       toast.error(
         error?.message.includes("not_enough_boosters")
           ? "Pas assez de boosters en stock."
-          : "Impossible d'ouvrir le booster. Réessaie dans un instant.",
+          : error
+            ? `Réponse du serveur indisponible : ${error.message}. Vérifie ta collection avant de réessayer.`
+            : "Le serveur n'a retourné aucune carte. Vérifie ta collection avant de réessayer.",
       );
-      queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
       return;
     }
     try { recordBoosterOpen(session.user.id, count, ownedIdsBeforeOpen, data.map((item) => item.card_id), openedAt); }
     catch { toast.error("Booster ouvert, mais progression des missions et XP locales indisponible."); }
 
-    const { data: copyStates, error: copyStatesError } = await supabase
+    async function failAfterOpen(message: string) {
+      setPhase("idle");
+      toast.error(message);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["profile", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["collection", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["game", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["pity", userId] }),
+      ]);
+    }
+    const fetchCopyStates = () => supabase
       .from("user_cards")
       .select("id, transcended")
       .eq("user_id", session.user.id)
       .in("id", data.map((row) => row.user_card_id));
-    if (copyStatesError || copyStates.length !== data.length) {
-      setPhase("idle");
-      toast.error(
-        copyStatesError
-          ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${copyStatesError.message}`
-          : "Booster ouvert, mais l’état de certaines cartes n’a pas pu être chargé.",
-      );
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] }),
-        queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] }),
-        queryClient.invalidateQueries({ queryKey: ["game", session.user.id] }),
-        queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] }),
-      ]);
+    let copyResult: Awaited<ReturnType<typeof fetchCopyStates>>;
+    try {
+      copyResult = await fetchCopyStates();
+    } catch (reason) {
+      await failAfterOpen(reason instanceof Error
+        ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${reason.message}. Consulte ta collection.`
+        : "Booster ouvert, mais l’état des cartes n’a pas pu être chargé. Consulte ta collection.");
+      return;
+    }
+    const { data: copyStates, error: copyStatesError } = copyResult;
+    if (copyStatesError || !copyStates || copyStates.length !== data.length) {
+      await failAfterOpen(copyStatesError
+        ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${copyStatesError.message}. Consulte ta collection.`
+        : "Booster ouvert, mais l’état de certaines cartes n’a pas pu être chargé. Consulte ta collection.");
       return;
     }
 
@@ -426,7 +441,10 @@ export function BoostersPage() {
                 )}
                 <div role="radiogroup" aria-label="Catégorie de booster" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
                   {PACKS.filter((p) => packFilter === "all" || (packFilter === "zen" ? p.id === "zenkai" : p.id !== "zenkai")).map((p) => (
-                    <PackOption key={p.id} info={p} selected={pack === p.id} onSelect={() => setPack(p.id)} />
+                    <PackOption key={p.id} info={p} selected={pack === p.id} onSelect={() => {
+                      setPack(p.id);
+                      setIsPackChoiceOpen(true);
+                    }} />
                   ))}
                 </div>
               </section>
@@ -479,13 +497,37 @@ export function BoostersPage() {
                 {pack === "zenkai" && <p className="mt-2 text-xs text-muted-foreground">Achat indisponible : les règles Zen doivent être ajoutées au serveur.</p>}
                 {guest && <p className="mt-2 text-xs text-muted-foreground">Mode invité : tirages simulés, cartes non sauvegardées.</p>}
               </aside>
+              <Dialog open={isPackChoiceOpen} onOpenChange={setIsPackChoiceOpen}>
+                <DialogContent className="z-[999] border-amber-400/30 bg-slate-950">
+                  <DialogHeader className="pr-8">
+                    <DialogTitle>Ouvrir {packInfo.label}</DialogTitle>
+                    <DialogDescription>
+                      {!ready ? "Chargement de la session…" : pack === "zenkai" ? "L'achat en Zen nécessite une prise en charge côté serveur." : guest ? "Simulation invitée : les cartes ne sont pas sauvegardées." : "Boosters gratuits : le stock du compte connecté s'applique."}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3">
+                    {[1, 10].map((count) => (
+                      <Button key={count} variant="hero" className="min-h-12" disabled={!ready || busy || pack === "zenkai"} onClick={() => {
+                        setIsPackChoiceOpen(false);
+                        void open(count, pack);
+                      }}>
+                        Ouvrir x{count} · {pack === "zenkai" ? `${(count * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : "Gratuit"}
+                      </Button>
+                    ))}
+                    <Button type="button" variant="link" className="min-h-11" onClick={() => {
+                      setIsPackChoiceOpen(false);
+                      setIsPackPreviewOpen(true);
+                    }}>Voir les cartes du pack</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </>
       )}
 
       {phase !== "idle" && guest && <p className="text-center text-xs text-muted-foreground">Simulation invitée : les cartes révélées ne sont pas sauvegardées.</p>}
-      {phase !== "idle" && <section className={cn("opening-stage relative flex min-h-[350px] w-full items-center justify-center bg-transparent", phase === "reveal" || phase === "summary" ? "mt-0" : "mt-2")}>
+      {phase !== "idle" && <section className={cn("opening-stage flex min-h-[350px] w-full items-center justify-center", phase === "opening" || phase === "tearing" ? "fixed inset-0 z-[1000] overflow-y-auto bg-background px-4" : "relative mt-0 bg-transparent")}>
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (
           <CardReveal
@@ -516,7 +558,7 @@ export function BoostersPage() {
                 beam={tearBeam}
                 onTear={requestTear}
               />
-              {phase === "opening" && <p className="text-center text-xs text-muted-foreground">Glisse horizontalement pour déchirer le booster, ou laisse l'animation continuer.</p>}
+              {phase === "opening" && <p className="text-center text-xs text-muted-foreground">Appuie ou glisse horizontalement pour déchirer le booster, ou laisse l'animation continuer.</p>}
           </div>
         )}
       </section>}

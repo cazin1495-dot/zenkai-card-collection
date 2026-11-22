@@ -90,7 +90,7 @@ export function SecretQuestEffects() {
   return (
     <div
       key={quest.id}
-      className="secret-reveal pointer-events-auto fixed inset-0 z-[100] grid cursor-pointer place-items-center bg-black/92 px-4 backdrop-blur-sm"
+      className="secret-reveal pointer-events-auto fixed inset-0 z-[1100] grid cursor-pointer place-items-center bg-black/92 px-4 backdrop-blur-sm"
     >
       <button
         type="button"

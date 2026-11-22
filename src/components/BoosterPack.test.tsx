@@ -21,6 +21,18 @@ describe("BoosterPack tearing animation", () => {
     expect(screen.queryByRole("button", { name: "Déchirer le booster" })).toBeNull();
   });
 
+  it("tears on a tap without firing twice after a swipe", () => {
+    const onTear = vi.fn();
+    render(<BoosterPack state="opening" onTear={onTear} />);
+    const pack = screen.getByRole("button", { name: "Déchirer le booster" });
+    fireEvent.click(pack);
+    expect(onTear).toHaveBeenCalledTimes(1);
+    fireEvent(pack, new MouseEvent("pointerdown", { bubbles: true, clientX: 10 }));
+    fireEvent(pack, new MouseEvent("pointermove", { bubbles: true, clientX: 90 }));
+    fireEvent.click(pack);
+    expect(onTear).toHaveBeenCalledTimes(2);
+  });
+
   it("uses the original public booster image", () => {
     expect(PACK_ARTWORK).toBe("/image_c1811ac7.jpg");
   });
