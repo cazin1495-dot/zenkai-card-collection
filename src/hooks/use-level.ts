@@ -14,5 +14,5 @@ export function useLevel() {
     window.addEventListener("storage", refresh);
     return () => { window.removeEventListener("zenkai:guest-updated", refresh); window.removeEventListener("storage", refresh); };
   }, []);
-  return { xp, error, ...(xp === null ? { level: null, progress: null } : levelProgress(xp)) };
+  return { xp, error, ...(xp === null ? { level: null, progress: null, required: null } : levelProgress(xp)) };
 }
