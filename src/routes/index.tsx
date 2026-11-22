@@ -196,8 +196,83 @@ export function BoostersPage() {
     setPhase("reveal");
   }
 
+  
+  const MAX_BETA_BOOSTERS = 15;
+  const REGEN_SECONDS = 600;
+  const [betaBoosters, setBetaBoosters] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem("zenkai_beta_boosters_v1");
+      if (!raw) return MAX_BETA_BOOSTERS;
+      const parsed = JSON.parse(raw);
+      let count = typeof parsed.count === "number" ? parsed.count : MAX_BETA_BOOSTERS;
+      let updatedAt = typeof parsed.updatedAt === "number" ? parsed.updatedAt : Date.now();
+      if (count < MAX_BETA_BOOSTERS) {
+        const elapsed = Math.floor((Date.now() - updatedAt) / 1000);
+        const gained = Math.floor(elapsed / REGEN_SECONDS);
+        if (gained > 0) {
+          count = Math.min(MAX_BETA_BOOSTERS, count + gained);
+          updatedAt = count >= MAX_BETA_BOOSTERS ? Date.now() : updatedAt + gained * REGEN_SECONDS * 1000;
+          localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count, updatedAt }));
+        }
+      }
+      return count;
+    } catch { return MAX_BETA_BOOSTERS; }
+  });
+  const [nextBoosterSec, setNextBoosterSec] = useState<number>(0);
+
+  useEffect(() => {
+    const syncTimer = () => {
+      try {
+        const raw = localStorage.getItem("zenkai_beta_boosters_v1");
+        if (!raw) {
+          localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count: MAX_BETA_BOOSTERS, updatedAt: Date.now() }));
+          setBetaBoosters(MAX_BETA_BOOSTERS);
+          setNextBoosterSec(0);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        let count = typeof parsed.count === "number" ? parsed.count : MAX_BETA_BOOSTERS;
+        let updatedAt = typeof parsed.updatedAt === "number" ? parsed.updatedAt : Date.now();
+        if (count >= MAX_BETA_BOOSTERS) {
+          setBetaBoosters(MAX_BETA_BOOSTERS);
+          setNextBoosterSec(0);
+          return;
+        }
+        const elapsed = Math.floor((Date.now() - updatedAt) / 1000);
+        const gained = Math.floor(elapsed / REGEN_SECONDS);
+        if (gained > 0) {
+          count = Math.min(MAX_BETA_BOOSTERS, count + gained);
+          updatedAt = count >= MAX_BETA_BOOSTERS ? Date.now() : updatedAt + gained * REGEN_SECONDS * 1000;
+          localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count, updatedAt }));
+        }
+        setBetaBoosters(count);
+        if (count >= MAX_BETA_BOOSTERS) {
+          setNextBoosterSec(0);
+        } else {
+          const rem = Math.max(1, REGEN_SECONDS - Math.floor((Date.now() - updatedAt) / 1000));
+          setNextBoosterSec(rem);
+        }
+      } catch {}
+    };
+    syncTimer();
+    const id = window.setInterval(syncTimer, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
   async function open(count: number, category: string = pack) {
     if (busy) return;
+    if (betaBoosters < count) {
+      toast.error(`Stock insuffisant (${betaBoosters} / ${MAX_BETA_BOOSTERS} boosters). Attends le timer pour en récupérer !`);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem("zenkai_beta_boosters_v1");
+      const parsed = raw ? JSON.parse(raw) : { count: MAX_BETA_BOOSTERS, updatedAt: Date.now() };
+      const nextCount = Math.max(0, betaBoosters - count);
+      const nextUpdatedAt = betaBoosters >= MAX_BETA_BOOSTERS ? Date.now() : (parsed.updatedAt || Date.now());
+      localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count: nextCount, updatedAt: nextUpdatedAt }));
+      setBetaBoosters(nextCount);
+    } catch {}
     if (category === "zenkai") {
       toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
       return;
