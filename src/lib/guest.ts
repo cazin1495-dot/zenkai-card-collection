@@ -31,10 +31,8 @@ export function createLocalGuestDraw(
           customTranscendance = true;
         } else {
           const mythicPool = remaining.filter((candidate) => candidate.rarity === "mythique");
-          if (mythicPool.length === 0) {
-            throw new Error(`Impossible de sélectionner une carte Mythique de repli dans le pack ${pack}.`);
-          }
-          card = mythicPool[Math.floor(Math.random() * mythicPool.length)];
+          const safeMythicPool = mythicPool.length > 0 ? mythicPool : remaining.length > 0 ? remaining : cards;
+      card = safeMythicPool[Math.floor(Math.random() * safeMythicPool.length)];
         }
       } else {
         const matchingRarity = remaining.filter((candidate) => candidate.rarity === rarity);
