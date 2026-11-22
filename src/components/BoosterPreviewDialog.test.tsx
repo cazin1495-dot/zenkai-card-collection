@@ -107,6 +107,81 @@ describe("booster content preview", () => {
     expect(images()).toHaveLength(24);
   });
 
+  it("finds distant characters and anime without case or accent sensitivity and adds favorites", () => {
+    const catalog: Card[] = Array.from({ length: 55 }, (_, index) => ({
+      id: `search-${index}`,
+      name: index === 54 ? "Éowyn" : `Personnage ${index}`,
+      series: index === 54 ? "L'Épopée" : "Autre série",
+      title: index === 53 ? "Série du Crépuscule" : "",
+      rarity: "rare",
+      description: "",
+      sort_order: index,
+      category: "shonen",
+    }));
+    render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.queryByText("Éowyn")).toBeNull();
+    const search = screen.getByLabelText("Rechercher un personnage ou un anime");
+    fireEvent.change(search, { target: { value: "  eOWYN  " } });
+    expect(screen.getByText("Éowyn")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter Éowyn aux favoris" }));
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (1)" }));
+    fireEvent.change(search, { target: { value: "EPOPEE" } });
+    expect(screen.getByText("Éowyn")).toBeTruthy();
+    fireEvent.change(search, { target: { value: "crépuscule" } });
+    expect(screen.getByText(/Aucune carte ne correspond à cette recherche/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "★ Mes favoris (1)" }));
+    expect(screen.getByText("Personnage 53")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Effacer la recherche" }));
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Effacer la recherche" })).toBeDisabled();
+  });
+
+  it("resets pagination on every search change, clear and pack change", () => {
+    const catalog: Card[] = Array.from({ length: 55 }, (_, index) => ({
+      id: `search-page-${index}`, name: `Héros ${index}`, series: "Épopée", title: "",
+      rarity: "rare", description: "", sort_order: index, category: "seinen",
+      image_url: `/search-${index}.jpg`,
+    }));
+    const { rerender } = render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const articles = () => screen.getByRole("dialog").querySelectorAll("article");
+    const showMore = () => fireEvent.click(screen.getByRole("button", { name: "Afficher plus (+24)" }));
+    const search = screen.getByLabelText("Rechercher un personnage ou un anime");
+    showMore();
+    expect(articles()).toHaveLength(48);
+    fireEvent.change(search, { target: { value: "heros" } });
+    expect(articles()).toHaveLength(24);
+    showMore();
+    expect(articles()).toHaveLength(48);
+    fireEvent.change(search, { target: { value: "HÉROS" } });
+    expect(articles()).toHaveLength(24);
+    showMore();
+    rerender(<PreviewHarness catalog={catalog} customCards={[]} pack="seinen" />);
+    expect(articles()).toHaveLength(24);
+    showMore();
+    fireEvent.click(screen.getByRole("button", { name: "Effacer la recherche" }));
+    expect(articles()).toHaveLength(24);
+  });
+
+  it("does not expose concealed Transcendances through search results", () => {
+    const hidden: CustomTranscendanceCard = {
+      id: "secret-exclusive", name: "Personnage secret", anime: "Série secrète",
+      image_url: "/secret-portrait.png", pack_ids: ["shonen"], rarity: "Transcendance", series_number: "SECRET-001",
+    };
+    const { rerender } = render(<PreviewHarness customCards={[hidden]} ownedCardIds={new Set()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const search = screen.getByLabelText("Rechercher un personnage ou un anime");
+    fireEvent.change(search, { target: { value: "personnage secret" } });
+    expect(screen.queryByText("??? · Carte Transcendance")).toBeNull();
+    expect(screen.getByText(/Aucune carte ne correspond à cette recherche/)).toBeTruthy();
+    fireEvent.change(search, { target: { value: "serie secrete" } });
+    expect(screen.queryByText("??? · Carte Transcendance")).toBeNull();
+    rerender(<PreviewHarness customCards={[hidden]} ownedCardIds={new Set(["secret-exclusive"])} />);
+    expect(screen.getByText("Personnage secret")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ajouter Personnage secret aux favoris" })).toBeTruthy();
+  });
+
   it("counts the mystery card towards the limit and offers the remaining card", () => {
     const catalog: Card[] = Array.from({ length: 24 }, (_, index) => ({
       id: `page-${index}`,

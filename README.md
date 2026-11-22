@@ -112,6 +112,8 @@ Les favoris se choisissent dans l'aperçu des packs et sont enregistrés sur cet
 pas sur le compte. Ils sont partagés entre les onglets et signalés dans la collection et
 à la révélation ; le filtre de favoris se combine aux autres filtres. Un favori suit
 l'identifiant de la carte, y compris ses copies transcendées.
+Dans l'aperçu, la recherche par personnage ou anime ignore la casse et les accents.
+Les Transcendances non possédées restent masquées et ne sont pas recherchables par identité.
 
 L'éditeur de raretés de l'aperçu enregistre ses réglages dans le navigateur, par identifiant
 de carte. Il modifie l'affichage et les simulations locales, pas les tirages ni les gains

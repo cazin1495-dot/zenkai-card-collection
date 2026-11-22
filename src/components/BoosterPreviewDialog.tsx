@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Eye, Heart, LockKeyhole, Pencil } from "lucide-react";
+import { Eye, Heart, LockKeyhole, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { AnimeCard, TranscendFrame } from "@/components/AnimeCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,10 @@ function rateLabel(rarity: Rarity, pack: PackId) {
   return `${String(effectiveDropRate(rarity, pack)).replace(".", ",")} %`;
 }
 
+function searchKey(value: string) {
+  return value.trim().toLocaleLowerCase("fr").normalize("NFD").replace(/\p{M}/gu, "");
+}
+
 export function BoosterPreviewDialog({
   cards,
   pack,
@@ -57,15 +62,16 @@ export function BoosterPreviewDialog({
   const [filter, setFilter] = useState<RarityFilter>("all");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [pagination, setPagination] = useState({ pack, filter, favoritesOnly, open, count: PREVIEW_PAGE_SIZE });
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({ pack, filter, favoritesOnly, open, search, count: PREVIEW_PAGE_SIZE });
   const visibleCount =
     pagination.pack === pack && pagination.filter === filter &&
-    pagination.favoritesOnly === favoritesOnly && pagination.open === open
+    pagination.favoritesOnly === favoritesOnly && pagination.open === open && pagination.search === search
       ? pagination.count
       : PREVIEW_PAGE_SIZE;
   useEffect(() => {
-    setPagination({ pack, filter, favoritesOnly, open, count: PREVIEW_PAGE_SIZE });
-  }, [pack, filter, favoritesOnly, open]);
+    setPagination({ pack, filter, favoritesOnly, open, search, count: PREVIEW_PAGE_SIZE });
+  }, [pack, filter, favoritesOnly, open, search]);
   const overrides = useRarityOverrides();
   const { favoriteCardIds, toggleFavorite } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
@@ -86,11 +92,16 @@ export function BoosterPreviewDialog({
     const rightRarity = right.customTranscendance ? "transcendance" : right.card.rarity;
     return RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity);
   });
+  const searchTerm = searchKey(search);
   const visibleEntries = entries.filter((entry) => (
     (!favoritesOnly || favoriteIds.has(entry.card.id)) &&
-    (filter === "all" || (entry.customTranscendance ? filter === "transcendance" : entry.card.rarity === filter))
+    (filter === "all" || (entry.customTranscendance ? filter === "transcendance" : entry.card.rarity === filter)) &&
+    (!searchTerm || (
+      !(entry.customTranscendance && !ownedCardIds?.has(entry.card.id)) &&
+      [entry.card.name, entry.card.series ?? "", entry.card.title].some((value) => searchKey(value).includes(searchTerm))
+    ))
   ));
-  const showMystery = !favoritesOnly && customForPack.length === 0 && (filter === "all" || filter === "transcendance");
+  const showMystery = !searchTerm && !favoritesOnly && customForPack.length === 0 && (filter === "all" || filter === "transcendance");
   const favoriteCount = entries.filter((entry) => favoriteIds.has(entry.card.id)).length;
   const filters: RarityFilter[] = ["all", ...RARITY_ORDER];
 
@@ -106,6 +117,13 @@ export function BoosterPreviewDialog({
           <DialogTitle>Contenu du pack {packLabel}</DialogTitle>
           <DialogDescription>Cartes disponibles et taux de drop par carte.</DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center gap-2">
+          <Input aria-label="Rechercher un personnage ou un anime" placeholder="Personnage ou anime…" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <Button type="button" variant="glass" size="icon" aria-label="Effacer la recherche" disabled={!search} onClick={() => setSearch("")}>
+            <X aria-hidden className="size-4" />
+          </Button>
+        </div>
 
         {pack === "shonen" && <p className="text-xs text-muted-foreground">En ligne, la règle universelle doit encore être activée côté serveur : certaines cartes de cet aperçu peuvent être indisponibles au tirage.</p>}
         {customForPack.length > 0 && <p className="text-xs text-muted-foreground">Les Transcendances exclusives sont disponibles dans la simulation invitée ; leur obtention en ligne dépend du serveur.</p>}
@@ -156,7 +174,7 @@ export function BoosterPreviewDialog({
         </div>
 
         {visibleEntries.length === 0 && !showMystery ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">{favoritesOnly ? "Aucune carte favorite ne correspond à ces filtres dans ce pack." : "Aucune carte de cette rareté dans ce pack."}</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Aucune carte ne correspond à cette recherche et à ces filtres." : favoritesOnly ? "Aucune carte favorite ne correspond à ces filtres dans ce pack." : "Aucune carte de cette rareté dans ce pack."}</p>
         ) : (
           <div className="booster-preview-cards grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {showMystery && <MysteryCard pack={pack} />}
@@ -219,7 +237,7 @@ export function BoosterPreviewDialog({
         )}
         {visibleEntries.length + Number(showMystery) > visibleCount && (
           <Button type="button" variant="glass" onClick={() => setPagination({
-            pack, filter, favoritesOnly, open, count: visibleCount + PREVIEW_PAGE_SIZE,
+            pack, filter, favoritesOnly, open, search, count: visibleCount + PREVIEW_PAGE_SIZE,
           })}>
             Afficher plus (+24)
           </Button>
