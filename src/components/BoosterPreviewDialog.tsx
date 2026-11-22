@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Eye, Heart, LockKeyhole, Pencil, X } from "lucide-react";
+import { Eye, Heart, LockKeyhole, X } from "lucide-react";
 import { toast } from "sonner";
 import { AnimeCard, TranscendFrame } from "@/components/AnimeCard";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CATALOG_RARITIES, effectiveDropRate, inPack, isCatalogRarity, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, setUserRarityOverride, type Card, type PackId, type Rarity } from "@/lib/cards";
+import { effectiveDropRate, inPack, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, type Card, type PackId, type Rarity } from "@/lib/cards";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscendanceInPack, type CustomTranscendanceCard } from "@/lib/transcendance-cards";
 import { useFavoriteCards } from "@/lib/favorites";
 import { cn } from "@/lib/utils";
@@ -61,7 +61,6 @@ export function BoosterPreviewDialog({
 }: Props) {
   const [filter, setFilter] = useState<RarityFilter>("all");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({ pack, filter, favoritesOnly, open, search, count: PREVIEW_PAGE_SIZE });
   const visibleCount =
@@ -139,19 +138,7 @@ export function BoosterPreviewDialog({
           <Button type="button" size="sm" variant={favoritesOnly ? "hero" : "glass"} aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(!favoritesOnly)}>
             ★ Mes favoris ({favoriteCount})
           </Button>
-          <Button type="button" size="sm" variant={editing ? "hero" : "glass"} aria-pressed={editing} onClick={() => setEditing(!editing)}>
-            <Pencil aria-hidden /> Éditer les raretés
-          </Button>
-          {editing && <Button type="button" size="sm" variant="glass" onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(`export const USER_RARITY_OVERRIDES = ${JSON.stringify(overrides, null, 2)} as const;`);
-              toast.success("Configuration copiée !");
-            } catch {
-              toast.error("Impossible de copier la configuration dans le presse-papiers.");
-            }
-          }}>Exporter ma config</Button>}
         </div>
-        {editing && <p className="text-xs text-muted-foreground">Modifications locales sur cet appareil : les tirages et gains des comptes connectés restent régis par le serveur. Les Transcendances restent liées aux copies.</p>}
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par rareté">
           {filters.map((rarity) => (
             <Button
@@ -206,30 +193,6 @@ export function BoosterPreviewDialog({
                   <p className="w-full text-center text-[10px] font-semibold text-muted-foreground">
                     {RARITY[rarity].label} · {rateLabel(rarity, pack)}
                   </p>
-                  {editing && (entry.customTranscendance ? (
-                    <p className="text-center text-xs text-muted-foreground">Transcendance exclusive</p>
-                  ) : (
-                    <select
-                      aria-label={`Rareté de ${entry.card.name}`}
-                      value={entry.card.rarity}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        if (!isCatalogRarity(value)) {
-                          toast.error("Rareté invalide.");
-                          return;
-                        }
-                        try {
-                          setUserRarityOverride(entry.card.id, value);
-                          toast.success("Rareté mise à jour !");
-                        } catch {
-                          toast.error("Impossible d'enregistrer la rareté. Vérifie le stockage du navigateur.");
-                        }
-                      }}
-                      className="w-full rounded-lg border border-amber-400/40 bg-violet-950 px-2 py-1 text-xs text-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
-                    >
-                      {CATALOG_RARITIES.map((option) => <option key={option} value={option}>{RARITY[option].label}</option>)}
-                    </select>
-                  ))}
                 </article>
               );
             })}

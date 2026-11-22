@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { DEMON_SLAYER_MYTHIC_CARDS, normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
@@ -41,7 +41,6 @@ describe("booster content preview", () => {
     localStorage.removeItem("zenkai:favorite-cards");
     localStorage.removeItem("zenkai_admin_rarity_overrides");
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();
   });
 
   it("renders at most 24 cards per batch, including the mystery card, with lazy, asynchronous images", () => {
@@ -246,55 +245,16 @@ describe("booster content preview", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Vérification de ta collection");
   });
 
-  it("edits and exports local catalogue rarities without altering Transcendance cards", async () => {
-    const success = vi.spyOn(toast, "success");
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", { clipboard: { writeText } });
-    const { unmount } = render(<PreviewHarness />);
-    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
-    const select = screen.getByRole("combobox", { name: "Rareté de Héros" });
-    expect(within(select).getAllByRole("option")).toHaveLength(6);
-    expect(within(select).queryByRole("option", { name: "Transcendance" })).toBeNull();
-    expect(screen.queryByRole("combobox", { name: "Rareté de Goku Ultra Instinct" })).toBeNull();
-    fireEvent.change(select, { target: { value: "mythique" } });
-    expect(success).toHaveBeenCalledWith("Rareté mise à jour !");
-    expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Mythique");
-    expect(JSON.parse(localStorage.getItem("zenkai_admin_rarity_overrides")!)).toEqual({ common: "mythique" });
-    fireEvent.click(screen.getByRole("button", { name: "Exporter ma config" }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      'export const USER_RARITY_OVERRIDES = {\n  "common": "mythique"\n} as const;',
-    ));
-    unmount();
+  it("keeps favorites and search without exposing rarity editing while retaining existing overrides", () => {
+    localStorage.setItem("zenkai_admin_rarity_overrides", JSON.stringify({ common: "mythique" }));
     render(<PreviewHarness customCards={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.getByRole("button", { name: "★ Mes favoris (0)" })).toBeTruthy();
+    expect(screen.getByLabelText("Rechercher un personnage ou un anime")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Éditer les raretés" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Exporter ma config" })).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Mythique");
-  });
-
-  it("allows local editing of a card with a fixed id rarity", () => {
-    const catalog: Card[] = [{ id: "hsr-20", name: "Welt", title: "", description: "", rarity: "rare", sort_order: 0 }];
-    render(<PreviewHarness catalog={catalog} customCards={[]} />);
-    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
-    const select = screen.getByRole("combobox", { name: "Rareté de Welt" });
-    expect(select).toHaveValue("legendaire");
-    fireEvent.change(select, { target: { value: "mythique" } });
-    expect(select).toHaveValue("mythique");
-  });
-
-  it("reports failed rarity saves and clipboard exports", async () => {
-    const error = vi.spyOn(toast, "error");
-    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
-    vi.stubGlobal("navigator", { clipboard: { writeText } });
-    render(<PreviewHarness customCards={[]} />);
-    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("storage"); });
-    fireEvent.change(screen.getByRole("combobox", { name: "Rareté de Héros" }), { target: { value: "mythique" } });
-    expect(error).toHaveBeenCalledWith(expect.stringContaining("Impossible d'enregistrer"));
-    expect(screen.getByRole("combobox", { name: "Rareté de Héros" })).toHaveValue("commune");
-    fireEvent.click(screen.getByRole("button", { name: "Exporter ma config" }));
-    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining("Impossible de copier")));
   });
 
   it("shows other categories and exclusive cards outside Shonen in the universal preview", () => {

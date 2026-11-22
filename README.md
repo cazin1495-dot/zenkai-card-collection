@@ -115,10 +115,6 @@ l'identifiant de la carte, y compris ses copies transcendées.
 Dans l'aperçu, la recherche par personnage ou anime ignore la casse et les accents.
 Les Transcendances non possédées restent masquées et ne sont pas recherchables par identité.
 
-L'éditeur de raretés de l'aperçu enregistre ses réglages dans le navigateur, par identifiant
-de carte. Il modifie l'affichage et les simulations locales, pas les tirages ni les gains
-des comptes connectés. La Transcendance reste un état de copie et ne peut pas être définie
-comme rareté de catalogue. L'export copie une constante TypeScript des réglages locaux.
 Les choix de l'éditeur priment sur les valeurs par identifiant de `USER_RARITY_OVERRIDES`,
 qui priment à leur tour sur les règles de rareté par nom.
 
