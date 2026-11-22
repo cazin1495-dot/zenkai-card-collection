@@ -62,7 +62,7 @@ export function CollectionPage() {
   const accountPlus = useZenkaiPlus();
   const localBonus = session ? accountPlus.state?.active === true : plus.data?.active === true;
   const queryClient = useQueryClient();
-  const ownedRows = localCollection ? guestOwned.data : owned.data;
+  const ownedRows = guestOwned.data;
   const [recycling, setRecycling] = useState<string | null>(null);
   const [saleCopyId, setSaleCopyId] = useState<string | null>(null);
   const [detail, setDetail] = useState<CollectionEntry | null>(null);
