@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { queryOptions } from "@tanstack/react-query";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { cardArt, cardIdentity, isTranscendanceCatalogCard, rarityRank, type Card } from "./cards";
 import { MILESTONES } from "./economy";
 import { SECRET_QUESTS, type SecretQuestState } from "./quests";
@@ -10,6 +14,7 @@ const showcaseSlot = z.string().min(1).nullable();
 const profileSchema = z
   .object({
     username: z.string().trim().min(1).max(30),
+    lockedUsername: z.object({ userId: z.string().min(1), username: z.string().trim().min(1).max(30) }).optional(),
     bio: z.string().max(160),
     avatarCardId: z.string().min(1).nullable(),
     avatarFrame: z.enum(["steel", "solar", "imperial", "rainbow"]),
@@ -87,7 +92,42 @@ export function getCustomPlayerUsername() {
   return getPlayerProfile().username;
 }
 
-export function savePlayerProfile(
+// The Lovable-generated types do not yet include this table.
+type UsernameDatabase = Omit<Database, "public"> & {
+  public: Omit<Database["public"], "Tables"> & {
+    Tables: Database["public"]["Tables"] & {
+      player_usernames: {
+        Row: { user_id: string; username: string; locked: boolean };
+        Insert: { user_id: string; username: string; locked: boolean };
+        Update: never;
+        Relationships: [];
+      };
+    };
+  };
+};
+
+const usernameClient = supabase as SupabaseClient<UsernameDatabase>;
+export const playerUsernameKey = (userId: string) => ["player-username", userId] as const;
+export const playerUsernameQuery = (userId: string) => queryOptions({
+  queryKey: playerUsernameKey(userId),
+  queryFn: async () => {
+    const { data, error } = await usernameClient.from("player_usernames").select("username").eq("user_id", userId).maybeSingle();
+    if (error) throw error;
+    return data ? z.string().trim().min(1).max(30).parse(data.username) : null;
+  },
+  staleTime: 60_000,
+  retry: false,
+});
+
+export async function claimPlayerUsername(userId: string, username: string) {
+  const { error } = await usernameClient.from("player_usernames").insert({ user_id: userId, username, locked: true });
+  if (error) {
+    if (error.code === "23505") throw new Error("Ce pseudo est déjà pris ou un pseudo est déjà attribué à ce compte.");
+    throw new Error(`Impossible de réserver le pseudo : ${error.message}`);
+  }
+}
+
+export function validatePlayerProfile(
   profile: PlayerProfile,
   allowed: {
     ownedIds: ReadonlySet<string>;
@@ -106,6 +146,14 @@ export function savePlayerProfile(
     throw new Error("Une carte de la vitrine n'est plus dans cette collection.");
   if (!allowed.frames.has(value.avatarFrame)) throw new Error("Ce cadre n'est pas débloqué.");
   if (!allowed.titles.has(value.equippedTitle)) throw new Error("Ce titre n'est pas débloqué.");
+  return value;
+}
+
+export function savePlayerProfile(
+  profile: PlayerProfile,
+  allowed: Parameters<typeof validatePlayerProfile>[1],
+) {
+  const value = validatePlayerProfile(profile, allowed);
   window.localStorage.setItem(PLAYER_PROFILE_KEY, JSON.stringify(value));
   window.dispatchEvent(new Event(PLAYER_PROFILE_UPDATED));
 }

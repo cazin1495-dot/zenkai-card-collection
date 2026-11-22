@@ -88,10 +88,12 @@ en ligne, sans le bonus de connexion. Les missions locales sont enregistrées en
 les missions serveur sont réclamées une par une et toute interruption est signalée avec
 les gains confirmés. Après une erreur réseau, vérifie les missions avant de réessayer.
 
-Le bouton Profil de l'en-tête ouvre la personnalisation locale : pseudo, bio, bannière,
-avatar, cadre, titre et huit cartes en vitrine. Les quatre premiers emplacements d'un
-profil existant sont conservés automatiquement. Le profil est partagé sur cet appareil
-et ne modifie pas le profil en ligne ni l'avatar Zenkai+. Les cartes proposées proviennent
+Le bouton Profil de l'en-tête permet de choisir une bio, une bannière, un avatar, un cadre,
+un titre et huit cartes en vitrine sur cet appareil, sans modifier l'avatar Zenkai+.
+Pour un compte connecté, le pseudo choisi est unique, définitif et partagé en ligne ;
+son verrou local est associé au compte. En mode invité, le pseudo reste local et modifiable.
+Les noms et adresses Google ne servent pas de pseudo. Les quatre premiers emplacements d'un
+profil existant sont conservés automatiquement. Les cartes proposées proviennent
 de la collection du compte connecté ou, en mode invité, de la collection locale.
 Si une carte possédée manque du catalogue chargé, elle ne peut pas être sélectionnée ;
 les choix devenus indisponibles doivent être remplacés avant l'enregistrement. Les cadres

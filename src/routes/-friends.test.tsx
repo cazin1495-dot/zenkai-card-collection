@@ -4,9 +4,10 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Router
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FriendsPage } from "./friends";
 import type { Friendship } from "@/lib/friendships";
-const mocks = vi.hoisted(() => ({ list: vi.fn(), send: vi.fn(), accept: vi.fn(), remove: vi.fn(), session: { user: { id: "alice" } } as { user: { id: string } } | null, rows: [] as Friendship[] }));
+const mocks = vi.hoisted(() => ({ list: vi.fn(), send: vi.fn(), accept: vi.fn(), remove: vi.fn(), username: vi.fn(), plus: false, session: { user: { id: "alice" } } as { user: { id: string } } | null, rows: [] as Friendship[] }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ session: mocks.session, guest: !mocks.session, ready: true }) }));
-vi.mock("@/hooks/use-zenkai-plus", () => ({ useZenkaiPlus: () => ({ state: null }) }));
+vi.mock("@/hooks/use-zenkai-plus", () => ({ useZenkaiPlus: () => ({ state: mocks.plus ? { active: true } : null }) }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.username }) }) }) } }));
 vi.mock("@/lib/queries", () => ({ cardsQuery: { queryKey: ["cards"], queryFn: async () => [] }, profileQuery: () => ({ queryKey: ["profile", "alice"], queryFn: async () => ({ username: "Alice" }) }) }));
 vi.mock("@/lib/friendships", async importOriginal => ({ ...await importOriginal<typeof import("@/lib/friendships")>(), friendshipsQuery: (id: string) => ({ queryKey: ["friendships", id], queryFn: mocks.list }), sendFriendRequest: mocks.send, acceptFriendRequest: mocks.accept, removeFriendship: mocks.remove }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -22,8 +23,15 @@ function showPage() {
   render(<QueryClientProvider client={client}><RouterProvider router={router} /></QueryClientProvider>);
   return client;
 }
-beforeEach(() => { vi.clearAllMocks(); mocks.session = { user: { id: "alice" } }; mocks.rows = [request("received", "bob", "alice"), request("sent", "alice", "carol")]; mocks.list.mockImplementation(async () => mocks.rows.map(row => ({ ...row }))); mocks.accept.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.map(row => row.id === id ? { ...row, status: "accepted" } : row); }); mocks.remove.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.filter(row => row.id !== id); }); });
+beforeEach(() => { localStorage.clear(); vi.clearAllMocks(); mocks.session = { user: { id: "alice" } }; mocks.plus = false; mocks.username.mockResolvedValue({ data: null, error: null }); mocks.rows = [request("received", "bob", "alice"), request("sent", "alice", "carol")]; mocks.list.mockImplementation(async () => mocks.rows.map(row => ({ ...row }))); mocks.accept.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.map(row => row.id === id ? { ...row, status: "accepted" } : row); }); mocks.remove.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.filter(row => row.id !== id); }); });
 describe("online friendship actions", () => {
+  it("uses the definitive username, not the old profile name", async () => {
+    mocks.plus = true;
+    mocks.username.mockResolvedValue({ data: { username: "Pseudo définitif" }, error: null });
+    showPage();
+    expect(await screen.findByText("Pseudo définitif")).toBeTruthy();
+    expect(screen.queryByText("Alice")).toBeNull();
+  });
   it("accepts as addressee and refreshes the accepted friendship in query cache", async () => {
     const client = showPage();
     fireEvent.click(await screen.findByRole("button", { name: "Accepter Bob" }));

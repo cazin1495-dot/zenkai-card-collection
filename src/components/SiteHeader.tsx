@@ -46,7 +46,7 @@ export function SiteHeader() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [guestZen, setGuestZen] = useState<number | null>(null);
   const [guestZenError, setGuestZenError] = useState(false);
-  const customUsername = usePlayerProfileUsername();
+  const usernameStatus = usePlayerProfileUsername();
   const mobileMenu = useRef<HTMLDetailsElement>(null);
   const closeMobileMenu = () => { if (mobileMenu.current) mobileMenu.current.open = false; };
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
@@ -83,15 +83,7 @@ export function SiteHeader() {
   const avatar = cards.data?.find(card => card.id === "al-246")?.image_url;
   const plusActive = plus.state?.active === true && !plus.error;
   const plusAvatar = plusAvatarImage(plus.state?.avatar, cards.data ?? []);
-  const metadataFullName = session?.user.user_metadata.full_name;
-  const metadataName = session?.user.user_metadata.name;
-  const playerName =
-    customUsername ??
-    (typeof metadataFullName === "string" && metadataFullName.trim()
-      ? metadataFullName.trim()
-      : typeof metadataName === "string" && metadataName.trim()
-        ? metadataName.trim()
-        : profile.data?.username ?? session?.user.email?.split("@")[0] ?? "Joueur");
+  const playerName = usernameStatus.username ?? (usernameStatus.isError ? "Pseudo indisponible" : "Choisir un pseudo");
   async function signInGoogle() {
     setGoogleLoading(true);
     try {

@@ -7,15 +7,19 @@ import type { Card } from "@/lib/cards";
 import { claimDailyLogin, recordQuestActivity, unlockSecret } from "@/lib/quests";
 import { toast } from "sonner";
 
+const identity = vi.hoisted(() => ({
+  session: null as { user: { id: string; user_metadata: { full_name: string; name: string }; email: string } } | null,
+  username: vi.fn(),
+}));
 vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ session: null, guest: true, leaveGuestMode: vi.fn() }),
+  useAuth: () => ({ session: identity.session, guest: !identity.session, ready: true, leaveGuestMode: vi.fn() }),
 }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...await importOriginal<typeof import("@tanstack/react-router")>(),
   useNavigate: () => vi.fn(),
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: identity.username }) }) }) } }));
 vi.mock("@/lib/queries", () => ({
   cardsQuery: { queryKey: ["cards"], queryFn: async () => [] },
   profileQuery: () => ({ queryKey: ["profile"], queryFn: async () => null }),
@@ -26,7 +30,33 @@ vi.mock("@/lib/game", () => ({
 }));
 
 describe("Zenkai+ in the header", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    identity.session = null;
+    identity.username.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("n'affiche jamais les noms Google ou le profil serveur comme pseudo", async () => {
+    identity.session = { user: { id: "alice", user_metadata: { full_name: "Nom Google", name: "Prénom Google" }, email: "gmail@example.com" } };
+    identity.username.mockResolvedValue({ data: { username: "Pseudo choisi" }, error: null });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><SiteHeader /></QueryClientProvider>);
+    const panel = screen.getByLabelText("Profil joueur");
+    expect(await within(panel).findByText("Pseudo choisi")).toBeTruthy();
+    expect(panel).not.toHaveTextContent("Nom Google");
+    expect(panel).not.toHaveTextContent("Prénom Google");
+    expect(panel).not.toHaveTextContent("gmail");
+  });
+
+  it("invite à choisir un pseudo lorsque le compte n'en a pas", async () => {
+    identity.session = { user: { id: "alice", user_metadata: { full_name: "Nom Google", name: "Prénom Google" }, email: "gmail@example.com" } };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><SiteHeader /></QueryClientProvider>);
+    const panel = screen.getByLabelText("Profil joueur");
+    expect(within(panel).getByText("Choisir un pseudo")).toBeTruthy();
+    expect(panel).not.toHaveTextContent("Nom Google");
+    expect(panel).not.toHaveTextContent("gmail");
+  });
 
   it("garde la boutique accessible dans la navigation avec le badge Bientôt", () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

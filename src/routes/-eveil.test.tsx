@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
+  username: vi.fn(),
   session: { user: { id: "alice" } } as { user: { id: string } } | null,
 }));
 
@@ -17,7 +18,7 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ session: mocks.session }) }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.username }) }) }) } }));
 vi.mock("@/components/MissionsPanel", () => ({ MissionsPanel: () => <div>Missions locales</div> }));
 vi.mock("@/components/LocalLevel", () => ({ LocalLevel: () => null }));
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }));
@@ -56,6 +57,15 @@ describe("réclamation groupée des missions", () => {
     mocks.success.mockReset();
     mocks.error.mockReset();
     mocks.session = { user: { id: "alice" } };
+    mocks.username.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("affiche le pseudo définitif plutôt que l'ancien nom du profil", async () => {
+    mocks.username.mockResolvedValue({ data: { username: "Pseudo choisi" }, error: null });
+    mocks.rpc.mockResolvedValue({ data: serverState(), error: null });
+    mount();
+    expect(await screen.findByText("Pseudo choisi")).toBeTruthy();
+    expect(screen.queryByText("Alice")).toBeNull();
   });
 
   it("réclame les deux progressions locales et les missions en ligne en un clic", async () => {

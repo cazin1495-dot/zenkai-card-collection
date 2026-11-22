@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLevel } from "@/hooks/use-level";
 import { useQuests } from "@/hooks/use-quests";
 import { useSecretQuests } from "@/hooks/use-secret-quests";
+import { usePlayerProfileUsername } from "@/hooks/use-player-profile-username";
 import { supabase } from "@/integrations/supabase/client";
 import { getGuestCollection } from "@/lib/guest-collection";
 import { betaEnded, hasBetaWelcome, resetGuestBetaProgress } from "@/lib/beta";
@@ -25,8 +26,10 @@ import { cardsQuery } from "@/lib/queries";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
   completedAlbumCount,
+  claimPlayerUsername,
   getPlayerProfile,
   PLAYER_PROFILE_UPDATED,
+  playerUsernameKey,
   PROFILE_FRAMES,
   profileCards,
   profilePortrait,
@@ -34,6 +37,7 @@ import {
   profileTitles,
   savePlayerProfile,
   unlockedProfileFrames,
+  validatePlayerProfile,
   type PlayerProfile,
   type ProfileCopy,
 } from "@/lib/player-profile";
@@ -65,7 +69,7 @@ export function PlayerProfileDialog({ trigger }: { trigger?: ReactElement } = {}
         <DialogHeader>
           <DialogTitle>Profil du joueur</DialogTitle>
           <DialogDescription>
-            Personnalisation locale sur cet appareil, distincte du profil en ligne.
+            Personnalisation locale sur cet appareil ; le pseudo définitif est partagé en ligne.
           </DialogDescription>
         </DialogHeader>
         {open && <PlayerProfileContent onSaved={() => setOpen(false)} />}
@@ -77,6 +81,7 @@ export function PlayerProfileDialog({ trigger }: { trigger?: ReactElement } = {}
 function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   const { session, ready } = useAuth();
   const userId = session?.user.id ?? null;
+  const usernameStatus = usePlayerProfileUsername();
   const client = useQueryClient();
   const catalog = useQuery(cardsQuery);
   const local = useQuery({
@@ -94,6 +99,9 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   const [search, setSearch] = useState("");
   const [betaWelcome, setBetaWelcome] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+
+  useEffect(() => { setNewUsername(""); }, [userId]);
 
   useEffect(() => {
     const refresh = () => {
@@ -198,25 +206,48 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   }
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (!draft || loading || dataError || saving) return;
+    if (!draft || loading || dataError || saving || (userId && (usernameStatus.isLoading || usernameStatus.isError))) return;
     setSaving(true);
+    let claimed = false;
     try {
-      savePlayerProfile(draft, { ownedIds, avatarIds, frames: frameOptions, titles: allowedTitles });
-      if (session) {
-        const { error } = await supabase.auth.updateUser({
-          data: { username: draft.username.trim() },
-        });
-        if (error) {
-          toast.error(`Profil local enregistré, mais synchronisation du pseudo impossible : ${error.message}`);
-          onSaved();
-          return;
+      const username = userId ? usernameStatus.username ?? newUsername.trim() : draft.username;
+      const next = userId
+        ? { ...draft, username, lockedUsername: { userId, username } }
+        : draft;
+      const allowed = { ownedIds, avatarIds, frames: frameOptions, titles: allowedTitles };
+      validatePlayerProfile(next, allowed);
+      if (userId && !usernameStatus.serverUsername) {
+        try {
+          await claimPlayerUsername(userId, username);
+        } catch (error) {
+          await usernameStatus.refetch();
+          throw error;
         }
+        claimed = true;
+        client.setQueryData(playerUsernameKey(userId), username);
+      }
+      let authError: string | null = null;
+      if (session && claimed) {
+        try {
+          const { error } = await supabase.auth.updateUser({ data: { username } });
+          if (error) authError = error.message;
+        } catch (reason) {
+          authError = reason instanceof Error ? reason.message : "Erreur de connexion.";
+        }
+      }
+      savePlayerProfile(next, allowed);
+      if (authError) {
+        toast.error(`Pseudo définitif enregistré, mais synchronisation du compte impossible : ${authError}`);
+        onSaved();
+        return;
       }
       toast.success("Profil local enregistré.");
       onSaved();
     } catch (reason) {
       toast.error(
-        reason instanceof Error ? reason.message : "Enregistrement du profil impossible.",
+        claimed
+          ? `Pseudo définitif réservé, mais profil local non enregistré : ${reason instanceof Error ? reason.message : "Erreur de stockage."}`
+          : reason instanceof Error ? reason.message : "Enregistrement du profil impossible.",
       );
     } finally {
       setSaving(false);
@@ -278,6 +309,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
       .toLocaleLowerCase("fr")
       .includes(search.trim().toLocaleLowerCase("fr")),
   );
+  const displayUsername = userId ? usernameStatus.username ?? "Choisir un pseudo" : draft.username;
 
   return (
     <form onSubmit={save} className="space-y-6">
@@ -293,7 +325,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
               <AvatarPortrait
                 key={portrait?.src ?? "initial"}
                 portrait={portrait}
-                username={draft.username}
+                username={displayUsername}
               />
             </div>
             {frame === "rainbow" && (
@@ -302,7 +334,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-display text-xl font-black text-amber-200">
-              {draft.username || "Joueur"}
+              {displayUsername || "Joueur"}
             </p>
             <p className="mt-1 text-sm font-bold text-violet-200">
               {allowedTitles.has(draft.equippedTitle) ? draft.equippedTitle : "Titre indisponible"}
@@ -356,10 +388,17 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
             aria-label="Pseudo"
             maxLength={30}
             required
-            value={draft.username}
-            onChange={(event) => setDraft({ ...draft, username: event.target.value })}
+            disabled={!!userId && (!!usernameStatus.username || usernameStatus.isLoading || usernameStatus.isError || saving)}
+            value={userId ? usernameStatus.username ?? newUsername : draft.username}
+            onChange={(event) => userId ? setNewUsername(event.target.value) : setDraft({ ...draft, username: event.target.value })}
           />
+          {userId && (usernameStatus.username ? (
+            <span className="block text-xs text-amber-300">🔒 Pseudo définitif</span>
+          ) : !usernameStatus.isLoading && !usernameStatus.isError ? (
+            <span className="block text-xs text-amber-300">Attention : ton pseudo est définitif et ne pourra plus être modifié après validation</span>
+          ) : null)}
         </label>
+        {userId && usernameStatus.isError && <p role="alert" className="text-sm text-destructive">Impossible de vérifier ton pseudo définitif. <button type="button" className="underline" onClick={() => { void usernameStatus.refetch(); }}>Réessayer</button></p>}
         <label className="space-y-2 text-sm font-semibold">
           Bio
           <Input
@@ -522,7 +561,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
         </div>
       </section>
       <div className="flex justify-end">
-        <Button type="submit" variant="hero" disabled={saving}>
+        <Button type="submit" variant="hero" disabled={saving || (!!userId && (usernameStatus.isLoading || usernameStatus.isError))}>
           {saving ? "Enregistrement…" : "Enregistrer le profil"}
         </Button>
       </div>
