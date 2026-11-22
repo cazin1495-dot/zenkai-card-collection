@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { AnimeCard, TranscendFrame, TranscendanceSparklesOverlay } from "@/components/AnimeCard";
+import { AnimeCard, TranscendFrame } from "@/components/AnimeCard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -158,16 +158,16 @@ export function BoosterPreviewDialog({
         {visibleEntries.length === 0 && !showMystery ? (
           <p className="py-10 text-center text-sm text-muted-foreground">{favoritesOnly ? "Aucune carte favorite ne correspond à ces filtres dans ce pack." : "Aucune carte de cette rareté dans ce pack."}</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          <div className="booster-preview-cards grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {showMystery && <MysteryCard pack={pack} />}
-            {visibleEntries.slice(0, visibleCount).map((entry) => {
+            {visibleEntries.slice(0, visibleCount - Number(showMystery)).map((entry) => {
               const rarity = entry.customTranscendance ? "transcendance" : entry.card.rarity;
               const concealed = rarity === "transcendance" && !ownedCardIds?.has(entry.card.id);
               const favoriteName = concealed ? "une carte Transcendance mystère" : entry.card.name;
               return (
                 <article key={entry.id} className="mx-auto flex w-full max-w-44 flex-col items-center gap-2">
                   <div className="relative w-full">
-                    {concealed ? <MysteryTranscendanceCard /> : <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact />}
+                    {concealed ? <MysteryTranscendanceCard /> : <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact staticEffects />}
                     <button
                       type="button"
                       aria-label={`${favoriteIds.has(entry.card.id) ? "Retirer" : "Ajouter"} ${favoriteName} ${favoriteIds.has(entry.card.id) ? "des" : "aux"} favoris`}
@@ -217,11 +217,11 @@ export function BoosterPreviewDialog({
             })}
           </div>
         )}
-        {visibleEntries.length > visibleCount && (
+        {visibleEntries.length + Number(showMystery) > visibleCount && (
           <Button type="button" variant="glass" onClick={() => setPagination({
             pack, filter, favoritesOnly, open, count: visibleCount + PREVIEW_PAGE_SIZE,
           })}>
-            Voir plus de cartes (+24)
+            Afficher plus (+24)
           </Button>
         )}
       </DialogContent>
@@ -235,7 +235,6 @@ function MysteryTranscendanceCard() {
       <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,#251339_0%,#080611_48%,#000_100%)]">
         <span aria-hidden className="font-display text-7xl font-black text-amber-300 drop-shadow-[0_0_18px_rgba(251,191,36,0.9)]">?</span>
       </div>
-      <TranscendanceSparklesOverlay />
       <TranscendFrame />
       <div className="premium-glass-label absolute inset-x-0 bottom-0 z-30 p-1">
         <p className="tcg-nameplate text-center font-display text-[9px] font-bold leading-tight">??? · Carte Transcendance</p>

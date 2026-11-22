@@ -1239,6 +1239,12 @@ body:has(.transcendence-slam-overlay) > header {
 }
 /* Full-art finish: the frame stays on the edge. */
 .reverse-card { background: var(--surface); box-shadow: var(--shadow-reverse-card); }
+.booster-preview-cards *,
+.booster-preview-cards *::before,
+.booster-preview-cards *::after {
+  animation: none !important;
+  transition: none !important;
+}
 .flip-front.reverse-card { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.45); }
 .flip-front.zenkai-transcendance-card {
   border-radius: 14px;

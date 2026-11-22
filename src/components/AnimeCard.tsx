@@ -15,6 +15,7 @@ type Props = {
   /** This is a dedicated custom card, not an evolved copy. */
   customTranscendance?: boolean | undefined;
   compact?: boolean | undefined;
+  staticEffects?: boolean | undefined;
   comparisonForm?: "base" | "awakened" | undefined;
   transformationKey?: number | undefined;
 };
@@ -147,13 +148,13 @@ export function TranscendFrame() {
 }
 
 /** Trading card with a flip animation and a rarity-coloured frame. */
-export function AnimeCard({ card, backTheme, flipped = true, className, count, locked, transcended, customTranscendance, compact, comparisonForm, transformationKey = 0 }: Props) {
+export function AnimeCard({ card, backTheme, flipped = true, className, count, locked, transcended, customTranscendance, compact, staticEffects, comparisonForm, transformationKey = 0 }: Props) {
   const rarity = displayRarity(card, transcended, customTranscendance);
   const r = RARITY[rarity];
   const art = cardArt(card, transcended);
   const identity = cardIdentity(card, transcended);
   const tiltRef = useRef<HTMLDivElement | null>(null);
-  const interactive = rarity === "transcendance" && flipped && !locked;
+  const interactive = rarity === "transcendance" && flipped && !locked && !staticEffects;
   function tilt(event: PointerEvent<HTMLDivElement>) {
     if (!interactive || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -182,8 +183,8 @@ export function AnimeCard({ card, backTheme, flipped = true, className, count, l
         data-transcendence-id={rarity === "transcendance" ? card.id : undefined}
         className={cn("relative size-full bg-transparent", interactive && "holo-tilt")}
       >
-      {!locked && flipped && rarity === "mythique" && <div aria-hidden className="flame-aura" />}
-      {!locked && flipped && rarity === "transcendance" && <div aria-hidden className="premium-awakened-aura pointer-events-none absolute inset-0 z-0 rounded-2xl" />}
+      {!staticEffects && !locked && flipped && rarity === "mythique" && <div aria-hidden className="flame-aura" />}
+      {!staticEffects && !locked && flipped && rarity === "transcendance" && <div aria-hidden className="premium-awakened-aura pointer-events-none absolute inset-0 z-0 rounded-2xl" />}
       <div className={cn("flip-inner size-full bg-transparent", flipped && "flipped")}>
         <div
           className={cn(
@@ -255,8 +256,8 @@ export function AnimeCard({ card, backTheme, flipped = true, className, count, l
               )}
             />
           ) : null}
-          {rarity === "transcendance" && !locked && <TranscendanceSparklesOverlay />}
-          {(rarity === "legendaire" || rarity === "mythique") && !locked && (
+          {!staticEffects && rarity === "transcendance" && !locked && <TranscendanceSparklesOverlay />}
+          {!staticEffects && (rarity === "legendaire" || rarity === "mythique") && !locked && (
             <div className="holo-sheen pointer-events-none absolute inset-0 animate-sheen" />
           )}
           {rarity === "transcendance" && !locked && <TranscendFrame />}

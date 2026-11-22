@@ -44,7 +44,7 @@ describe("booster content preview", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders catalogue cards in batches of 24 with lazy, asynchronous images", () => {
+  it("renders at most 24 cards per batch, including the mystery card, with lazy, asynchronous images", () => {
     const catalog: Card[] = Array.from({ length: 55 }, (_, index) => ({
       id: `page-${index}`,
       name: `Carte ${index}`,
@@ -59,16 +59,20 @@ describe("booster content preview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
 
     const images = () => screen.getByRole("dialog").querySelectorAll("article img");
-    expect(images()).toHaveLength(24);
+    const articles = () => screen.getByRole("dialog").querySelectorAll("article");
+    expect(articles()).toHaveLength(24);
+    expect(images()).toHaveLength(23);
     for (const image of images()) {
       expect(image).toHaveAttribute("loading", "lazy");
       expect(image).toHaveAttribute("decoding", "async");
     }
-    fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
-    expect(images()).toHaveLength(48);
-    fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Afficher plus (+24)" }));
+    expect(articles()).toHaveLength(48);
+    expect(images()).toHaveLength(47);
+    fireEvent.click(screen.getByRole("button", { name: "Afficher plus (+24)" }));
     expect(images()).toHaveLength(55);
-    expect(screen.queryByRole("button", { name: "Voir plus de cartes (+24)" })).toBeNull();
+    expect(articles()).toHaveLength(56);
+    expect(screen.queryByRole("button", { name: "Afficher plus (+24)" })).toBeNull();
   });
 
   it("resets the batch when the rarity, favorites, pack or dialog changes", () => {
@@ -85,10 +89,10 @@ describe("booster content preview", () => {
     localStorage.setItem("zenkai:favorite-cards", JSON.stringify(catalog.map((card) => card.id)));
     const { rerender } = render(<PreviewHarness catalog={catalog} customCards={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    const showMore = () => fireEvent.click(screen.getByRole("button", { name: "Voir plus de cartes (+24)" }));
+    const showMore = () => fireEvent.click(screen.getByRole("button", { name: "Afficher plus (+24)" }));
     const images = () => screen.getByRole("dialog").querySelectorAll("article img");
     showMore();
-    expect(images()).toHaveLength(48);
+    expect(images()).toHaveLength(47);
     fireEvent.click(screen.getByRole("button", { name: /^Rare/ }));
     expect(images()).toHaveLength(24);
     showMore();
@@ -103,6 +107,33 @@ describe("booster content preview", () => {
     expect(images()).toHaveLength(24);
   });
 
+  it("counts the mystery card towards the limit and offers the remaining card", () => {
+    const catalog: Card[] = Array.from({ length: 24 }, (_, index) => ({
+      id: `page-${index}`,
+      name: `Carte ${index}`,
+      title: "",
+      rarity: "rare",
+      description: "",
+      sort_order: index,
+      category: "shonen",
+    }));
+    render(<PreviewHarness catalog={catalog} customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    expect(screen.getByRole("dialog").querySelectorAll("article")).toHaveLength(24);
+    fireEvent.click(screen.getByRole("button", { name: "Afficher plus (+24)" }));
+    expect(screen.getByRole("dialog").querySelectorAll("article")).toHaveLength(25);
+    expect(screen.queryByRole("button", { name: "Afficher plus (+24)" })).toBeNull();
+  });
+
+  it("omits mythic and legendary animated effects in the preview", () => {
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    const dialog = screen.getByRole("dialog");
+    expect(screen.getByText("Rival")).toBeTruthy();
+    expect(screen.getByText("Autre")).toBeTruthy();
+    expect(dialog.querySelector(".flame-aura, .holo-sheen")).toBeNull();
+  });
+
   it("conceals unowned Transcendances without leaking their identity or art, including in favorites", () => {
     const hidden: CustomTranscendanceCard = {
       id: "secret-exclusive", name: "Personnage secret", anime: "Série secrète",
@@ -113,7 +144,7 @@ describe("booster content preview", () => {
     const dialog = screen.getByRole("dialog");
     const article = screen.getByText("??? · Carte Transcendance").closest("article")!;
     expect(article.querySelector(".premium-energy-frame")).toBeTruthy();
-    expect(article.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(article.querySelector(".transcendance-sparkles-overlay")).toBeNull();
     expect(article.querySelector("img")).toBeNull();
     expect(dialog.innerHTML).not.toContain("Personnage secret");
     expect(dialog.innerHTML).not.toContain("Série secrète");
@@ -203,7 +234,7 @@ describe("booster content preview", () => {
     expect(screen.getByText(/règle universelle doit encore être activée/)).toBeTruthy();
   });
 
-  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows Gon Transcendance with its sparkles in %s", (pack) => {
+  it.each(["shonen", "protagoniste", "zenkai"] as const)("shows Gon Transcendance without animated effects in %s", (pack) => {
     render(<PreviewHarness pack={pack} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
     const name = "Gon Freecss · Serment Absolu";
@@ -211,7 +242,9 @@ describe("booster content preview", () => {
     expect(article).toHaveTextContent("Transcendance");
     expect(article?.querySelector(".zenkai-transcendance-card")).toBeTruthy();
     expect(article?.querySelector(".zenkai-transcendance-holo")).toBeNull();
-    expect(article?.querySelectorAll(".transcendance-sparkles-overlay")).toHaveLength(1);
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeNull();
+    expect(article?.querySelector(".premium-awakened-aura, .holo-interactive")).toBeNull();
+    expect(article?.closest(".booster-preview-cards")).toBeTruthy();
     expect(article?.querySelector(".tcg-inner-frame")).toBeTruthy();
     expect(article?.querySelector(".relic-seal")).toBeTruthy();
     expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
@@ -226,7 +259,7 @@ describe("booster content preview", () => {
     const article = screen.getByText(name).closest("article");
     expect(article).toHaveTextContent("Transcendance");
     expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
-    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeNull();
     expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/deku%20vigilante.jpg");
   });
 
@@ -237,7 +270,7 @@ describe("booster content preview", () => {
     const article = screen.getByText(name).closest("article");
     expect(article).toHaveTextContent("Transcendance");
     expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
-    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeNull();
     expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/katchan.jpg");
     expect(screen.getByRole("img", { name })).toHaveClass("object-cover");
     expect(screen.getByRole("img", { name })).toHaveStyle({ objectPosition: "center", transform: "scale(0.92)" });
@@ -250,7 +283,7 @@ describe("booster content preview", () => {
     const article = screen.getByText(name).closest("article");
     expect(article).toHaveTextContent("Transcendance");
     expect(article?.querySelector(".premium-energy-frame")).toBeTruthy();
-    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeTruthy();
+    expect(article?.querySelector(".transcendance-sparkles-overlay")).toBeNull();
     expect(screen.getByRole("img", { name })).toHaveAttribute("src", "/shigaraki.jpg");
   });
 
