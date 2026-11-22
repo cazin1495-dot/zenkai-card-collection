@@ -1,5 +1,7 @@
 # Zenkai — roadmap
 
+- [ ] Amis : demandes en ligne uniques dans les deux sens, droits par participant, acceptation/refus destinataire, listes reçues/envoyées/acceptées et tests.
+
 - [ ] Nouvelles règles : sept raretés packables, retrait du mode test et de la fusion, Pity Mythique conservée.
 - [ ] Cinéma local sur tirage/inspection Transcendance et ouverture faisceau/éclats triangulaires.
 - [ ] Coins, achats à 100, XP, missions 24h et niveaux 150 avec récompenses sécurisées.

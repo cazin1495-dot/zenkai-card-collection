@@ -78,6 +78,13 @@
       "when": 1795178575802,
       "tag": "0010_secure_duplicate_recycling",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795367999401,
+      "tag": "0011_friendship_requests",
+      "breakpoints": true
     }
   ]
 }

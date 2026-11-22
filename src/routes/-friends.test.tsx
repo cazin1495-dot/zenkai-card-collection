@@ -3,142 +3,50 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FriendsPage } from "./friends";
-import { setPlus } from "@/lib/subscription";
-
-const mocks = vi.hoisted(() => ({
-  ilike: vi.fn(),
-  neq: vi.fn(),
-  limit: vi.fn(),
-  success: vi.fn(),
-  error: vi.fn(),
-  session: { user: { id: "alice" } } as { user: { id: string } } | null,
-}));
-vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ session: mocks.session, guest: !mocks.session, ready: true }),
-}));
-vi.mock("@/lib/queries", () => ({
-  cardsQuery: { queryKey: ["cards"], queryFn: async () => [] },
-  profileQuery: () => ({
-    queryKey: ["profile", "alice"],
-    queryFn: async () => ({ username: "Alice" }),
-  }),
-}));
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: () => ({ select: () => ({ ilike: mocks.ilike }) }) },
-}));
-vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }));
-
-describe("friends page", () => {
-  beforeEach(() => {
-    localStorage.clear();
-    vi.clearAllMocks();
-    mocks.session = { user: { id: "alice" } };
-    mocks.ilike.mockReturnValue({ neq: mocks.neq });
-    mocks.neq.mockReturnValue({ limit: mocks.limit });
+import type { Friendship } from "@/lib/friendships";
+const mocks = vi.hoisted(() => ({ list: vi.fn(), send: vi.fn(), accept: vi.fn(), remove: vi.fn(), session: { user: { id: "alice" } } as { user: { id: string } } | null, rows: [] as Friendship[] }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ session: mocks.session, guest: !mocks.session, ready: true }) }));
+vi.mock("@/hooks/use-zenkai-plus", () => ({ useZenkaiPlus: () => ({ state: null }) }));
+vi.mock("@/lib/queries", () => ({ cardsQuery: { queryKey: ["cards"], queryFn: async () => [] }, profileQuery: () => ({ queryKey: ["profile", "alice"], queryFn: async () => ({ username: "Alice" }) }) }));
+vi.mock("@/lib/friendships", async importOriginal => ({ ...await importOriginal<typeof import("@/lib/friendships")>(), friendshipsQuery: (id: string) => ({ queryKey: ["friendships", id], queryFn: mocks.list }), sendFriendRequest: mocks.send, acceptFriendRequest: mocks.accept, removeFriendship: mocks.remove }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+const request = (id: string, requester: string, addressee: string): Friendship => ({ id, requester_id: requester, addressee_id: addressee, status: "pending", created_at: "2026-11-22T00:00:00Z", requester_username: requester === "bob" ? "Bob" : "Alice", addressee_username: addressee === "carol" ? "Carol" : "Alice" });
+function showPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const root = createRootRoute();
+  const router = createRouter({ routeTree: root.addChildren([
+    createRoute({ getParentRoute: () => root, path: "/friends", component: FriendsPage }),
+    createRoute({ getParentRoute: () => root, path: "/echanges", validateSearch: (s: Record<string, unknown>) => ({ pseudo: typeof s["pseudo"] === "string" ? s["pseudo"] : "" }), component: () => null }),
+    createRoute({ getParentRoute: () => root, path: "/auth", component: () => null }),
+  ]), history: createMemoryHistory({ initialEntries: ["/friends"] }) });
+  render(<QueryClientProvider client={client}><RouterProvider router={router} /></QueryClientProvider>);
+  return client;
+}
+beforeEach(() => { vi.clearAllMocks(); mocks.session = { user: { id: "alice" } }; mocks.rows = [request("received", "bob", "alice"), request("sent", "alice", "carol")]; mocks.list.mockImplementation(async () => mocks.rows.map(row => ({ ...row }))); mocks.accept.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.map(row => row.id === id ? { ...row, status: "accepted" } : row); }); mocks.remove.mockImplementation(async (id: string) => { mocks.rows = mocks.rows.filter(row => row.id !== id); }); });
+describe("online friendship actions", () => {
+  it("accepts as addressee and refreshes the accepted friendship in query cache", async () => {
+    const client = showPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Accepter Bob" }));
+    await waitFor(() => expect(mocks.accept).toHaveBeenCalledWith("received", "alice"));
+    await waitFor(() => expect(client.getQueryData<Friendship[]>(["friendships", "alice"])?.find(row => row.id === "received")?.status).toBe("accepted"));
+    expect(mocks.list.mock.calls.length).toBeGreaterThan(1);
+    expect(await screen.findByRole("button", { name: "Retirer Bob" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Accepter Bob" })).toBeNull();
   });
-
-  function showPage() {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const root = createRootRoute();
-    const friendsRoute = createRoute({ getParentRoute: () => root, path: "/friends", component: FriendsPage });
-    const tradesRoute = createRoute({
-      getParentRoute: () => root,
-      path: "/echanges",
-      validateSearch: (search: Record<string, unknown>) => ({
-        pseudo: typeof search["pseudo"] === "string" ? search["pseudo"] : "",
-      }),
-      component: () => <div>Pseudo sélectionné : {tradesRoute.useSearch().pseudo}</div>,
-    });
-    const router = createRouter({
-      routeTree: root.addChildren([friendsRoute, tradesRoute]),
-      history: createMemoryHistory({ initialEntries: ["/friends"] }),
-    });
-    render(
-      <QueryClientProvider client={client}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>,
-    );
-  }
-
-  it("shows the player's local Zenkai+ avatar and badge", async () => {
-    setPlus("alice", false, { active: true });
-    setPlus("alice", false, { avatar: "goku" });
-    showPage();
-    expect(await screen.findByText("ZENKAI+")).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Ton avatar" })).toHaveAttribute("src", "/goku%20ui.png");
+  it("refuses an incoming request without keeping it as an accepted friend", async () => {
+    const client = showPage(); fireEvent.click(await screen.findByRole("button", { name: "Refuser Bob" }));
+    await waitFor(() => expect(mocks.remove).toHaveBeenCalledWith("received"));
+    await waitFor(() => expect(client.getQueryData<Friendship[]>(["friendships", "alice"])?.map(row => row.id)).toEqual(["sent"]));
   });
-
-  it("adds a verified player locally, escapes wildcard searches, and removes them", async () => {
-    mocks.limit.mockResolvedValue({ data: [{ id: "bob", username: "Bob_1" }], error: null });
-    showPage();
-    fireEvent.change(await screen.findByLabelText("Rechercher un joueur par pseudo"), {
-      target: { value: " Bob_1 " },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Rechercher et ajouter un profil vérifié" }));
-    await screen.findByText("Bob_1");
-    expect(mocks.ilike).toHaveBeenCalledWith("username", "Bob\\_1");
-    expect(mocks.neq).toHaveBeenCalledWith("id", "alice");
-    expect(screen.getByText("Mes amis (1)")).toBeTruthy();
-    expect(mocks.success).toHaveBeenCalledWith("Bob_1 ajouté à ta liste locale");
-    fireEvent.click(screen.getByRole("button", { name: "Retirer Bob_1" }));
-    await waitFor(() => expect(screen.queryByText("Bob_1")).toBeNull());
+  it("sends a real request instead of a local contact", async () => {
+    mocks.send.mockResolvedValue({ id: "dave", username: "Dave" }); showPage();
+    fireEvent.change(await screen.findByLabelText("Rechercher un joueur par pseudo"), { target: { value: "Dave" } });
+    fireEvent.click(screen.getByRole("button", { name: "Envoyer une demande" }));
+    await waitFor(() => expect(mocks.send).toHaveBeenCalledWith("alice", "Dave"));
   });
-
-  it("does not invent a contact when the lookup fails or is ambiguous", async () => {
-    mocks.limit.mockResolvedValue({ data: [], error: { message: "Accès refusé" } });
-    showPage();
-    fireEvent.change(await screen.findByLabelText("Rechercher un joueur par pseudo"), {
-      target: { value: "Bob" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Rechercher et ajouter un profil vérifié" }));
-    await waitFor(() =>
-      expect(mocks.error).toHaveBeenCalledWith("Ajout impossible : Accès refusé"),
-    );
-    expect(screen.getByText("Mes amis (0)")).toBeTruthy();
-    mocks.limit.mockResolvedValue({
-      data: [
-        { id: "1", username: "Bob" },
-        { id: "2", username: "bob" },
-      ],
-      error: null,
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Rechercher et ajouter un profil vérifié" }));
-    await waitFor(() =>
-      expect(mocks.error).toHaveBeenCalledWith(
-        "Plusieurs joueurs portent ce pseudo. Impossible de les distinguer.",
-      ),
-    );
-    expect(screen.getByText("Mes amis (0)")).toBeTruthy();
-  });
-
-  it("can explicitly save an unverified local nickname but not the player's own", async () => {
-    showPage();
-    const input = await screen.findByLabelText("Rechercher un joueur par pseudo");
-    fireEvent.change(input, { target: { value: "ALICE" } });
-    const button = screen.getByRole("button", { name: "Ajouter" });
-    await waitFor(() => expect(button).toBeEnabled());
-    fireEvent.click(button);
-    expect(mocks.error).toHaveBeenCalledWith("Tu ne peux pas t'ajouter toi-même.");
-    fireEvent.change(input, { target: { value: "Bob" } });
-    fireEvent.click(button);
-    expect(await screen.findByText("Bob")).toBeTruthy();
-    expect(
-      screen.getByText("Contact local · pseudo non vérifié · statut indisponible"),
-    ).toBeTruthy();
-    expect(mocks.success).toHaveBeenCalledWith("Bob ajouté à ta liste locale (pseudo non vérifié)");
-  });
-
-  it("adds a guest contact without a server lookup and carries its nickname to trades", async () => {
-    mocks.session = null;
-    showPage();
-    fireEvent.change(await screen.findByLabelText("Rechercher un joueur par pseudo"), {
-      target: { value: "  Yuki & Co  " },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
-    expect(await screen.findByText("Yuki & Co")).toBeTruthy();
-    expect(mocks.ilike).not.toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem("zenkai:friends:local-guest") ?? "[]")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("link", { name: "Échanger" }));
-    expect(await screen.findByText("Pseudo sélectionné : Yuki & Co")).toBeTruthy();
+  it("does not load private requests or allow guest additions", async () => {
+    mocks.session = null; showPage(); await screen.findByRole("link", { name: "Connexion" });
+    expect(mocks.list).not.toHaveBeenCalled(); expect(mocks.send).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Envoyer une demande" })).toBeNull();
   });
 });

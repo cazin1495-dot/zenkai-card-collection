@@ -94,6 +94,45 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           bonus_boosters: number
@@ -206,7 +245,26 @@ export type Database = {
       }
       buy_boosters: { Args: { _count: number }; Returns: Json }
       claim_mission: { Args: { _mission: string }; Returns: Json }
+      find_friend_player: {
+        Args: { _username: string }
+        Returns: {
+          id: string
+          username: string
+        }[]
+      }
       game_state: { Args: never; Returns: Json }
+      list_friendships: {
+        Args: never
+        Returns: {
+          addressee_id: string
+          addressee_username: string
+          created_at: string
+          id: string
+          requester_id: string
+          requester_username: string
+          status: string
+        }[]
+      }
       open_booster: {
         Args: never
         Returns: {

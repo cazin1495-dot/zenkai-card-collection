@@ -31,6 +31,8 @@ use the editor.
 
 ## Project rules
 
+- Persist friendships in the owner-scoped database, never local storage; immutable participants and pending-only inserts prevent forged acceptances, while narrow authenticated name lookup/list RPCs avoid exposing private profiles.
+
 - Booster opening runs only through the `public.open_boosters(category, count)` security-definer DB function (stock regen, randomness, inserts); Transcendance attempts only through `public.attempt_transcendance(user_card_id)`. Clients have no insert/update rights on `user_cards`, so rules can't be bypassed.
 - Keep pity in a read-only owner-scoped table, locked and advanced per booster inside open_boosters; keep rarity-roll logic in its immutable SQL helper so batch draws, concurrency and tests share the same authoritative rules.
 - Card metadata (incl. AniList portrait URL, genre, saga, role, quote) lives in `public.cards`; it was imported once from the AniList GraphQL API. Legacy fictional cards are kept with `active=false`. Transcendance is a per-copy state on `user_cards`, not a card rarity. Client rule constants in `src/lib/cards.ts` mirror the SQL and are covered by tests.
