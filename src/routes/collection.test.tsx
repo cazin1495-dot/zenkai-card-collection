@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { normalizeCatalogCard, type Card } from "@/lib/cards";
 import { CollectionPage } from "./collection";
 
+const fixtures = vi.hoisted(() => ({ localOwned: false }));
+
 const cards: Card[] = [
   {
     id: "common",
@@ -67,7 +69,7 @@ vi.mock("@/lib/queries", () => ({
 vi.mock("@/lib/game", () => ({ gameQuery: () => ({ queryKey: ["game"] }) }));
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => ({
-    data: queryKey[0] === "cards" ? cards : queryKey[0] === "collection" ? copies : undefined,
+    data: queryKey[0] === "cards" ? cards : queryKey[0] === "collection" || (queryKey[0] === "guest-collection" && fixtures.localOwned) ? copies : undefined,
   }),
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
@@ -82,6 +84,18 @@ vi.mock("@/components/Transcendance", () => ({
 
 describe("collection filters and sorting", () => {
   afterEach(() => localStorage.removeItem("zenkai:favorite-cards"));
+
+  it("affiche par défaut les cartes de la plus rare à la moins rare", () => {
+    fixtures.localOwned = true;
+    try {
+      render(<CollectionPage />);
+      const names = () => screen.getAllByTestId("collection-card").map((element) => element.textContent);
+      expect(screen.getByLabelText("Trier la collection")).toHaveValue("rarest");
+      expect(names()).toEqual(["Mythic awakened", "Rare card", "Common"]);
+      fireEvent.change(screen.getByLabelText("Trier la collection"), { target: { value: "recent" } });
+      expect(names()).toEqual(["Common", "Mythic awakened", "Rare card"]);
+    } finally { fixtures.localOwned = false; }
+  });
 
   it("shows favorites and combines the favorites filter with pack and rarity", () => {
     localStorage.setItem("zenkai:favorite-cards", JSON.stringify(["common", "mythic"]));

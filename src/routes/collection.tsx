@@ -124,7 +124,7 @@ export function CollectionPage() {
   }
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
-  const [sort, setSort] = useState<CollectionSort>("recent");
+  const [sort, setSort] = useState<CollectionSort>("rarest");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const { favoriteCardIds } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
