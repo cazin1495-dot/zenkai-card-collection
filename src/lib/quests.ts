@@ -275,8 +275,40 @@ export function questProgress(state: QuestState, id: QuestId) {
 }
 
 export function availableQuestCount(state: QuestState) {
+  return availableQuests(state).length;
+}
+
+function availableQuests(state: QuestState) {
   return QUESTS.filter((quest) => questProgress(state, quest.id) >= quest.target &&
-    !(quest.daily ? state.dailyClaimed : state.achievementClaimed).includes(quest.id)).length;
+    !(quest.daily ? state.dailyClaimed : state.achievementClaimed).includes(quest.id));
+}
+
+export function claimAllQuests(userIds: readonly (string | null)[]) {
+  return updateGuestState((guest) => {
+    let updated = guest;
+    let count = 0;
+    let xp = 0;
+    for (const userId of new Set(userIds)) {
+      const state = read(updated.quests, userId);
+      const quests = availableQuests(state);
+      if (!quests.length) continue;
+      const questXp = quests.reduce((sum, quest) => sum + quest.xp, 0);
+      const questZen = quests.reduce((sum, quest) => sum + quest.reward, 0);
+      const withXp = addXp(updated, questXp);
+      updated = {
+        ...withXp,
+        zen: withXp.zen + questZen,
+        quests: { ...(updated.quests as Record<string, unknown> | undefined), [key(userId)]: {
+          ...state,
+          dailyClaimed: [...state.dailyClaimed, ...quests.filter((quest) => quest.daily).map((quest) => quest.id)],
+          achievementClaimed: [...state.achievementClaimed, ...quests.filter((quest) => !quest.daily).map((quest) => quest.id)],
+        } },
+      };
+      count += quests.length;
+      xp += questXp;
+    }
+    return { state: updated, result: { count, xp, zen: updated.zen - guest.zen } };
+  });
 }
 
 export function claimQuest(userId: string | null, id: QuestId) {

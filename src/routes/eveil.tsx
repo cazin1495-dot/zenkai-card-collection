@@ -6,11 +6,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { gameQuery, type GameState } from "@/lib/game";
+import { gameQuery, onlineMissionQuery, parseOnlineGameState, type GameState } from "@/lib/game";
 import { MAX_LEVEL, MILESTONES, xpRequired, REWARD_LABELS } from "@/lib/economy";
 import { formatCountdown } from "@/lib/cards";
 import { LocalLevel } from "@/components/LocalLevel";
 import { MissionsPanel } from "@/components/MissionsPanel";
+import { useQuests } from "@/hooks/use-quests";
+import { availableQuestCount, claimAllQuests } from "@/lib/quests";
 
 export const Route = createFileRoute("/eveil")({
   head: () => ({ meta: [
@@ -22,30 +24,99 @@ export const Route = createFileRoute("/eveil")({
   ] }), component: MissionsPage,
 });
 
-function MissionsPage() {
+export function MissionsPage() {
   const { session } = useAuth();
   const userId = session?.user.id ?? "";
   const queryClient = useQueryClient();
-  const game = useQuery({ ...gameQuery(userId), enabled: !!session, refetchInterval: 30_000 });
+  const game = useQuery({ ...onlineMissionQuery(userId), enabled: !!session, refetchInterval: 30_000 });
+  const accountQuests = useQuests(session?.user.id ?? null);
+  const guestQuests = useQuests(null);
   const [pending, setPending] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   const state = game.data;
   const missions = [
-    { id: "login", title: "Se connecter", icon: LogIn, progress: session ? 1 : 0, goal: 1, reward: "+100 Coins" },
-    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Coins" },
-    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Coins" },
+    { id: "login", title: "Se connecter", icon: LogIn, progress: session ? 1 : 0, goal: 1, reward: "+100 Coins", xp: 0 },
+    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Coins", xp: 30 },
+    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Coins", xp: 25 },
   ];
+  const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
+    (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);
+  const onlineReady = state ? missions.filter((mission) => mission.progress >= mission.goal && !state.mission_claims.includes(mission.id)).length : 0;
+  const totalReady = localReady + onlineReady;
   async function claim(id: string) {
     if (pending) return;
     setPending(id);
     try {
       const { data, error } = await supabase.rpc("claim_mission", { _mission: id });
       if (error) throw error;
-      queryClient.setQueryData(gameQuery(userId).queryKey, data as unknown as GameState);
+      queryClient.setQueryData(onlineMissionQuery(userId).queryKey, parseOnlineGameState(data));
+      void queryClient.invalidateQueries({ queryKey: gameQuery(userId).queryKey });
       toast.success("Récompense ajoutée à ton profil.");
     } catch { toast.error("Cette récompense n’est pas disponible. Actualise tes missions."); await game.refetch(); }
     finally { setPending(null); }
+  }
+  async function claimAll() {
+    if (pending) return;
+    setPending("all");
+    let local = { count: 0, xp: 0, zen: 0 };
+    let onlineCount = 0;
+    let onlineXp = 0;
+    let coins = 0;
+    let boosters = 0;
+    const packs: Record<string, number> = {};
+    try {
+      let online: GameState | undefined;
+      if (session) {
+        const fresh = await game.refetch({ throwOnError: true });
+        if (!fresh.data) throw new Error("État des missions en ligne indisponible.");
+        online = fresh.data;
+      }
+      local = claimAllQuests(session ? [null, session.user.id] : [null]);
+      if (online) {
+        const snapshot = online;
+        const pendingMissions = missions.filter((mission) => {
+          const progress = mission.id === "open" ? snapshot.mission_opened : mission.id === "recycle" ? snapshot.mission_recycled : 1;
+          return progress >= mission.goal && !snapshot.mission_claims.includes(mission.id);
+        });
+        for (const mission of pendingMissions) {
+          const { data, error } = await supabase.rpc("claim_mission", { _mission: mission.id });
+          if (error) throw error;
+          const next = parseOnlineGameState(data);
+          coins += next.coins - online.coins;
+          boosters += next.bonus_boosters - online.bonus_boosters;
+          for (const [key, count] of Object.entries(next.reward_packs)) {
+            const gained = count - (online.reward_packs[key] ?? 0);
+            if (gained) packs[key] = (packs[key] ?? 0) + gained;
+          }
+          online = next;
+          onlineCount++;
+          onlineXp += mission.xp;
+          queryClient.setQueryData(onlineMissionQuery(userId).queryKey, next);
+        }
+      }
+      if (!local.count && !onlineCount) {
+        toast.error("Aucune mission disponible. La progression a peut-être changé.");
+        return;
+      }
+      toast.success(`Missions réclamées : +${local.zen.toLocaleString("fr-FR")} Zen locaux · +${local.xp} XP locaux${session ? ` · +${coins.toLocaleString("fr-FR")} Coins · +${onlineXp} XP en ligne · ${boosters} booster(s) bonus${Object.entries(packs).map(([key, count]) => ` · ${count} ${REWARD_LABELS[key] ?? key}`).join("")}` : ""}`);
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message :
+        reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string" ? reason.message : "Erreur du serveur ou du stockage.";
+      toast.error(`Réclamation interrompue : ${message}. Confirmé : ${local.count} mission(s) locale(s), +${local.zen.toLocaleString("fr-FR")} Zen, +${local.xp} XP ; ${onlineCount} mission(s) en ligne, +${coins.toLocaleString("fr-FR")} Coins, +${onlineXp} XP, ${boosters} booster(s) bonus${Object.entries(packs).map(([key, count]) => `, ${count} ${REWARD_LABELS[key] ?? key}`).join("")}. Vérifie les missions avant de réessayer.`);
+    } finally {
+      try {
+        if (session) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: onlineMissionQuery(userId).queryKey }),
+            queryClient.invalidateQueries({ queryKey: gameQuery(userId).queryKey }),
+            queryClient.invalidateQueries({ queryKey: ["profile", userId] }),
+          ]);
+        }
+      } catch {
+        toast.error("Actualisation des missions impossible. Vérifie ton profil avant de réessayer.");
+      } finally { setPending(null); }
+    }
   }
   const remaining = state && now !== null ? Math.max(0, new Date(state.mission_started_at).getTime() + 86400000 - now) : null;
   const xpGoal = xpRequired(state?.level ?? 1);
@@ -53,7 +124,15 @@ function MissionsPage() {
     <p className="game-eyebrow"><Trophy className="size-4" /> PROGRESSION DU JOUEUR</p>
     <h1 className="mt-3 text-3xl font-black sm:text-4xl">Missions & Niveaux</h1>
     <section aria-label="Profil local" className="mt-6 rounded-xl border border-amber-400/25 bg-violet-950/20 p-5"><LocalLevel /></section>
-    <MissionsPanel accountId={session?.user.id ?? null} />
+    <div className="mt-6">
+      <Button variant="hero" className="min-h-11" disabled={!!pending || totalReady === 0 || !guestQuests.state || guestQuests.error || (!!session && (!accountQuests.state || accountQuests.error || !state))} onClick={claimAll}>
+        {pending === "all" ? "Réclamation en cours…" : `Tout réclamer (${totalReady})`}
+      </Button>
+      <p className="mt-2 text-xs text-muted-foreground">Missions locales et du compte en ligne ; le bonus de connexion reste séparé.</p>
+      {session && game.isError && <div role="alert" className="mt-2 flex flex-wrap items-center gap-2 text-sm text-destructive">Missions en ligne indisponibles : vérifie la connexion avant de tout réclamer.<Button type="button" variant="glass" size="sm" onClick={() => game.refetch()}>Réessayer</Button></div>}
+      {(guestQuests.error || (session && accountQuests.error)) && <p role="alert" className="mt-2 text-sm text-destructive">Missions locales indisponibles : vérifie le stockage avant de tout réclamer.</p>}
+    </div>
+    <MissionsPanel accountId={session?.user.id ?? null} claimingAll={pending === "all"} />
     <details className="mt-10 border-t border-border pt-5">
     <summary className="cursor-pointer text-lg font-bold">Progression et missions du compte en ligne</summary>
     <p className="mt-2 text-sm text-muted-foreground">Cette progression serveur, ses Coins et ses récompenses sont distincts du niveau, des missions et des Zen locaux ci-dessus.</p>

@@ -83,6 +83,10 @@ l'XP totale ; les Zen déjà gagnés avec l'ancienne courbe restent acquis. Le b
 appareil : une récompense par jour, avec une série de sept jours qui recommence après
 le septième jour ou après un jour manqué. Les tirages invités restent des simulations,
 mais leurs découvertes et leur XP sont mémorisées localement.
+« Tout réclamer » regroupe les missions disponibles des collections locales et du compte
+en ligne, sans le bonus de connexion. Les missions locales sont enregistrées ensemble ;
+les missions serveur sont réclamées une par une et toute interruption est signalée avec
+les gains confirmés. Après une erreur réseau, vérifie les missions avant de réessayer.
 
 Le bouton Profil de l'en-tête ouvre la personnalisation locale : pseudo, bio, bannière,
 avatar, cadre, titre et huit cartes en vitrine. Les quatre premiers emplacements d'un

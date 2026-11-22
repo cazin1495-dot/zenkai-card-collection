@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getGuestBalance, PLAYER_XP_KEY, updateGuestState } from "./guest-collection";
-import { claimAlbum, claimDailyLogin, claimQuest, DAILY_LOGIN_KEY, DAILY_LOGIN_REWARDS, getDailyLogin, getQuestState, observeQuestCollection, recordBoosterOpen, recordQuestActivity } from "./quests";
+import { claimAlbum, claimAllQuests, claimDailyLogin, claimQuest, DAILY_LOGIN_KEY, DAILY_LOGIN_REWARDS, getDailyLogin, getQuestState, observeQuestCollection, recordBoosterOpen, recordQuestActivity } from "./quests";
 import { addXp, getPlayerXp, levelProgress } from "./level";
 import type { Card } from "./cards";
 
@@ -52,6 +52,28 @@ describe("local quests and albums", () => {
     recordQuestActivity(null, "recycled", 5);
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("storage full"); });
     expect(() => claimQuest(null, "recycle5")).toThrow("storage full");
+    expect(getGuestBalance()).toBe(500);
+    expect(getQuestState(null).dailyClaimed).toEqual([]);
+    vi.restoreAllMocks();
+  });
+
+  it("claims all available missions across scopes once and includes level-up Zen", () => {
+    recordQuestActivity(null, "boosters", 10);
+    recordQuestActivity("alice", "boosters", 10);
+    claimQuest(null, "open3");
+    const before = getGuestBalance();
+    const result = claimAllQuests([null, "alice", null]);
+    expect(result).toEqual({ count: 3, zen: 920, xp: 250 });
+    expect(getGuestBalance()).toBe(before + 920);
+    expect(getQuestState(null).dailyClaimed).toEqual(["open3", "open10"]);
+    expect(getQuestState("alice").dailyClaimed).toEqual(["open3", "open10"]);
+    expect(claimAllQuests([null, "alice"])).toEqual({ count: 0, zen: 0, xp: 0 });
+  });
+
+  it("does not partially claim multiple missions when local storage fails", () => {
+    recordQuestActivity(null, "boosters", 10);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("storage full"); });
+    expect(() => claimAllQuests([null])).toThrow("storage full");
     expect(getGuestBalance()).toBe(500);
     expect(getQuestState(null).dailyClaimed).toEqual([]);
     vi.restoreAllMocks();
