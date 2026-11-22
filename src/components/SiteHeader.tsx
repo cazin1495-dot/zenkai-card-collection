@@ -19,6 +19,7 @@ import { useMissionData } from "@/components/MissionsPanel";
 import { LocalLevel } from "@/components/LocalLevel";
 import { PlayerProfileDialog } from "@/components/PlayerProfile";
 import { availableQuestCount } from "@/lib/quests";
+import { usePlayerProfileUsername } from "@/hooks/use-player-profile-username";
 
 const tabs = [
   { to: "/", label: "Boosters", icon: Layers },
@@ -45,6 +46,7 @@ export function SiteHeader() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [guestZen, setGuestZen] = useState<number | null>(null);
   const [guestZenError, setGuestZenError] = useState(false);
+  const customUsername = usePlayerProfileUsername();
   const mobileMenu = useRef<HTMLDetailsElement>(null);
   const closeMobileMenu = () => { if (mobileMenu.current) mobileMenu.current.open = false; };
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
@@ -81,6 +83,15 @@ export function SiteHeader() {
   const avatar = cards.data?.find(card => card.id === "al-246")?.image_url;
   const plusActive = plus.state?.active === true && !plus.error;
   const plusAvatar = plusAvatarImage(plus.state?.avatar, cards.data ?? []);
+  const metadataFullName = session?.user.user_metadata.full_name;
+  const metadataName = session?.user.user_metadata.name;
+  const playerName =
+    customUsername ??
+    (typeof metadataFullName === "string" && metadataFullName.trim()
+      ? metadataFullName.trim()
+      : typeof metadataName === "string" && metadataName.trim()
+        ? metadataName.trim()
+        : profile.data?.username ?? session?.user.email?.split("@")[0] ?? "Joueur");
   async function signInGoogle() {
     setGoogleLoading(true);
     try {
@@ -128,7 +139,7 @@ export function SiteHeader() {
         </details>
         <div className="hidden md:block">{session ? <div aria-label="Profil joueur" className="player-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-border bg-foreground/5 p-2">
           {plusActive ? <PlusAvatar image={plusAvatar ?? avatar} name="Ton avatar" active /> : avatar ? <img src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
-          <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{profile.data?.username ?? "Joueur"}</p>{plusActive && <PlusBadge />}<LocalLevel compact /><div className="player-metrics mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-muted-foreground"><span title="Zenkai Coins" className="flex items-center gap-1 whitespace-nowrap"><Coins className="size-3 text-rarity-legendaire" /> {game.data?.coins ?? "…"}</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock === null ? "…" : stock + (game.data?.bonus_boosters ?? 0)}</span></div></div>
+          <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{playerName}</p>{plusActive && <PlusBadge />}<LocalLevel compact /><div className="player-metrics mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-muted-foreground"><span title="Zenkai Coins" className="flex items-center gap-1 whitespace-nowrap"><Coins className="size-3 text-rarity-legendaire" /> {game.data?.coins ?? "…"}</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock === null ? "…" : stock + (game.data?.bonus_boosters ?? 0)}</span></div></div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter" className="size-7"><LogOut className="size-3.5" /></Button>
         </div> : guest ? (
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">

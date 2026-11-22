@@ -3,6 +3,7 @@ import type { Card } from "./cards";
 import {
   completedAlbumCount,
   DEFAULT_PLAYER_PROFILE,
+  getCustomPlayerUsername,
   getPlayerProfile,
   PLAYER_PROFILE_KEY,
   PLAYER_PROFILE_UPDATED,
@@ -25,6 +26,7 @@ const base = { card_id: "a", transcended: false };
 const awakened = { card_id: "a", transcended: true };
 const allowed = {
   ownedIds: new Set(["a", "b"]),
+  avatarIds: new Set(["a", "b", "catalog-only"]),
   frames: new Set<"steel" | "solar">(["steel", "solar"]),
   titles: new Set(["Novice Zenkai", "Collectionneur"]),
 };
@@ -51,6 +53,7 @@ describe("profil local", () => {
         avatarCardId: "a",
         showcaseCardIds: ["a", "b", null, null, null, "b", null, "a"],
       });
+      expect(getCustomPlayerUsername()).toBe("Alice");
       expect(listener).toHaveBeenCalledOnce();
     } finally {
       window.removeEventListener(PLAYER_PROFILE_UPDATED, listener);
@@ -83,6 +86,10 @@ describe("profil local", () => {
   it("refuse les cartes non possédées, titres et cadres verrouillés sans écraser le profil", () => {
     savePlayerProfile(DEFAULT_PLAYER_PROFILE, allowed);
     const original = localStorage.getItem(PLAYER_PROFILE_KEY);
+    expect(() =>
+      savePlayerProfile({ ...DEFAULT_PLAYER_PROFILE, avatarCardId: "catalog-only" }, allowed),
+    ).not.toThrow();
+    savePlayerProfile(DEFAULT_PLAYER_PROFILE, allowed);
     expect(() =>
       savePlayerProfile({ ...DEFAULT_PLAYER_PROFILE, avatarCardId: "missing" }, allowed),
     ).toThrow();

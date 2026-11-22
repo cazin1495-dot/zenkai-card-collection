@@ -277,7 +277,7 @@ describe("catalog query", () => {
     }
   });
 
-  it("loads the requested account profile and owned copies through the shared queries", async () => {
+  it("loads account profiles but keeps server-owned copies disabled", async () => {
     const profile = { id: "user-1", username: "test" };
     const copies = [{ id: "copy", card_id: "nami", transcended: false }];
     const eq = vi.fn((column: string, value: string) => {
@@ -301,11 +301,12 @@ describe("catalog query", () => {
         profile: useProfile("user-1"),
         collection: useUserCards("user-1"),
       }), { wrapper });
-      await waitFor(() => expect(result.current.profile.isSuccess && result.current.collection.isSuccess).toBe(true));
+      await waitFor(() => expect(result.current.profile.isSuccess).toBe(true));
       expect(result.current.profile.data).toEqual(profile);
-      expect(result.current.collection.data).toEqual(copies);
+      expect(result.current.collection.fetchStatus).toBe("idle");
+      expect(result.current.collection.data).toBeUndefined();
       expect(profileEq).toHaveBeenCalledOnce();
-      expect(eq).toHaveBeenCalledOnce();
+      expect(eq).not.toHaveBeenCalled();
     } finally {
       mockFrom.mockReset();
       client.clear();

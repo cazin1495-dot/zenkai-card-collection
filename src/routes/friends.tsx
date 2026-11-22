@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { usePlayerProfileUsername } from "@/hooks/use-player-profile-username";
 import { cardsQuery, profileQuery } from "@/lib/queries";
 import { useZenkaiPlus } from "@/hooks/use-zenkai-plus";
 import { plusAvatarImage } from "@/lib/subscription";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/friends")({
 export function FriendsPage() {
   const { session, guest } = useAuth();
   const userId = session?.user.id ?? "";
+  const customUsername = usePlayerProfileUsername();
   const queryClient = useQueryClient();
   const profile = useQuery({ ...profileQuery(userId), enabled: !!session });
   const cards = useQuery(cardsQuery);
@@ -56,7 +58,7 @@ export function FriendsPage() {
   return <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
     <p className="game-eyebrow"><Users className="size-4" /> COMMUNAUTÉ ZENKAI</p>
     <div className="mt-3 flex items-center justify-between gap-3"><h1 className="text-3xl font-black sm:text-4xl">Amis</h1>{session && <Button variant="ghost" size="icon" aria-label="Actualiser les amis" title="Actualiser les amis" onClick={refresh} disabled={!!pending || friendships.isFetching}><RefreshCw className="size-4" /></Button>}</div>
-    {(session || guest) && plus.state?.active && !plus.error && <div className="mt-6 flex items-center gap-3 rounded-md border border-primary/30 bg-surface p-4"><PlusAvatar image={plusAvatarImage(plus.state.avatar, cards.data ?? [])} name="Ton avatar" active /><span className="font-bold">{guest ? "Invité local" : profile.data?.username ?? "Joueur"}</span><PlusBadge /></div>}
+    {(session || guest) && plus.state?.active && !plus.error && <div className="mt-6 flex items-center gap-3 rounded-md border border-primary/30 bg-surface p-4"><PlusAvatar image={plusAvatarImage(plus.state.avatar, cards.data ?? [])} name="Ton avatar" active /><span className="font-bold">{guest ? "Invité local" : customUsername ?? profile.data?.username ?? "Joueur"}</span><PlusBadge /></div>}
     {!session ? <div className="mt-8 border-t border-border pt-6"><p className="text-sm text-muted-foreground">Connecte-toi pour envoyer et recevoir des demandes d’amis.</p><Button variant="hero" className="mt-4" asChild><Link to="/auth">Connexion</Link></Button></div> : <>
       <form onSubmit={event => { event.preventDefault(); void send(); }} className="mt-6 flex flex-col gap-3 sm:flex-row">
         <label htmlFor="friend-search" className="sr-only">Rechercher un joueur par pseudo</label>

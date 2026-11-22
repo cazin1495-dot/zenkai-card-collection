@@ -18,9 +18,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLevel } from "@/hooks/use-level";
 import { useQuests } from "@/hooks/use-quests";
 import { useSecretQuests } from "@/hooks/use-secret-quests";
+import { supabase } from "@/integrations/supabase/client";
 import { getGuestCollection } from "@/lib/guest-collection";
 import { betaEnded, hasBetaWelcome, resetGuestBetaProgress } from "@/lib/beta";
-import { cardsQuery, collectionQuery } from "@/lib/queries";
+import { cardsQuery } from "@/lib/queries";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
   completedAlbumCount,
@@ -78,13 +79,12 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   const userId = session?.user.id ?? null;
   const client = useQueryClient();
   const catalog = useQuery(cardsQuery);
-  const online = useQuery({ ...collectionQuery(userId ?? ""), enabled: ready && !!userId });
   const local = useQuery({
     queryKey: ["guest-collection"],
     queryFn: getGuestCollection,
-    enabled: ready && !userId,
+    enabled: ready,
   });
-  const copies: readonly ProfileCopy[] | undefined = userId ? online.data : local.data;
+  const copies: readonly ProfileCopy[] | undefined = local.data;
   const quests = useQuests(userId);
   const secrets = useSecretQuests();
   const level = useLevel();
@@ -93,6 +93,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   const [selector, setSelector] = useState<"avatar" | number | null>(null);
   const [search, setSearch] = useState("");
   const [betaWelcome, setBetaWelcome] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const refresh = () => {
@@ -128,13 +129,9 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   const allCards = useMemo(
     () => [
       ...(catalog.data ?? []),
-      ...(!userId
-        ? CUSTOM_TRANSCENDANCE_CARDS.filter((card) =>
-            copies?.some((copy) => copy.card_id === card.id),
-          ).map(customTranscendanceAsCard)
-        : []),
+      ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard),
     ],
-    [catalog.data, copies, userId],
+    [catalog.data],
   );
   const owned = useMemo(() => profileCards(allCards, copies ?? []), [allCards, copies]);
   const albumCards = useMemo(
@@ -148,7 +145,21 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
     [catalog.data],
   );
   const byId = useMemo(() => new Map(owned.map((item) => [item.card.id, item])), [owned]);
+  const avatarById = useMemo(
+    () =>
+      new Map(
+        allCards.map((card) => [
+          card.id,
+          byId.get(card.id) ?? {
+            card,
+            copy: { card_id: card.id, transcended: false },
+          },
+        ]),
+      ),
+    [allCards, byId],
+  );
   const ownedIds = useMemo(() => new Set((copies ?? []).map((copy) => copy.card_id)), [copies]);
+  const avatarIds = useMemo(() => new Set(allCards.map((card) => card.id)), [allCards]);
   const frameOptions = unlockedProfileFrames(level.level ?? 1, owned, copies ?? []);
   const series = [
     ...new Set(albumCards.flatMap((card) => (card.series?.trim() ? [card.series.trim()] : []))),
@@ -162,7 +173,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   );
   const dataError =
     catalog.isError ||
-    (userId ? online.isError : local.isError) ||
+    local.isError ||
     quests.error ||
     secrets.error ||
     level.error;
@@ -185,17 +196,30 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
     slots[index] = null;
     setDraft({ ...draft, showcaseCardIds: slots });
   }
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
-    if (!draft || loading || dataError) return;
+    if (!draft || loading || dataError || saving) return;
+    setSaving(true);
     try {
-      savePlayerProfile(draft, { ownedIds, frames: frameOptions, titles: allowedTitles });
+      savePlayerProfile(draft, { ownedIds, avatarIds, frames: frameOptions, titles: allowedTitles });
+      if (session) {
+        const { error } = await supabase.auth.updateUser({
+          data: { username: draft.username.trim() },
+        });
+        if (error) {
+          toast.error(`Profil local enregistré, mais synchronisation du pseudo impossible : ${error.message}`);
+          onSaved();
+          return;
+        }
+      }
       toast.success("Profil local enregistré.");
       onSaved();
     } catch (reason) {
       toast.error(
         reason instanceof Error ? reason.message : "Enregistrement du profil impossible.",
       );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -225,10 +249,10 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
   if (!draft || loading || !copies || !quests.state || !secrets.state || level.level === null)
     return <p className="text-sm text-muted-foreground">Chargement du profil…</p>;
 
-  const avatar = (draft.avatarCardId ? byId.get(draft.avatarCardId) : undefined) ?? owned[0];
+  const avatar = (draft.avatarCardId ? avatarById.get(draft.avatarCardId) : undefined) ?? owned[0];
   const portrait = avatar ? profilePortrait(avatar) : null;
   const frame = frameOptions.has(draft.avatarFrame) ? draft.avatarFrame : "steel";
-  const missingAvatar = draft.avatarCardId !== null && !byId.has(draft.avatarCardId);
+  const missingAvatar = draft.avatarCardId !== null && !avatarById.has(draft.avatarCardId);
   const missingSlots = draft.showcaseCardIds.some((id) => id !== null && !byId.has(id));
   const missingCards = [...ownedIds].some((id) => !byId.has(id));
   const mythic = copies.filter((copy) => {
@@ -248,7 +272,8 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
       (item && profileRarityRank({ card: item.card, copy }) === 0)
     );
   }).length;
-  const filtered = owned.filter((item) =>
+  const selectable = selector === "avatar" ? [...avatarById.values()] : owned;
+  const filtered = selectable.filter((item) =>
     `${profilePortrait(item).name} ${item.card.series ?? ""}`
       .toLocaleLowerCase("fr")
       .includes(search.trim().toLocaleLowerCase("fr")),
@@ -259,7 +284,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
       <section
         className={`rounded-2xl border border-amber-400/30 bg-gradient-to-br p-5 ${BANNERS.find((item) => item.id === draft.banner)?.className}`}
       >
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
           <div
             className={`profile-frame profile-frame-${frame}`}
             aria-label={`Cadre ${PROFILE_FRAMES.find((item) => item.id === frame)?.name}`}
@@ -286,12 +311,13 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
               {draft.bio || "Une nouvelle aventure commence."}
             </p>
             <p className="mt-2 text-xs text-white/60">
-              {userId ? "Collection du compte connecté" : "Collection locale"}
+              Collection locale sur cet appareil
             </p>
           </div>
           <Button
             type="button"
             variant="glass"
+            className="w-full sm:ml-auto sm:w-auto"
             onClick={() => {
               setSearch("");
               setSelector("avatar");
@@ -311,7 +337,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
         </Button>
         {missingAvatar && (
           <p role="alert" className="mt-2 text-xs text-amber-300">
-            Cet avatar n'appartient plus à la collection active. Choisis un avatar ou le mode
+            Cet avatar n'est plus dans le catalogue. Choisis un avatar disponible ou le mode
             automatique avant d'enregistrer.
           </p>
         )}
@@ -496,8 +522,8 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
         </div>
       </section>
       <div className="flex justify-end">
-        <Button type="submit" variant="hero">
-          Enregistrer le profil
+        <Button type="submit" variant="hero" disabled={saving}>
+          {saving ? "Enregistrement…" : "Enregistrer le profil"}
         </Button>
       </div>
       <div className="text-center">
@@ -519,7 +545,9 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
               {selector === "avatar" ? "Choisir un avatar" : "Choisir une carte pour la vitrine"}
             </DialogTitle>
             <DialogDescription>
-              Seules les cartes possédées dans la collection active sont disponibles.
+              {selector === "avatar"
+                ? "Tous les avatars du catalogue sont disponibles."
+                : "Choisis des cartes possédées dans ta collection locale."}
             </DialogDescription>
           </DialogHeader>
           <Input

@@ -546,10 +546,12 @@ export const PACKS: { id: PackId; label: string; hint: string; accent: string }[
 ];
 
 /** Does a card belong to a booster pack / collection filter? */
-export function inPack(card: Card, pack: PackId) {
-  if (pack === "shonen" || pack === "zenkai") return true;
-  if (pack === "antagoniste" || pack === "protagoniste") return card.role === pack;
-  return card.category === pack;
+export function inPack(card: Card, pack: PackId | string) {
+  const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
+  if (["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(normalized)) return true;
+  if (normalized === "antagoniste" || normalized === "protagoniste")
+    return card.role === normalized;
+  return card.category === normalized;
 }
 
 /** Live booster stock: +1 every 10 minutes, capped at 15 (mirrors the server). */

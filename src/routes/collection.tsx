@@ -4,11 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InspectableCard } from "@/components/Transcendance";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Heart, Recycle } from "lucide-react";
-import { recycleValue } from "@/lib/economy";
-import { cardsQuery, collectionQuery } from "@/lib/queries";
+import { cardsQuery } from "@/lib/queries";
 import { cardIdentity, getCardMarketPrice, getCardPopularityFactor, getCardRecycleValue, inPack, RARITY, RARITY_ORDER, type Card, type CatalogRarity, type PackId, type Rarity } from "@/lib/cards";
 import { collectionEntries, sortCollectionEntries, type CollectionEntry, type CollectionSort } from "@/lib/collection-view";
 import { cn } from "@/lib/utils";
@@ -51,12 +49,10 @@ const DEFAULT_RECYCLE_RARITIES: readonly CatalogRarity[] = ["commune", "non_comm
 
 export function CollectionPage() {
   const { session, guest } = useAuth();
-  const [localView, setLocalView] = useState(false);
   const [albumView, setAlbumView] = useState(false);
   const localCollection = true;
   const userId = session?.user.id;
   const cards = useQuery(cardsQuery);
-  const owned = useQuery({ ...collectionQuery(userId ?? ""), enabled: !!userId && !localCollection });
   const guestOwned = useQuery({ queryKey: ["guest-collection"], queryFn: getGuestCollection, enabled: true });
   const plus = useQuery({ queryKey: ["guest-plus"], queryFn: getGuestPlus, enabled: true });
   const accountPlus = useZenkaiPlus();
@@ -107,20 +103,6 @@ export function CollectionPage() {
       }
       return;
     }
-    const copy = ownedRows?.find(row => row.card_id === card.id && !row.transcended);
-    if (!userId || !copy || recycling) return;
-    const value = recycleValue(card.serverRarity ?? card.rarity, card.popularity ?? 1);
-    if (!window.confirm(`Recycler un doublon de ${card.name} pour ${value} Coins ?`)) return;
-    setRecycling(copy.id);
-    try {
-      const { data, error } = await supabase.rpc("recycle_copy", { _copy: copy.id });
-      if (error) throw error;
-      toast.success(`Doublon recyclé · +${data} Coins`);
-      try { recordQuestActivity(userId, "recycled", 1); }
-      catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ["collection", userId] }), queryClient.invalidateQueries({ queryKey: ["game", userId] })]);
-    } catch { toast.error("Recyclage impossible. Le dernier exemplaire est protégé."); }
-    finally { setRecycling(null); }
   }
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
@@ -193,20 +175,14 @@ export function CollectionPage() {
       {!session && !guest && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface/60 p-4">
           <p className="text-sm text-muted-foreground">
-            Ta collection locale est enregistrée sur cet appareil. Connecte-toi pour accéder à ta collection en ligne.
+            Ta collection est enregistrée localement sur cet appareil, même après connexion.
           </p>
           <Button variant="glass" asChild>
             <Link to="/auth">Se connecter</Link>
           </Button>
         </div>
       )}
-      {localCollection && <p className="mt-5 text-sm text-muted-foreground">Collection locale sur cet appareil, distincte du compte connecté. Le marché local est fictif.</p>}
-      {session && <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button variant="glass" onClick={() => { setLocalView(!localView); setSaleCopyId(null); setDetail(null); setRecycleOpen(false); }}>
-          {localView ? "Voir ma collection en ligne" : "Voir ma collection locale"}
-        </Button>
-        <span className="text-sm text-muted-foreground">Les cartes du compte connecté ne peuvent pas être vendues sur le marché fictif local.</span>
-      </div>}
+      {localCollection && <p className="mt-5 text-sm text-muted-foreground">Collection locale sur cet appareil, disponible avec ou sans compte connecté. Le marché local est fictif.</p>}
       {localCollection && (guestOwned.isError || plus.isError) && <p role="alert" className="mt-3 text-sm text-destructive">Collection ou état Zenkai+ local indisponible : vérifie le stockage du navigateur.</p>}
       {localCollection && session && accountPlus.error && <p role="alert" className="mt-3 text-sm text-destructive">État Zenkai+ du profil indisponible : vérifie le stockage du navigateur.</p>}
       {cards.isError && <p role="alert" className="mt-3 text-sm text-destructive">Catalogue indisponible. <Button variant="link" onClick={() => cards.refetch()}>Réessayer</Button></p>}
@@ -217,7 +193,7 @@ export function CollectionPage() {
         <Button variant={albumView ? "hero" : "glass"} aria-pressed={albumView} onClick={() => setAlbumView(true)}>Album par Anime</Button>
       </div>
       {albumView ? (
-        cards.data && ownedRows ? <AnimeAlbum cards={albumCatalog} copies={ownedRows} userId={localCollection ? null : userId ?? null} /> :
+        cards.data && ownedRows ? <AnimeAlbum cards={albumCatalog} copies={ownedRows} userId={null} /> :
           <p className="mt-6 text-sm text-muted-foreground">Chargement du catalogue et de la collection…</p>
       ) : <>
       <div aria-label="Filtrer par pack" className="mt-6 flex max-w-full gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
@@ -281,7 +257,7 @@ export function CollectionPage() {
             <CardValues entry={entry} bonus={localCollection && localBonus} />
             {!!count && <Button variant="glass" size="sm" aria-label={`Détails ${card.name}${evolved ? " transcendée" : ""}`} onClick={() => setDetail(entry)} className="w-full">Détails</Button>}
             {localCollection && !!count && <Button variant="hero" size="sm" aria-label={`Vendre ${card.name}${evolved ? " transcendée" : ""}`} onClick={() => sellCopy(card, evolved)} className="w-full">Vendre</Button>}
-            {count > 1 && !evolved && <Button variant="glass" size="sm" disabled={!!recycling || (localCollection && (!plus.data || plus.isError || (!!session && (!accountPlus.state || accountPlus.error))))} onClick={() => recycle(card)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{localCollection ? getCardRecycleValue(card) + plusRecycleBonus(getCardRecycleValue(card), localBonus) : recycleValue(card.serverRarity ?? card.rarity, card.popularity ?? 1)} {localCollection ? "Zen locaux" : "Coins"}</Button>}
+            {count > 1 && !evolved && <Button variant="glass" size="sm" disabled={!!recycling || !plus.data || plus.isError || (!!session && (!accountPlus.state || accountPlus.error))} onClick={() => recycle(card)} className="h-auto w-full whitespace-normal text-[10px]"><Recycle className="size-3" /> Recycler · +{getCardRecycleValue(card) + plusRecycleBonus(getCardRecycleValue(card), localBonus)} Zen locaux</Button>}
           </div>;
         })}
       </div>

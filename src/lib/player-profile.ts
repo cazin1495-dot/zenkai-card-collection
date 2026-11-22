@@ -82,10 +82,16 @@ export function getPlayerProfile(): PlayerProfile {
   return migrated;
 }
 
+export function getCustomPlayerUsername() {
+  if (window.localStorage.getItem(PLAYER_PROFILE_KEY) === null) return null;
+  return getPlayerProfile().username;
+}
+
 export function savePlayerProfile(
   profile: PlayerProfile,
   allowed: {
     ownedIds: ReadonlySet<string>;
+    avatarIds: ReadonlySet<string>;
     frames: ReadonlySet<ProfileFrame>;
     titles: ReadonlySet<string>;
   },
@@ -94,8 +100,8 @@ export function savePlayerProfile(
   if (!parsed.success)
     throw new Error("Vérifie le pseudo (1 à 30 caractères) et la bio (160 caractères maximum).");
   const value = parsed.data;
-  if (value.avatarCardId && !allowed.ownedIds.has(value.avatarCardId))
-    throw new Error("L'avatar choisi n'est plus dans cette collection.");
+  if (value.avatarCardId && !allowed.avatarIds.has(value.avatarCardId))
+    throw new Error("L'avatar choisi n'est plus dans le catalogue.");
   if (value.showcaseCardIds.some((id) => id !== null && !allowed.ownedIds.has(id)))
     throw new Error("Une carte de la vitrine n'est plus dans cette collection.");
   if (!allowed.frames.has(value.avatarFrame)) throw new Error("Ce cadre n'est pas débloqué.");

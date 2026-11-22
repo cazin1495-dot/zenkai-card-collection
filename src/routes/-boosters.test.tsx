@@ -139,30 +139,16 @@ describe("booster hub", () => {
     expect(screen.getAllByText("??? · Carte Transcendance").length).toBeGreaterThan(0);
   });
 
-  it("uses the connected collection rather than the guest collection", async () => {
+  it("uses the local collection for connected users too", async () => {
     const card = CUSTOM_TRANSCENDANCE_CARDS[0]!;
     addGuestCollectionCards([{ userCardId: "guest-exclusive", card: customTranscendanceAsCard(card), customTranscendance: true }]);
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
-    mocks.collection.mockResolvedValue([]);
     showPage();
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
     await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
-    expect(screen.queryByText(card.name)).toBeNull();
-    expect(mocks.collection).toHaveBeenCalled();
-  });
-
-  it("reveals connected owned cards and keeps them hidden on collection errors", async () => {
-    const card = CUSTOM_TRANSCENDANCE_CARDS[0]!;
-    mocks.auth.session = { user: { id: "player" } };
-    mocks.auth.guest = false;
-    mocks.collection.mockRejectedValueOnce(new Error("network")).mockResolvedValue([{ card_id: card.id }]);
-    showPage();
-    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de vérifier ta collection");
-    expect(screen.queryByText(card.name)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
-    expect(await screen.findByText(card.name)).toBeTruthy();
+    expect(screen.getByText(card.name)).toBeTruthy();
+    expect(mocks.collection).not.toHaveBeenCalled();
   });
 
   it("shows the real connected stock and remaining regeneration time", async () => {
@@ -200,7 +186,7 @@ describe("booster hub", () => {
     }
   });
 
-  it.each([1, 10])("chooses x%s by tapping the pack artwork", (count) => {
+  it.each([1, 5, 10])("chooses x%s by tapping the pack artwork", (count) => {
     vi.useFakeTimers();
     const { unmount } = showPage();
     try {
@@ -371,7 +357,7 @@ describe("booster hub", () => {
     }
   });
 
-  it.each([5, 10])("marks only first new guest draws in a %sx batch summary without persisting the simulation", async (count) => {
+  it.each([5, 10])("marks only first new guest draws in a persisted %sx batch summary", async (count) => {
     addGuestCollectionCards([{ userCardId: "owned", card: cards[0]! }]);
     showPage();
     const inspector = screen.getByRole("complementary", { name: "Détails du booster" });
@@ -384,62 +370,40 @@ describe("booster hub", () => {
     for (const element of screen.getAllByText("Carte 0")) {
       expect(within(element.closest(".animate-card-in") as HTMLElement).queryByText("NOUVEAU")).toBeNull();
     }
-    expect(getGuestCollection().map((row) => row.id)).toEqual(["owned"]);
-    expect(screen.getByText(/Simulation invitée : les cartes révélées ne sont pas sauvegardées/)).toBeTruthy();
+    expect(getGuestCollection()).toHaveLength(1 + count * 5);
+    expect(screen.getByText(/Tirage local sauvegardé dans ta collection/)).toBeTruthy();
   });
 
-  it("does not consume stock when the pre-open collection cannot be read", async () => {
+  it("snapshots the local collection before opening and marks only the first new copy", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
-    mocks.collection.mockRejectedValue(new Error("offline"));
-    showPage();
-    const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
-    await waitFor(() => expect(open).toBeEnabled());
-    fireEvent.click(open);
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Collection indisponible : offline"));
-    expect(mocks.rpc).not.toHaveBeenCalled();
-    expect(getQuestState("player").boosters).toBe(0);
-  });
-
-  it("snapshots the server collection before opening and marks only the first new copy", async () => {
-    mocks.auth.session = { user: { id: "player" } };
-    mocks.auth.guest = false;
-    mocks.collection.mockResolvedValue([{ card_id: "card-0" }]);
-    const draw = ["card-2", "card-0", "card-2", "card-1", "card-4"].map((card_id, i) => ({
-      card_id, user_card_id: `copy-${i}`, boosters_left: 14, stock_updated_at: new Date().toISOString(),
-    }));
-    mocks.rpc.mockResolvedValue({ data: draw, error: null });
-    const inQuery = vi.fn().mockResolvedValue({
-      data: draw.map((item) => ({ id: item.user_card_id, transcended: false })), error: null,
-    });
-    mocks.from.mockReturnValue({ select: () => ({ eq: () => ({ in: inQuery }) }) });
+    addGuestCollectionCards([{ userCardId: "owned", card: cards[0]! }]);
+    mocks.draw.mockReturnValue(["card-2", "card-0", "card-2", "card-1", "card-4"].map((id, i) => ({
+      userCardId: `copy-${i}`,
+      card: cards.find((card) => card.id === id)!,
+    })));
     showPage();
     const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
     await waitFor(() => expect(open).toBeEnabled());
     fireEvent.click(open);
     fireEvent.click(await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 }));
-    expect(getQuestState("player").boosters).toBe(1);
-    expect(mocks.collection.mock.invocationCallOrder[0]).toBeLessThan(mocks.rpc.mock.invocationCallOrder[0]!);
+    expect(getQuestState(null).boosters).toBe(1);
     expect(screen.getAllByText("NOUVEAU")).toHaveLength(3);
     const duplicates = screen.getAllByText("Carte 2");
     expect(duplicates).toHaveLength(2);
     expect(duplicates.filter((element) => within(element.closest(".animate-card-in") as HTMLElement).queryByText("NOUVEAU"))).toHaveLength(1);
-    expect(inQuery).toHaveBeenCalledOnce();
+    expect(getGuestCollection()).toHaveLength(6);
+    expect(mocks.collection).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
   it("débloque Double Miracle après un tirage connecté x10", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
-    mocks.profile = { boosters_stored: 15, stock_updated_at: new Date().toISOString() };
-    const draw = Array.from({ length: 50 }, (_, i) => ({
-      card_id: i === 0 || i === 1 ? "card-4" : "card-0",
-      user_card_id: `copy-${i}`, boosters_left: 5, stock_updated_at: new Date().toISOString(),
-    }));
-    mocks.rpc.mockResolvedValue({ data: draw, error: null });
-    const inQuery = vi.fn().mockResolvedValue({
-      data: draw.map((item) => ({ id: item.user_card_id, transcended: false })), error: null,
-    });
-    mocks.from.mockReturnValue({ select: () => ({ eq: () => ({ in: inQuery }) }) });
+    mocks.draw.mockReturnValue(Array.from({ length: 50 }, (_, i) => ({
+      userCardId: `copy-${i}`,
+      card: cards[i === 0 || i === 1 ? 4 : 0]!,
+    })));
     showPage();
     const inspector = screen.getByRole("complementary", { name: "Détails du booster" });
     const open = within(inspector).getByRole("button", { name: "Ouvrir · Gratuit" });
@@ -447,66 +411,29 @@ describe("booster hub", () => {
     fireEvent.click(within(inspector).getByRole("radio", { name: "10x" }));
     fireEvent.click(open);
     await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 });
-    expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 10 });
+    expect(getGuestCollection()).toHaveLength(50);
+    expect(mocks.rpc).not.toHaveBeenCalled();
     expect(getSecretQuests().unlocked).toContain("miracle");
   });
 
-  it("reports an RPC failure and allows a signed-in player to retry", async () => {
+  it("does not draw when the local collection cannot be read", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
-    mocks.rpc.mockResolvedValue({ data: null, error: { message: "offline" } });
-    showPage();
-    const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
-    await waitFor(() => expect(open).toBeEnabled());
-    fireEvent.click(open);
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Réponse du serveur indisponible : offline. Vérifie ta collection avant de réessayer."));
-    expect(screen.getByRole("button", { name: /Ouvrir · Gratuit/ })).toBeEnabled();
-    expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 1 });
-    expect(mocks.draw).not.toHaveBeenCalled();
-  });
-
-  it("reports a lost server response without creating a second local draw", async () => {
-    mocks.auth.session = { user: { id: "player" } };
-    mocks.auth.guest = false;
-    mocks.rpc.mockRejectedValue(new Error("network"));
+    localStorage.setItem("zenkai_guest_collection", "{");
     showPage();
     fireEvent.click(screen.getByRole("button", { name: /Ouvrir · Gratuit/ }));
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith(
-      "Réponse du serveur indisponible : network. Vérifie ta collection avant de réessayer.",
-    ));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
     expect(mocks.draw).not.toHaveBeenCalled();
-    expect(getGuestCollection()).toEqual([]);
   });
 
-  it("lets the server decide availability when the cached stock is zero", async () => {
+  it("opens and persists cards locally for signed-in accounts", async () => {
     mocks.auth.session = { user: { id: "player" } };
     mocks.auth.guest = false;
-    mocks.profile = { boosters_stored: 0, stock_updated_at: new Date().toISOString() };
-    mocks.rpc.mockResolvedValue({ data: null, error: { message: "not_enough_boosters" } });
     showPage();
-    await screen.findByText("0/15");
-    fireEvent.click(screen.getByRole("radio", { name: "Shonen Mix" }));
-    const dialog = screen.getByRole("dialog", { name: "Ouvrir Shonen Mix" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Ouvrir x1 · Gratuit" }));
-    await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("open_boosters", { _category: "shonen", _count: 1 }));
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Pas assez de boosters en stock."));
-  });
-
-  it("leaves the opening screen and reports a failed copy lookup after a committed draw", async () => {
-    mocks.auth.session = { user: { id: "player" } };
-    mocks.auth.guest = false;
-    mocks.rpc.mockResolvedValue({
-      data: [{ card_id: "card-0", user_card_id: "copy", boosters_left: 14, stock_updated_at: new Date().toISOString() }],
-      error: null,
-    });
-    const inQuery = vi.fn().mockRejectedValue(new Error("réseau indisponible"));
-    mocks.from.mockReturnValue({ select: () => ({ eq: () => ({ in: inQuery }) }) });
-    showPage();
-    const open = await screen.findByRole("button", { name: /Ouvrir · Gratuit/ });
-    await waitFor(() => expect(open).toBeEnabled());
-    fireEvent.click(open);
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining("réseau indisponible. Consulte ta collection.")));
-    expect(screen.getByRole("button", { name: /Ouvrir · Gratuit/ })).toBeEnabled();
-    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: /Ouvrir · Gratuit/ }));
+    await screen.findByRole("button", { name: "Full Skip" }, { timeout: 5000 });
+    expect(getGuestCollection()).toHaveLength(5);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.from).not.toHaveBeenCalled();
   });
 });

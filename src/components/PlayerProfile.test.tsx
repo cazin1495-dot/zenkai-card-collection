@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerProfile } from "@/lib/player-profile";
@@ -35,6 +35,7 @@ const fixtures = vi.hoisted(() => ({
       sort_order: 1,
     },
   ],
+  updateUser: vi.fn(),
 }));
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
@@ -44,10 +45,9 @@ vi.mock("@/hooks/use-auth", () => ({
 }));
 vi.mock("@/lib/queries", () => ({
   cardsQuery: { queryKey: ["cards"], queryFn: async () => fixtures.cards },
-  collectionQuery: (id: string) => ({
-    queryKey: ["collection", id],
-    queryFn: async () => fixtures.accountRows,
-  }),
+}));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { auth: { updateUser: fixtures.updateUser } },
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/components/AnimeCard", () => ({
@@ -80,6 +80,7 @@ describe("personnalisation du profil", () => {
     localStorage.clear();
     fixtures.userId = null;
     fixtures.accountRows = [];
+    fixtures.updateUser.mockResolvedValue({ data: { user: null }, error: null });
     vi.spyOn(Date, "now").mockReturnValue(Date.parse(BETA_END) - 1000);
   });
   afterEach(() => vi.restoreAllMocks());
@@ -89,7 +90,7 @@ describe("personnalisation du profil", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection locale");
+    await screen.findByText("Collection locale sur cet appareil");
     fireEvent.click(screen.getByRole("button", { name: "Réinitialiser ma progression Bêta (repartir de 0)" }));
     expect(confirm).toHaveBeenCalledOnce();
     expect(JSON.parse(localStorage.getItem("zenkai_guest_collection")!).zen).toBe(900);
@@ -99,7 +100,7 @@ describe("personnalisation du profil", () => {
     fixtures.userId = "alice";
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection du compte connecté");
+    await screen.findByText("Collection locale sur cet appareil");
     expect(screen.getByRole("button", { name: "Réinitialiser ma progression Bêta (repartir de 0)" })).toBeDisabled();
     expect(screen.getByText(/nécessite une prise en charge sécurisée côté serveur/)).toBeTruthy();
   });
@@ -108,7 +109,7 @@ describe("personnalisation du profil", () => {
     claimBetaAccess("ZENKAI7", Date.parse(BETA_END) - 1);
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection locale");
+    await screen.findByText("Collection locale sur cet appareil");
     const select = screen.getByLabelText("Titre équipé");
     expect(within(select).getByRole("option", { name: "Pionnier Bêta" })).toBeEnabled();
     fireEvent.change(select, { target: { value: "Pionnier Bêta" } });
@@ -123,14 +124,14 @@ describe("personnalisation du profil", () => {
     }));
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection locale");
+    await screen.findByText("Collection locale sur cet appareil");
     expect(screen.getAllByRole("button", { name: /Modifier emplacement/ })).toHaveLength(8);
     fireEvent.change(screen.getByLabelText("Pseudo"), { target: { value: "Alice" } });
     expect(screen.getByRole("button", { name: /Arc-en-Ciel Transcendance/ })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: /Arc-en-Ciel Transcendance/ }));
     fireEvent.click(screen.getByRole("button", { name: "Changer d'avatar" }));
     const avatarSelector = screen.getByRole("dialog", { name: "Choisir un avatar" });
-    expect(within(avatarSelector).queryByText("Carte compte")).toBeNull();
+    expect(within(avatarSelector).getByText("Carte compte")).toBeTruthy();
     fireEvent.click(within(avatarSelector).getByRole("button", { name: /Carte invitée/ }));
     fireEvent.click(screen.getByRole("button", { name: "Modifier emplacement 1" }));
     fireEvent.click(
@@ -171,7 +172,7 @@ describe("personnalisation du profil", () => {
     ]);
   });
 
-  it("utilise la collection du compte connecté et signale les choix devenus indisponibles", async () => {
+  it("utilise la collection locale même connecté et synchronise le pseudo personnalisé", async () => {
     fixtures.userId = "alice";
     fixtures.accountRows = [row("account")];
     localStorage.setItem(
@@ -183,34 +184,37 @@ describe("personnalisation du profil", () => {
         avatarCardId: "guest",
         avatarFrame: "steel",
         equippedTitle: "Novice Zenkai",
-        showcaseCardIds: ["guest", null, null, null],
+        showcaseCardIds: [null, null, null, null, null, null, null, null],
       }),
     );
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection du compte connecté");
-    expect(screen.getByText(/Cet avatar n'appartient plus/)).toBeTruthy();
-    expect(screen.getByText(/Certaines cartes ne sont plus disponibles/)).toBeTruthy();
+    await screen.findByText("Collection locale sur cet appareil");
     fireEvent.click(screen.getByRole("button", { name: "Changer d'avatar" }));
     const selector = screen.getByRole("dialog", { name: "Choisir un avatar" });
-    expect(within(selector).queryByText("Carte invitée")).toBeNull();
+    expect(within(selector).getByText("Carte invitée")).toBeTruthy();
+    expect(within(selector).getByText("Carte compte")).toBeTruthy();
     fireEvent.click(within(selector).getByRole("button", { name: /Carte compte/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Retirer carte 1" }));
+    fireEvent.change(screen.getByLabelText("Pseudo"), { target: { value: "Alice perso" } });
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer le profil" }));
+    await waitFor(() => expect(fixtures.updateUser).toHaveBeenCalledWith({
+      data: { username: "Alice perso" },
+    }));
     expect(getPlayerProfile()).toMatchObject({
+      username: "Alice perso",
       avatarCardId: "account",
       showcaseCardIds: [null, null, null, null, null, null, null, null],
     });
   });
 
-  it("rafraîchit les cartes locales et refuse de conserver une carte retirée", async () => {
+  it("garde un avatar du catalogue même si sa carte est retirée de la collection", async () => {
     updateGuestState((state) => ({
       state: { ...state, rows: [row("guest")] },
       result: undefined,
     }));
     mount();
     fireEvent.click(screen.getByRole("button", { name: "Profil" }));
-    await screen.findByText("Collection locale");
+    await screen.findByText("Collection locale sur cet appareil");
     fireEvent.click(screen.getByRole("button", { name: "Changer d'avatar" }));
     fireEvent.click(
       within(screen.getByRole("dialog", { name: "Choisir un avatar" })).getByRole("button", {
@@ -220,11 +224,8 @@ describe("personnalisation du profil", () => {
     act(() => {
       updateGuestState((state) => ({ state: { ...state, rows: [] }, result: undefined }));
     });
-    expect(await screen.findByText(/Cet avatar n'appartient plus/)).toBeTruthy();
+    expect(screen.queryByText(/Cet avatar n'appartient plus/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer le profil" }));
-    expect(localStorage.getItem("zenkai_player_profile")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Avatar automatique" }));
-    fireEvent.click(screen.getByRole("button", { name: "Enregistrer le profil" }));
-    expect(getPlayerProfile().avatarCardId).toBeNull();
+    expect(getPlayerProfile().avatarCardId).toBe("guest");
   });
 });

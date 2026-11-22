@@ -5,6 +5,7 @@ import { Check, Gift, Trophy, Clock, Coins, Package, Recycle, LogIn } from "luci
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { usePlayerProfileUsername } from "@/hooks/use-player-profile-username";
 import { supabase } from "@/integrations/supabase/client";
 import { gameQuery, onlineMissionQuery, parseOnlineGameState, type GameState } from "@/lib/game";
 import { MAX_LEVEL, MILESTONES, xpRequired, REWARD_LABELS } from "@/lib/economy";
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/eveil")({
 
 export function MissionsPage() {
   const { session } = useAuth();
+  const customUsername = usePlayerProfileUsername();
   const userId = session?.user.id ?? "";
   const queryClient = useQueryClient();
   const game = useQuery({ ...onlineMissionQuery(userId), enabled: !!session, refetchInterval: 30_000 });
@@ -141,7 +143,7 @@ export function MissionsPage() {
     {session && !state && !game.isError && <p className="mt-6 text-sm text-muted-foreground">Chargement du profil…</p>}
     {state && <section className="mt-7 border-y border-border py-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div><p className="text-xs uppercase text-muted-foreground">{state.username}</p><h2 className="mt-2 font-display text-2xl font-bold">Niveau {state.level}<span className="ml-2 text-sm text-muted-foreground">/ {MAX_LEVEL}</span></h2></div>
+        <div><p className="text-xs uppercase text-muted-foreground">{customUsername ?? state.username}</p><h2 className="mt-2 font-display text-2xl font-bold">Niveau {state.level}<span className="ml-2 text-sm text-muted-foreground">/ {MAX_LEVEL}</span></h2></div>
         <div className="flex items-center gap-5 text-sm font-semibold"><span className="flex items-center gap-2 text-rarity-legendaire"><Coins className="size-4" />{state.coins.toLocaleString("fr-FR")}</span><span className="flex items-center gap-2 text-accent"><Package className="size-4" />{state.bonus_boosters} bonus</span></div>
       </div>
       <div role="progressbar" aria-label="Progression XP" aria-valuemin={0} aria-valuemax={xpGoal} aria-valuenow={Math.min(state.xp, xpGoal)} className="mt-5 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gradient-primary transition-all" style={{ width: `${state.level === MAX_LEVEL ? 100 : Math.min(100, state.xp / xpGoal * 100)}%` }} /></div>

@@ -16,8 +16,7 @@ import { gameQuery } from "@/lib/game";
 import { REWARD_LABELS } from "@/lib/economy";
 import { useAuth } from "@/hooks/use-auth";
 import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
-import { supabase } from "@/integrations/supabase/client";
-import { cardsQuery, collectionQuery, pityQuery, profileQuery } from "@/lib/queries";
+import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
 import { recordBoosterOpen, recordSecretDraw } from "@/lib/quests";
 import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
@@ -90,22 +89,15 @@ export function BoostersPage() {
   const [localZenError, setLocalZenError] = useState(false);
   const tearRequested = useRef(false);
   const finishOpeningWait = useRef<(() => void) | null>(null);
-  const accountCollection = useQuery({
-    ...collectionQuery(userId ?? ""),
-    enabled: ready && isPackPreviewOpen && !!userId,
-    staleTime: 0,
-    retry: false,
-  });
   const guestCollection = useQuery({
     queryKey: ["guest-collection"],
     queryFn: getGuestCollection,
-    enabled: ready && isPackPreviewOpen && !userId,
+    enabled: ready && isPackPreviewOpen,
     staleTime: 0,
     retry: false,
   });
-  const previewCollection = userId ? accountCollection : guestCollection;
-  const ownedCardIds = ready && !previewCollection.isFetching && !previewCollection.isError && previewCollection.data
-    ? new Set(previewCollection.data.map((row) => row.card_id))
+  const ownedCardIds = ready && !guestCollection.isFetching && !guestCollection.isError && guestCollection.data
+    ? new Set(guestCollection.data.map((row) => row.card_id))
     : null;
   const rarityOverrides = useRarityOverrides();
   const displayedPulled = useMemo(
@@ -118,7 +110,7 @@ export function BoostersPage() {
   );
 
   useEffect(() => {
-    if (!isPackPreviewOpen || !ready || userId) return;
+    if (!isPackPreviewOpen || !ready) return;
     const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["guest-collection"] }); };
     window.addEventListener("zenkai:guest-updated", refresh);
     window.addEventListener("storage", refresh);
@@ -126,7 +118,7 @@ export function BoostersPage() {
       window.removeEventListener("zenkai:guest-updated", refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [isPackPreviewOpen, ready, userId, queryClient]);
+  }, [isPackPreviewOpen, ready, queryClient]);
 
   useEffect(() => {
     function refreshLocalZen() {
@@ -265,6 +257,43 @@ export function BoostersPage() {
       toast.error(`Stock insuffisant (${betaBoosters} / ${MAX_BETA_BOOSTERS} boosters). Attends le timer pour en récupérer !`);
       return;
     }
+    if (category === "zenkai") {
+      toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
+      return;
+    }
+    if (!session && !guest) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    const localPack = PACKS.find((item) => item.id === category);
+    if (!localPack) {
+      toast.error("Ce type de booster n’est pas disponible.");
+      return;
+    }
+    let localDraw: PulledCard[];
+    let ownedIdsBeforeOpen: string[];
+    try {
+      ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
+      localDraw = sortBoosterCardsByRarity(markNewBoosterCards(
+        createLocalGuestDraw(cards, localPack.id, count),
+        ownedIdsBeforeOpen,
+      ));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Tirage local impossible.");
+      return;
+    }
+    if (!localDraw.length) {
+      toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
+      return;
+    }
+    try {
+      addGuestCollectionCards(localDraw);
+    } catch (error) {
+      toast.error(error instanceof Error
+        ? `Sauvegarde de la collection impossible : ${error.message}`
+        : "Sauvegarde de la collection impossible.");
+      return;
+    }
     try {
       const raw = localStorage.getItem("zenkai_beta_boosters_v1");
       const parsed = raw ? JSON.parse(raw) : { count: MAX_BETA_BOOSTERS, updatedAt: Date.now() };
@@ -272,181 +301,40 @@ export function BoostersPage() {
       const nextUpdatedAt = betaBoosters >= MAX_BETA_BOOSTERS ? Date.now() : (parsed.updatedAt || Date.now());
       localStorage.setItem("zenkai_beta_boosters_v1", JSON.stringify({ count: nextCount, updatedAt: nextUpdatedAt }));
       setBetaBoosters(nextCount);
-    } catch {}
-    if (category === "zenkai") {
-      toast.error("Le Booster Zenkai nécessite une prise en charge sécurisée du Zen par le serveur.");
-      return;
+    } catch (error) {
+      toast.error(error instanceof Error
+        ? `Cartes sauvegardées, mais stock local indisponible : ${error.message}`
+        : "Cartes sauvegardées, mais stock local indisponible.");
     }
-    if (!session || true) {
-      if (!session && !guest) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      const localPack = PACKS.find((item) => item.id === category);
-      if (!localPack) {
-        toast.error("Ce type de booster n’est pas disponible en mode Invité.");
-        return;
-      }
-      let localDraw: PulledCard[];
-      let ownedIdsBeforeOpen: string[];
-      try {
-        ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
-        localDraw = sortBoosterCardsByRarity(markNewBoosterCards(
-          createLocalGuestDraw(cards, localPack.id, count),
-          ownedIdsBeforeOpen,
-        ));
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Tirage invité impossible.");
-        return;
-      }
-      if (!localDraw.length) {
-        toast.error("Aucune carte disponible dans ce pack pour le tirage local.");
-        return;
-      }
-      try {
-        recordBoosterOpen(null, count, ownedIdsBeforeOpen, localDraw.map((item) => item.card.id));
-        recordSecretDraw(count, localDraw);
-      }
-      catch { toast.error("Tirage effectué, mais progression des missions et XP locales indisponible."); }
+    try {
+      recordBoosterOpen(null, count, ownedIdsBeforeOpen, localDraw.map((item) => item.card.id));
+      recordSecretDraw(count, localDraw);
+    } catch {
+      toast.error("Tirage sauvegardé, mais progression des missions et succès locaux indisponible.");
+    }
 
-      tearRequested.current = false;
-      setPhase("opening");
-      setPulled([]);
-      setAwake(
-        Object.fromEntries(
-          localDraw
-            .filter((item) => item.transcended)
-            .map((item) => [item.userCardId, "transcended" as const]),
-        ),
-      );
-      const started = Date.now();
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
-      );
-      setPulled(localDraw);
-      addGuestCollectionCards(localDraw);
-      queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
-      setOpened(count);
-      const prevXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
-      localStorage.setItem("zenkai_beta_xp", String(prevXp + count * 15));
-      const prevOp = Number(localStorage.getItem("zenkai_beta_opened") || "0");
-      localStorage.setItem("zenkai_beta_opened", String(prevOp + count));
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      await revealAfterOpening();
-      return;
-    }
     tearRequested.current = false;
     setPhase("opening");
     setPulled([]);
-    setAwake({});
-    let ownedIdsBeforeOpen: string[];
-    try {
-      const current = await queryClient.fetchQuery({ ...collectionQuery(session.user.id), staleTime: 0 });
-      ownedIdsBeforeOpen = current.map((row) => row.card_id);
-    } catch (reason) {
-      setPhase("idle");
-      toast.error(reason instanceof Error ? `Collection indisponible : ${reason.message}` : "Collection indisponible. Réessaie.");
-      return;
-    }
-    const started = Date.now();
-    let response: Awaited<ReturnType<typeof supabase.rpc<"open_boosters">>>;
-    try {
-      response = await supabase.rpc("open_boosters", { _category: category, _count: count });
-    } catch (error) {
-      setPhase("idle");
-      toast.error(error instanceof Error
-        ? `Réponse du serveur indisponible : ${error.message}. Vérifie ta collection avant de réessayer.`
-        : "Réponse du serveur indisponible. Vérifie ta collection avant de réessayer.");
-      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
-      return;
-    }
-    const { data, error } = response;
-    const openedAt = new Date();
-    await new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started))));
-
-    if (error || !data?.length) {
-      setPhase("idle");
-      toast.error(
-        error?.message.includes("not_enough_boosters")
-          ? "Pas assez de boosters en stock."
-          : error
-            ? `Réponse du serveur indisponible : ${error.message}. Vérifie ta collection avant de réessayer.`
-            : "Le serveur n'a retourné aucune carte. Vérifie ta collection avant de réessayer.",
-      );
-      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
-      return;
-    }
-    try { recordBoosterOpen(session.user.id, count, ownedIdsBeforeOpen, data.map((item) => item.card_id), openedAt); }
-    catch { toast.error("Booster ouvert, mais progression des missions et XP locales indisponible."); }
-
-    async function failAfterOpen(message: string) {
-      setPhase("idle");
-      toast.error(message);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["profile", userId] }),
-        queryClient.invalidateQueries({ queryKey: ["collection", userId] }),
-        queryClient.invalidateQueries({ queryKey: ["game", userId] }),
-        queryClient.invalidateQueries({ queryKey: ["pity", userId] }),
-      ]);
-    }
-    const fetchCopyStates = () => supabase
-      .from("user_cards")
-      .select("id, transcended")
-      .eq("user_id", session.user.id)
-      .in("id", data.map((row) => row.user_card_id));
-    let copyResult: Awaited<ReturnType<typeof fetchCopyStates>>;
-    try {
-      copyResult = await fetchCopyStates();
-    } catch (reason) {
-      await failAfterOpen(reason instanceof Error
-        ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${reason.message}. Consulte ta collection.`
-        : "Booster ouvert, mais l’état des cartes n’a pas pu être chargé. Consulte ta collection.");
-      return;
-    }
-    const { data: copyStates, error: copyStatesError } = copyResult;
-    if (copyStatesError || !copyStates || copyStates.length !== data.length) {
-      await failAfterOpen(copyStatesError
-        ? `Booster ouvert, mais l’état des cartes n’a pas pu être chargé : ${copyStatesError.message}. Consulte ta collection.`
-        : "Booster ouvert, mais l’état de certaines cartes n’a pas pu être chargé. Consulte ta collection.");
-      return;
-    }
-
-    const transcendedIds = new Set(copyStates.filter((copy) => copy.transcended).map((copy) => copy.id));
-    const byId = new Map(cards.map((c) => [c.id, c]));
-    const items = data
-        .map((row) => {
-          const card = byId.get(row.card_id);
-          if (!card) return null;
-          return {
-            userCardId: row.user_card_id,
-            card,
-            ...(transcendedIds.has(row.user_card_id) ? { transcended: true } : {}),
-          };
-        })
-        .filter((item): item is PulledCard => item !== null);
-    if (items.length !== data.length) {
-      setPhase("idle");
-      toast.error("Booster ouvert, mais certaines cartes manquent dans le catalogue. Consulte ta collection.");
-      void queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
-      return;
-    }
-    try { recordSecretDraw(count, items); }
-    catch { toast.error("Booster ouvert, mais progression des succès secrets indisponible."); }
-    const marked = sortBoosterCardsByRarity(markNewBoosterCards(items, ownedIdsBeforeOpen));
-    setAwake(Object.fromEntries(marked.filter((item) => item.transcended).map((item) => [item.userCardId, "transcended" as const])));
-    setPulled(marked);
-    setOpened(count);
-    queryClient.setQueryData(profileQuery(session.user.id).queryKey, (old) =>
-      old && data[0] ? { ...old, boosters_stored: data[0].boosters_left, stock_updated_at: data[0].stock_updated_at } : old,
+    setAwake(
+      Object.fromEntries(
+        localDraw
+          .filter((item) => item.transcended)
+          .map((item) => [item.userCardId, "transcended" as const]),
+      ),
     );
-    queryClient.invalidateQueries({ queryKey: ["collection", session.user.id] });
-    queryClient.invalidateQueries({ queryKey: ["game", session.user.id] });
-    await queryClient.invalidateQueries({ queryKey: ["pity", session.user.id] });
+    const started = Date.now();
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
+    );
+    setPulled(localDraw);
+    void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
+    setOpened(count);
+    const prevXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
+    localStorage.setItem("zenkai_beta_xp", String(prevXp + count * 15));
+    const prevOp = Number(localStorage.getItem("zenkai_beta_opened") || "0");
+    localStorage.setItem("zenkai_beta_opened", String(prevOp + count));
     window.scrollTo({ top: 0, behavior: "smooth" });
-
     await revealAfterOpening();
   }
 
@@ -457,15 +345,17 @@ export function BoostersPage() {
     setNow(Date.now());
     setPhase("idle");
 
-    if (!userId) return;
     setReturningToBoosters(true);
     try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: profileQuery(userId).queryKey }),
-        queryClient.invalidateQueries({ queryKey: ["collection", userId] }),
-        queryClient.invalidateQueries({ queryKey: ["game", userId] }),
-        queryClient.invalidateQueries({ queryKey: ["pity", userId] }),
-      ]);
+      const updates = [queryClient.invalidateQueries({ queryKey: ["guest-collection"] })];
+      if (userId) {
+        updates.push(
+          queryClient.invalidateQueries({ queryKey: profileQuery(userId).queryKey }),
+          queryClient.invalidateQueries({ queryKey: ["game", userId] }),
+          queryClient.invalidateQueries({ queryKey: ["pity", userId] }),
+        );
+      }
+      await Promise.all(updates);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -558,7 +448,7 @@ export function BoostersPage() {
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{stock ? `${stock.count}/${STOCK_CAP}` : "—"}</strong><p className="text-[10px] text-muted-foreground">{guest ? "stock non suivi" : "boosters en stock"}</p></div>
                 </div>
                 <div className="mt-4 [&>button]:w-full">
-                  <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} ownedCardIds={ownedCardIds} ownershipError={previewCollection.isError} onRetryOwnership={() => { void previewCollection.refetch(); }} />
+                  <BoosterPreviewDialog cards={cards} pack={pack} packLabel={packInfo.label} open={isPackPreviewOpen} onOpenChange={setIsPackPreviewOpen} ownedCardIds={ownedCardIds} ownershipError={guestCollection.isError} onRetryOwnership={() => { void guestCollection.refetch(); }} />
                 </div>
                 <div className="mt-5">
                   <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Chance par booster <span className="font-normal normal-case tracking-normal">· par carte</span></h3>
@@ -587,21 +477,21 @@ export function BoostersPage() {
                 {stock && <p className="mt-2 text-center text-xs text-muted-foreground"><Clock className="mr-1 inline size-3" />{stock.nextInMs === null ? "Stock plein" : `Prochain gratuit dans ${formatCountdown(stock.nextInMs)}`} · {game.data?.bonus_boosters ?? 0} bonus</p>}
                 {game.data && Object.entries(game.data.reward_packs).filter(([, count]) => count > 0).map(([key, count]) => <Button key={key} variant="transcend" className="mt-2 w-full" disabled={busy} onClick={() => open(1, `reward:${key}`)}><Package /> {REWARD_LABELS[key]} ×{count}</Button>)}
                 {pack === "zenkai" && <p className="mt-2 text-xs text-muted-foreground">Achat indisponible : les règles Zen doivent être ajoutées au serveur.</p>}
-                {guest && <p className="mt-2 text-xs text-muted-foreground">Mode invité : tirages simulés, cartes non sauvegardées.</p>}
+                {guest && <p className="mt-2 text-xs text-muted-foreground">Mode invité : tirages simulés, cartes sauvegardées dans la collection locale.</p>}
               </aside>
               <Dialog open={isPackChoiceOpen} onOpenChange={setIsPackChoiceOpen}>
                 <DialogContent className="z-[999] border-amber-400/30 bg-slate-950">
                   <DialogHeader className="pr-8">
                     <DialogTitle>Ouvrir {packInfo.label}</DialogTitle>
                     <DialogDescription>
-                      {!ready ? "Chargement de la session…" : pack === "zenkai" ? "L'achat en Zen nécessite une prise en charge côté serveur." : guest ? "Simulation invitée : les cartes ne sont pas sauvegardées." : "Boosters gratuits : le stock du compte connecté s'applique."}
+                      {!ready ? "Chargement de la session…" : pack === "zenkai" ? "L'achat en Zen nécessite une prise en charge côté serveur." : "Tirages locaux sauvegardés dans cette collection."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-3">
-                    {[1, 10].map((count) => (
+                    {[1, 5, 10].map((count) => (
                       <Button key={count} variant="hero" className="min-h-12" disabled={!ready || busy || pack === "zenkai"} onClick={() => {
                         setIsPackChoiceOpen(false);
-                        void open(count, pack);
+                        void open(count);
                       }}>
                         Ouvrir x{count} · {pack === "zenkai" ? `${(count * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : "Gratuit"}
                       </Button>
@@ -618,7 +508,7 @@ export function BoostersPage() {
         </>
       )}
 
-      {phase !== "idle" && guest && <p className="text-center text-xs text-muted-foreground">Simulation invitée : les cartes révélées ne sont pas sauvegardées.</p>}
+      {phase !== "idle" && <p className="text-center text-xs text-muted-foreground">Tirage local sauvegardé dans ta collection.</p>}
       {phase !== "idle" && <section className={cn("opening-stage flex min-h-[350px] w-full items-center justify-center", phase === "opening" || phase === "tearing" ? "fixed inset-0 z-[1000] overflow-y-auto bg-background px-4" : "relative mt-0 bg-transparent")}>
         {(phase === "tearing" || phase === "reveal" || phase === "summary") && <OpeningAura rarity={tearBeam} stage={phase} />}
         {phase === "reveal" ? (

@@ -262,7 +262,7 @@ export function useCardsByPack(pack: PackId) {
 }
 
 export function useUserCards(userId?: string | null) {
-  return useQuery({ ...collectionQuery(userId ?? ""), enabled: !!userId });
+  return useQuery({ ...collectionQuery(userId ?? ""), enabled: false });
 }
 
 export function useProfile(userId?: string | null) {

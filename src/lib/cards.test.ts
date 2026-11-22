@@ -170,6 +170,21 @@ describe("booster content", () => {
     expect(normalizeCatalogCard({ ...card, name: "Nami", id: "nami-TR" }).rarity).toBe("rare");
     expect(normalizeCatalogCard({ ...card, name: "Nami", transcendance_series_number: "001" }).rarity).toBe("rare");
   });
+  it.each(["shonen", "Shonen Mix", "shonen-mix", "SHONEN-MIX", "shonen_mix", "all", "all-star"])(
+    "includes the full catalogue in Shonen Mix aliases (%s)",
+    (pack) => {
+      const card: Card = {
+        id: "seinen-card",
+        name: "Seinen",
+        title: "",
+        description: "",
+        rarity: "rare",
+        sort_order: 0,
+        category: "seinen",
+      };
+      expect(inPack(card, pack)).toBe(true);
+    },
+  );
   it("applies custom lowercase name overrides before existing rules without changing Transcendance", () => {
     const card: Card = { id: "nami", name: "NAMI", title: "", description: "", rarity: "rare", sort_order: 0 };
     CUSTOM_RARITY["nami"] = "legendaire";
