@@ -85,12 +85,14 @@ vi.mock("@/components/Transcendance", () => ({
 describe("collection filters and sorting", () => {
   afterEach(() => localStorage.removeItem("zenkai:favorite-cards"));
 
-  it("affiche par défaut les cartes de la plus rare à la moins rare", () => {
+  it("affiche par défaut les cartes possédées d'abord, puis les autres par rareté", () => {
     fixtures.localOwned = true;
     try {
       render(<CollectionPage />);
       const names = () => screen.getAllByTestId("collection-card").map((element) => element.textContent);
-      expect(screen.getByLabelText("Trier la collection")).toHaveValue("rarest");
+      expect(screen.getByLabelText("Trier la collection")).toHaveValue("owned-rarest");
+      expect(names()).toEqual(["Mythic awakened", "Common", "Rare card"]);
+      fireEvent.change(screen.getByLabelText("Trier la collection"), { target: { value: "rarest" } });
       expect(names()).toEqual(["Mythic awakened", "Rare card", "Common"]);
       fireEvent.change(screen.getByLabelText("Trier la collection"), { target: { value: "recent" } });
       expect(names()).toEqual(["Common", "Mythic awakened", "Rare card"]);

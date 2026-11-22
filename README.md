@@ -143,8 +143,9 @@ annonce du joueur dont le prix ne dépasse pas la suggestion de sa rareté ; sin
 l'enchère suit son cours. Les anciennes annonces sans prix immédiat restent inchangées.
 Évite les transactions simultanées dans plusieurs onglets. Si le catalogue distant est
 indisponible, la salle utilise les cartes intégrées et indique que le choix est réduit.
-La collection est triée par rareté effective décroissante par défaut, et permet aussi
-de choisir un autre tri et de filtrer par rareté ; les compteurs
+La collection affiche par défaut les cartes possédées avant les autres, chaque groupe
+étant trié par rareté effective décroissante. Elle permet aussi de choisir un autre tri
+et de filtrer par rareté ; les compteurs
 indiquent les formes distinctes possédées après le filtre de pack. Les estimations locales
 dépendent de la rareté et de la popularité du catalogue ; le recyclage groupé local conserve
 la copie ordinaire la plus ancienne, exclut les Transcendances et arrondit le bonus Zenkai+

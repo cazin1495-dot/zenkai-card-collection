@@ -124,7 +124,7 @@ export function CollectionPage() {
   }
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
-  const [sort, setSort] = useState<CollectionSort>("rarest");
+  const [sort, setSort] = useState<CollectionSort>("owned-rarest");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const { favoriteCardIds } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
@@ -237,6 +237,7 @@ export function CollectionPage() {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <label htmlFor="collection-sort" className="text-sm font-bold">Trier la collection</label>
         <select id="collection-sort" value={sort} onChange={(event) => setSort(event.target.value as CollectionSort)} className="rounded-lg border border-primary/30 bg-surface px-3 py-2 text-sm">
+          <option value="owned-rarest">Possédées d'abord · Plus rare → Commune</option>
           <option value="rarest">Rareté : Plus rare → Commune</option>
           <option value="commonest">Rareté : Commune → Plus rare</option>
           <option value="value">Valeur Zen (Plus chères en premier)</option>

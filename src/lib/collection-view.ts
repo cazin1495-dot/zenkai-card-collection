@@ -1,7 +1,7 @@
 import { getCardMarketPrice, rarityRank, type Card, type Rarity } from "./cards";
 
 type Copy = { card_id: string; obtained_at: string; transcended: boolean };
-export type CollectionSort = "recent" | "rarest" | "commonest" | "value" | "duplicates";
+export type CollectionSort = "recent" | "owned-rarest" | "rarest" | "commonest" | "value" | "duplicates";
 export type CollectionEntry = {
   card: Card;
   rarity: Rarity;
@@ -48,9 +48,12 @@ export function collectionEntries(
 
 export function sortCollectionEntries(entries: CollectionEntry[], sort: CollectionSort) {
   return [...entries].sort((a, b) => {
-    if (sort === "rarest" || sort === "commonest") {
+    if (sort === "owned-rarest" || sort === "rarest" || sort === "commonest") {
+      if (sort === "owned-rarest" && (a.count > 0) !== (b.count > 0)) {
+        return a.count > 0 ? -1 : 1;
+      }
       const rarity = rarityRank(a.rarity) - rarityRank(b.rarity);
-      if (rarity) return sort === "rarest" ? rarity : -rarity;
+      if (rarity) return sort === "commonest" ? -rarity : rarity;
       return (b.card.popularity ?? 0) - (a.card.popularity ?? 0);
     }
     if (sort === "value") {

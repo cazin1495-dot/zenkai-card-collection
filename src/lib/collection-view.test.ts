@@ -74,6 +74,26 @@ describe("collection view", () => {
     ]);
   });
 
+  it("sorts owned forms first and orders each ownership group by effective rarity", () => {
+    const cards = [
+      card("common-owned", "commune"),
+      card("mythic-missing", "mythique"),
+      card("legendary-owned", "legendaire"),
+      card("rare-missing", "rare"),
+      card("awakened", "rare"),
+    ];
+    const copies = [
+      { card_id: "common-owned", obtained_at: "2025-01-03", transcended: false },
+      { card_id: "common-owned", obtained_at: "2025-01-04", transcended: false },
+      { card_id: "legendary-owned", obtained_at: "2025-01-01", transcended: false },
+      { card_id: "awakened", obtained_at: "2025-01-02", transcended: true },
+    ];
+    const entries = collectionEntries(cards, copies, new Set());
+    expect(sortCollectionEntries(entries, "owned-rarest").map((entry) => entry.card.id)).toEqual([
+      "awakened", "legendary-owned", "common-owned", "mythic-missing", "rare-missing",
+    ]);
+  });
+
   it("breaks rarity ties by popularity and ranks value using effective copy rarity", () => {
     const cards = [
       { ...card("less-popular", "rare"), popularity: 1000 },
