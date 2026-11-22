@@ -1,3 +1,4 @@
+import { addGuestCollectionCards } from "@/lib/guest-collection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -248,6 +249,8 @@ export function BoostersPage() {
         setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
       );
       setPulled(localDraw);
+      addGuestCollectionCards(localDraw);
+      queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
       setOpened(count);
       const prevXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
       localStorage.setItem("zenkai_beta_xp", String(prevXp + count * 15));
