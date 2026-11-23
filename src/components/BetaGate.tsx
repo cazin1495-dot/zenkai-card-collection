@@ -10,8 +10,8 @@ import { betaCountdown, betaEnded, claimBetaAccess, hasBetaAccess, wipeBetaProgr
 export function BetaGate({ children }: { children: ReactNode }) {
   const { session, ready } = useAuth();
   const client = useQueryClient();
-  const [effectiveNow, setNow] = useState<number | null>(null);
-  const [access, setAccess] = useState(false);
+  const [effectiveNow, setNow] = useState<number | null>(() => Date.effectiveNow());
+  const [access, setAccess] = useState(() => { try { return hasBetaAccess(); } catch { return false; } });
   const [creator, setCreator] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
