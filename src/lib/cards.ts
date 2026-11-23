@@ -128,7 +128,21 @@ export function setUserRarityOverride(cardIdOrName: string, rarity: CatalogRarit
   window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
   void supabase
     .from("card_rarity_overrides")
-    .upsert({ card_key: key, rarity, updated_at: new Date().toISOString() }, { onConflict: "card_key" });
+    .upsert({ card_key: key, rarity, updated_at: new Date().toISOString() }, { onConflict: "card_key" })
+    .then(({ error }) => {
+      if (error) console.error("Erreur synchro rareté Supabase:", error.message);
+    });
+}
+
+export async function syncAllLocalRaritiesToSupabase() {
+  const local = getUserRarityOverrides();
+  const rows = Object.entries(local).map(([card_key, rarity]) => ({
+    card_key,
+    rarity,
+    updated_at: new Date().toISOString(),
+  }));
+  if (rows.length === 0) return;
+  await supabase.from("card_rarity_overrides").upsert(rows, { onConflict: "card_key" });
 }
 
 export function subscribeUserRarityOverrides(onChange: () => void) {

@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DEMON_SLAYER_MYTHIC_CARDS, getUserRarityOverrides, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, getUserRarityOverrides,
+  syncAllLocalRaritiesToSupabase, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
 import { getCards } from "./cards.functions";
 
 export { CUSTOM_RARITY } from "./cards";
@@ -268,6 +269,12 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      if ((authData?.user?.email ?? "").toLowerCase().trim() === "cazin1495@gmail.com") {
+        await syncAllLocalRaritiesToSupabase();
+      }
+    } catch {}
     let remoteOverrides: Record<string, any> = {};
     try {
       const { data: rows } = await supabase.from("card_rarity_overrides").select("card_key, rarity");
@@ -297,8 +304,8 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },
-  staleTime: 20_000,
-  refetchInterval: 20_000,
+  staleTime: 10_000,
+  refetchInterval: 10_000,
   refetchOnWindowFocus: true,
 });
 
