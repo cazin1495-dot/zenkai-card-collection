@@ -18,6 +18,14 @@ type RarityDatabase = Omit<Database, "public"> & {
 
 const rarityClient = supabase as SupabaseClient<RarityDatabase>;
 
+export function normalizeRarityLookupKey(value: string): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export async function fetchRarityOverrides(): Promise<Record<string, CatalogRarity>> {
   const pageSize = 1000;
   const result: Record<string, CatalogRarity> = {};
@@ -35,7 +43,7 @@ export async function fetchRarityOverrides(): Promise<Record<string, CatalogRari
   }
 }
 
-export async function saveRarityOverride(cardKey: string, rarity: CatalogRarity) {
+export async function saveRarityOverride(cardKey: string, rarity: CatalogRarity, cardName?: string) {
   const { error } = await rarityClient.from("card_rarity_overrides").upsert(
     { card_key: cardKey, rarity, updated_at: new Date().toISOString() },
     { onConflict: "card_key" },

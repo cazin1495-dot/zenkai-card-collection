@@ -223,7 +223,7 @@ export function BoosterPreviewDialog({
                         }
                         try {
                           setSavingRarity(true);
-                          await saveRarityOverride(entry.card.id, value);
+                          await saveRarityOverride(entry.card.id, value, entry.card.name);
                           applyRemoteRarityOverrides({ ...getUserRarityOverrides(), [entry.card.id]: value });
                           toast.success("Rareté d'affichage enregistrée pour tous les joueurs.");
                         } catch (error) {
