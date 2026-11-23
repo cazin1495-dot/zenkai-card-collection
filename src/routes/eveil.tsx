@@ -61,6 +61,9 @@ export function MissionsPage() {
     mission_started_at: new Date().toISOString(),
     level: 1,
     xp: 0,
+    coins: 0,
+    bonus_boosters: 0,
+    reward_packs: {} as Record<string, number>,
   };
   const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
   const todaySeed = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) || 1;
@@ -163,7 +166,7 @@ export function MissionsPage() {
     {state && <section className="mt-7 border-y border-border py-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-xs uppercase text-muted-foreground">{usernameStatus.username ?? (usernameStatus.isError ? "Pseudo indisponible" : "Choisir un pseudo")}</p><h2 className="mt-2 font-display text-2xl font-bold">Niveau {state.level}<span className="ml-2 text-sm text-muted-foreground">/ {MAX_LEVEL}</span></h2></div>
-        <div className="flex items-center gap-5 text-sm font-semibold"><span className="flex items-center gap-2 text-rarity-legendaire"><Coins className="size-4" />{state.coins.toLocaleString("fr-FR")}</span><span className="flex items-center gap-2 text-accent"><Package className="size-4" />{state.bonus_boosters} bonus</span></div>
+        <div className="flex items-center gap-5 text-sm font-semibold"><span className="flex items-center gap-2 text-rarity-legendaire"><Coins className="size-4" />{(state.coins ?? 0).toLocaleString("fr-FR")}</span><span className="flex items-center gap-2 text-accent"><Package className="size-4" />{state.bonus_boosters} bonus</span></div>
       </div>
       <div role="progressbar" aria-label="Progression XP" aria-valuemin={0} aria-valuemax={xpGoal} aria-valuenow={Math.min(state.xp, xpGoal)} className="mt-5 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gradient-primary transition-all" style={{ width: `${state.level === MAX_LEVEL ? 100 : Math.min(100, state.xp / xpGoal * 100)}%` }} /></div>
       <p className="mt-2 text-xs text-muted-foreground">{state.level === MAX_LEVEL ? "Divinité Zenkai · Niveau maximum" : `${state.xp.toLocaleString("fr-FR")} / ${xpGoal.toLocaleString("fr-FR")} XP`}</p>
