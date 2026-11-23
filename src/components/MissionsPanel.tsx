@@ -66,10 +66,7 @@ export function MissionsPanel({ accountId, claimingAll = false }: { accountId: s
           }}>{daily?.claimed ? "Réclamé aujourd'hui" : "Réclamer le bonus du jour"}</Button>
         </section>
         <div><h2 className="text-xl font-bold">Missions quotidiennes &amp; succès</h2><p className="mt-1 text-sm text-muted-foreground">Zen et XP locaux sur cet appareil. Les tirages invités sont des simulations non sauvegardées. Réinitialisation à minuit (heure locale).</p></div>
-        {accountId && <div role="group" aria-label="Progression des missions" className="flex gap-2">
-          <Button size="sm" variant={scope === "account" ? "hero" : "glass"} aria-pressed={scope === "account"} disabled={claimingAll} onClick={() => setScope("account")}>Compte connecté</Button>
-          <Button size="sm" variant={scope === "local" ? "hero" : "glass"} aria-pressed={scope === "local"} disabled={claimingAll} onClick={() => setScope("local")}>Collection locale</Button>
-        </div>}
+        
         {error && <p role="alert" className="text-sm text-destructive">Progression ou collection indisponible. Vérifie le stockage et la connexion.</p>}
         {([true, false] as const).map((daily) => <section key={String(daily)} className="space-y-2">
           <h3 className="font-bold text-amber-300">{daily ? "Missions du jour" : "Succès collection"}</h3>
