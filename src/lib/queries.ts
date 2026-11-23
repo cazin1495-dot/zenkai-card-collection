@@ -19,6 +19,44 @@ const OP_LEGENDARY_IDS = parseIds("729");
 // One Piece — Antagonistes : Doflamingo, Crocodile, Katakuri, Kaido, Buggy, Barbe Noire
 const OP_ANTAGONIST_IDS = parseIds("19986,2745,123779,125667,2460,14251");
 
+
+// 9 nouveaux animés : Fairy Tail, SNK, Yozakura Family, Atelier des Sorciers, Magical DoReMi, Kilari, Inazuma Eleven, Tokyo Mew Mew, Dr. STONE
+const FT_MYTHIC_IDS = parseIds("5187,5189,4839,5186,33753,16789");
+const FT_LEGENDARY_IDS = parseIds("4840,7008,16788,7111,13895,21329");
+const FT_ANTAGONIST_IDS = parseIds("33753,16789,21329,39249,47281,66917");
+
+const SNK_MYTHIC_IDS = parseIds("40882,45627,40881,46494,46484,46486");
+const SNK_LEGENDARY_IDS = parseIds("46496,46490,46488,46492,46498,46500");
+const SNK_ANTAGONIST_IDS = parseIds("46484,46486,46490,46488,71329");
+
+const YOZAKURA_MYTHIC_IDS = parseIds("154994,154995,154996");
+const YOZAKURA_LEGENDARY_IDS = parseIds("154997,154998,154999,155000,155001");
+const YOZAKURA_ANTAGONIST_IDS = parseIds("195722,195723");
+
+const ATELIER_MYTHIC_IDS = parseIds("124420,124421");
+const ATELIER_LEGENDARY_IDS = parseIds("124422,124423,124424,124425");
+const ATELIER_ANTAGONIST_IDS = parseIds("124426,124427");
+
+const DOREMI_MYTHIC_IDS = parseIds("2481,2482,2483,2484");
+const DOREMI_LEGENDARY_IDS = parseIds("2485,2486,10935");
+const DOREMI_ANTAGONIST_IDS = parseIds("16955,16956");
+
+const KILARI_MYTHIC_IDS = parseIds("5995,5996,5997");
+const KILARI_LEGENDARY_IDS = parseIds("5998,5999,11521");
+const KILARI_ANTAGONIST_IDS = parseIds("11522,11523");
+
+const INAZUMA_MYTHIC_IDS = parseIds("14103,14104,14105,22106");
+const INAZUMA_LEGENDARY_IDS = parseIds("22107,22108,22109,22110,27193");
+const INAZUMA_ANTAGONIST_IDS = parseIds("22109,27193,27194,35801");
+
+const MEWMEW_MYTHIC_IDS = parseIds("2300,2301,2302,2303,2304");
+const MEWMEW_LEGENDARY_IDS = parseIds("3679,3680,10455");
+const MEWMEW_ANTAGONIST_IDS = parseIds("3679,3680,10455");
+
+const DRSTONE_MYTHIC_IDS = parseIds("122320,124034,124035,124036");
+const DRSTONE_LEGENDARY_IDS = parseIds("124037,124038,136028,136029");
+const DRSTONE_ANTAGONIST_IDS = parseIds("124036,136029,158711");
+
 const HXH_MYTHIC_IDS = parseIds("27,30,31,28,23277,57,23338,23278");
 const HXH_LEGENDARY_IDS = parseIds("33,3200,27996,58193,4423,23337");
 const HXH_ANTAGONIST_IDS = parseIds("31,23277,57,23278,33,3200,26165,24558,24560,58,12300");
@@ -191,8 +229,41 @@ export const cardsQuery = queryOptions({
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
     const op = await fetchAnimeCharacters(21, "One Piece", OP_MYTHIC_IDS, OP_LEGENDARY_IDS, OP_ANTAGONIST_IDS, 1000, "Pirate / Antagoniste", "Pirate / Protagoniste");
-    const hxh = await fetchAnimeCharacters(11061, "Hunter x Hunter", HXH_MYTHIC_IDS, HXH_LEGENDARY_IDS, HXH_ANTAGONIST_IDS, 900, "Antagoniste", "Hunter");
-    const mha = await fetchAnimeCharacters(21459, "My Hero Academia", MHA_MYTHIC_IDS, MHA_LEGENDARY_IDS, MHA_ANTAGONIST_IDS, 1000, "Antagoniste", "Héros");
+    const [
+      hxh,
+      mha,
+      fairyTailRaw,
+      snkRaw,
+      yozakuraRaw,
+      atelierRaw,
+      doremiRaw,
+      kilariRaw,
+      inazumaRaw,
+      mewmewRaw,
+      drStoneRaw,
+    ] = await Promise.all([
+      fetchAnimeCharacters(11061, "Hunter x Hunter", HXH_MYTHIC_IDS, HXH_LEGENDARY_IDS, HXH_ANTAGONIST_IDS, 900, "Antagoniste", "Hunter"),
+      fetchAnimeCharacters(21459, "My Hero Academia", MHA_MYTHIC_IDS, MHA_LEGENDARY_IDS, MHA_ANTAGONIST_IDS, 1000, "Antagoniste", "Héros"),
+      fetchAnimeCharacters(6702, "Fairy Tail", FT_MYTHIC_IDS, FT_LEGENDARY_IDS, FT_ANTAGONIST_IDS, 1100, "Antagoniste", "Mage"),
+      fetchAnimeCharacters(16498, "L'Attaque des Titans", SNK_MYTHIC_IDS, SNK_LEGENDARY_IDS, SNK_ANTAGONIST_IDS, 1200, "Antagoniste", "Soldat"),
+      fetchAnimeCharacters(158898, "Mission: Yozakura Family", YOZAKURA_MYTHIC_IDS, YOZAKURA_LEGENDARY_IDS, YOZAKURA_ANTAGONIST_IDS, 1300, "Antagoniste", "Espion"),
+      fetchAnimeCharacters(147105, "L'Atelier des Sorciers", ATELIER_MYTHIC_IDS, ATELIER_LEGENDARY_IDS, ATELIER_ANTAGONIST_IDS, 1400, "Antagoniste", "Sorcier"),
+      fetchAnimeCharacters(350, "Magical DoReMi", DOREMI_MYTHIC_IDS, DOREMI_LEGENDARY_IDS, DOREMI_ANTAGONIST_IDS, 1500, "Antagoniste", "Apprentie Sorcière"),
+      fetchAnimeCharacters(1543, "Kilari", KILARI_MYTHIC_IDS, KILARI_LEGENDARY_IDS, KILARI_ANTAGONIST_IDS, 1600, "Antagoniste", "Idole"),
+      fetchAnimeCharacters(5231, "Inazuma Eleven", INAZUMA_MYTHIC_IDS, INAZUMA_LEGENDARY_IDS, INAZUMA_ANTAGONIST_IDS, 1700, "Antagoniste", "Joueur"),
+      fetchAnimeCharacters(756, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 1800, "Antagoniste", "Mew Mew"),
+      fetchAnimeCharacters(105333, "Dr. STONE", DRSTONE_MYTHIC_IDS, DRSTONE_LEGENDARY_IDS, DRSTONE_ANTAGONIST_IDS, 1900, "Antagoniste", "Scientifique"),
+    ]);
+
+    const fairyTail = fairyTailRaw.map((c) => ({ ...c, category: "shonen" }));
+    const snk = snkRaw.map((c) => ({ ...c, category: "shonen" }));
+    const yozakura = yozakuraRaw.map((c) => ({ ...c, category: "shonen" }));
+    const atelier = atelierRaw.map((c) => ({ ...c, category: "seinen" }));
+    const doremi = doremiRaw.map((c) => ({ ...c, category: "shojo" }));
+    const kilari = kilariRaw.map((c) => ({ ...c, category: "shojo" }));
+    const inazuma = inazumaRaw.map((c) => ({ ...c, category: "sport" }));
+    const mewmew = mewmewRaw.map((c) => ({ ...c, category: "shojo" }));
+    const drStone = drStoneRaw.map((c) => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
@@ -206,6 +277,15 @@ export const cardsQuery = queryOptions({
       ...hxh.filter((card) => !existingIds.has(card.id)),
       ...mha.filter((card) => !existingIds.has(card.id)),
       ...hsr.filter((card) => !existingIds.has(card.id)),
+      ...fairyTail.filter((card) => !existingIds.has(card.id)),
+      ...snk.filter((card) => !existingIds.has(card.id)),
+      ...yozakura.filter((card) => !existingIds.has(card.id)),
+      ...atelier.filter((card) => !existingIds.has(card.id)),
+      ...doremi.filter((card) => !existingIds.has(card.id)),
+      ...kilari.filter((card) => !existingIds.has(card.id)),
+      ...inazuma.filter((card) => !existingIds.has(card.id)),
+      ...mewmew.filter((card) => !existingIds.has(card.id)),
+      ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },
   staleTime: Infinity,
