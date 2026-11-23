@@ -10,7 +10,7 @@ import { betaCountdown, betaEnded, claimBetaAccess, hasBetaAccess, wipeBetaProgr
 export function BetaGate({ children }: { children: ReactNode }) {
   const { session, ready } = useAuth();
   const client = useQueryClient();
-  const [effectiveNow, setNow] = useState<number | null>(() => Date.effectiveNow());
+  const [effectiveNow, setNow] = useState<number | null>(() => Date.now());
   const [access, setAccess] = useState(() => { try { return hasBetaAccess(); } catch { return false; } });
   const [creator, setCreator] = useState(false);
   const [code, setCode] = useState("");
@@ -23,12 +23,12 @@ export function BetaGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const refresh = () => {
-      setNow(Date.effectiveNow());
+      setNow(Date.now());
       try { setAccess(hasBetaAccess()); }
       catch { setError("Stockage local indisponible. Autorise son utilisation et réessaie."); }
     };
     refresh();
-    const timer = window.setInterval(() => setNow(Date.effectiveNow()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     window.addEventListener("storage", refresh);
     window.addEventListener("focus", refresh);
     return () => {
