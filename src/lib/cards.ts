@@ -146,6 +146,23 @@ export async function syncAllLocalRaritiesToSupabase(): Promise<{ count: number;
   return { count: rows.length };
 }
 
+export function applyRemoteRarityOverrides(remote: Record<string, string>) {
+  if (typeof window === "undefined" || !remote || typeof remote !== "object") return;
+  const current = getUserRarityOverrides();
+  let changed = false;
+  const merged: Record<string, string> = { ...current };
+  for (const [k, v] of Object.entries(remote)) {
+    if (k && v && merged[k] !== v) {
+      merged[k] = v;
+      changed = true;
+    }
+  }
+  if (changed) {
+    window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
+  }
+}
+
 export function subscribeUserRarityOverrides(onChange: () => void) {
   const onStorage = (event: StorageEvent) => {
     if (event.key === USER_RARITY_OVERRIDES_KEY || event.key === null) onChange();

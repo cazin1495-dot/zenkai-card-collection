@@ -1,7 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DEMON_SLAYER_MYTHIC_CARDS, getUserRarityOverrides,
-  syncAllLocalRaritiesToSupabase, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
+  syncAllLocalRaritiesToSupabase,
+  applyRemoteRarityOverrides, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
 import { getCards } from "./cards.functions";
 
 export { CUSTOM_RARITY } from "./cards";
@@ -285,7 +286,8 @@ export const cardsQuery = queryOptions({
         }
       }
     } catch {}
-    const overrides = { ...remoteOverrides, ...getUserRarityOverrides() };
+    applyRemoteRarityOverrides(remoteOverrides);
+    const overrides = { ...getUserRarityOverrides(), ...remoteOverrides };
     return [
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
