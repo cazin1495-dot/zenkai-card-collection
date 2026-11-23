@@ -99,7 +99,7 @@ export function MarketSaleDialog({
         <DialogHeader>
           <DialogTitle>Mettre une carte en vente</DialogTitle>
           <DialogDescription>
-            Marché fictif local : la copie sera retirée de ta collection jusqu’à la vente ou
+            Vente sur le marché : la copie sera retirée de ta collection jusqu’à la vente ou
             l’annulation.
           </DialogDescription>
         </DialogHeader>
@@ -122,7 +122,7 @@ export function MarketSaleDialog({
             <option key={copy.id} value={copy.id}>
               {byId.get(copy.card_id)?.name}
               {copy.transcended || copy.customTranscendance ? " · Transcendance" : ""} ·{" "}
-              {copy.id.slice(-8)}
+              {card.rarity} · {(counts.get(card.id) ?? 1) > 1 ? `x${counts.get(card.id)} (doublon)` : "dernier exemplaire"}
             </option>
           ))}
         </select>
