@@ -1,3 +1,6 @@
+import { updateGuestState } from "@/lib/guest-collection";
+import { addGuestXp } from "@/lib/guest-level";
+import { syncDailyMissionDay } from "@/lib/game";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,11 +39,17 @@ export function MissionsPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
-  const state = game.data;
+  syncDailyMissionDay();
+  const localDailyState = {
+    mission_opened: Number(localStorage.getItem("zenkai_beta_opened") || "0"),
+    mission_recycled: Number(localStorage.getItem("zenkai_beta_recycled") || "0"),
+    mission_claims: JSON.parse(localStorage.getItem("zenkai_beta_claims") || "[]") as string[],
+  };
+  const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
   const missions = [
-    { id: "login", title: "Se connecter", icon: LogIn, progress: session ? 1 : 0, goal: 1, reward: "+100 Coins", xp: 0 },
-    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Coins", xp: 30 },
-    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Coins", xp: 25 },
+    { id: "login", title: "Se connecter", icon: LogIn, progress: 1, goal: 1, reward: "+100 Zen", xp: 0 },
+    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Zen", xp: 30 },
+    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Zen", xp: 25 },
   ];
   const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
     (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);
@@ -138,7 +147,7 @@ export function MissionsPage() {
     <details className="mt-10 border-t border-border pt-5">
     <summary className="cursor-pointer text-lg font-bold">Progression et missions du compte en ligne</summary>
     <p className="mt-2 text-sm text-muted-foreground">Cette progression serveur, ses Coins et ses récompenses sont distincts du niveau, des missions et des Zen locaux ci-dessus.</p>
-    {!session && <Button variant="hero" className="mt-6" asChild><Link to="/auth">Connexion</Link></Button>}
+    
     {game.isError && <div role="alert" className="mt-5 flex items-center gap-3 text-sm text-destructive">Le profil n’a pas pu être chargé.<Button variant="glass" size="sm" onClick={() => game.refetch()}>Réessayer</Button></div>}
     {session && !state && !game.isError && <p className="mt-6 text-sm text-muted-foreground">Chargement du profil…</p>}
     {state && <section className="mt-7 border-y border-border py-6">

@@ -1,3 +1,4 @@
+import { recordDailyBoosterOpen } from "@/lib/game";
 import { addGuestCollectionCards } from "@/lib/guest-collection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";

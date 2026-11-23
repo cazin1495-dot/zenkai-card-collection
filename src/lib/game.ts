@@ -51,10 +51,35 @@ export const gameQuery = (userId: string) => queryOptions({
       ...state,
       level: prog.level,
       xp: prog.progress,
-      mission_opened: Number(localStorage.getItem("zenkai_beta_opened") || "0"),
+      mission_opened: (() => { syncDailyMissionDay(); return Number(localStorage.getItem("zenkai_beta_opened") || "0"); })(),
       mission_recycled: Number(localStorage.getItem("zenkai_beta_recycled") || "0"),
       mission_claims: JSON.parse(localStorage.getItem("zenkai_beta_claims") || "[]"),
     };
   },
   staleTime: 2_000,
 });
+
+
+const DAILY_DAY_KEY = "zenkai_beta_daily_day_v1";
+export function syncDailyMissionDay() {
+  if (typeof window === "undefined") return;
+  const today = new Date().toISOString().slice(0, 10);
+  if (localStorage.getItem(DAILY_DAY_KEY) !== today) {
+    localStorage.setItem(DAILY_DAY_KEY, today);
+    localStorage.setItem("zenkai_beta_opened", "0");
+    localStorage.setItem("zenkai_beta_recycled", "0");
+    localStorage.setItem("zenkai_beta_claims", "[]");
+  }
+}
+export function recordDailyBoosterOpen(count = 1) {
+  if (typeof window === "undefined") return;
+  syncDailyMissionDay();
+  const prev = Number(localStorage.getItem("zenkai_beta_opened") || "0");
+  localStorage.setItem("zenkai_beta_opened", String(prev + Math.max(1, count)));
+}
+export function recordDailyRecycle(count = 1) {
+  if (typeof window === "undefined") return;
+  syncDailyMissionDay();
+  const prev = Number(localStorage.getItem("zenkai_beta_recycled") || "0");
+  localStorage.setItem("zenkai_beta_recycled", String(prev + Math.max(1, count)));
+}

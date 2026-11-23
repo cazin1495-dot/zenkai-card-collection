@@ -1,3 +1,4 @@
+import { recordDailyRecycle } from "@/lib/game";
 import {
   getCardRecycleValue,
   isLegacyDemonSlayerTranscendanceCardId,
@@ -256,6 +257,7 @@ export function recycleGuestCollection(
   expected?: { rarities?: readonly CatalogRarity[]; total: number },
   bonusActive?: boolean,
 ) {
+  recordDailyRecycle(Array.isArray(copyIds) ? copyIds.length : 1);
   const state = readState();
   const active = bonusActive ?? state.plus.active;
   const eligible = new Map(guestDuplicates(state.rows, cards).map((row) => [row.id, row]));
