@@ -17,6 +17,14 @@ import { MissionsPanel } from "@/components/MissionsPanel";
 import { useQuests } from "@/hooks/use-quests";
 import { availableQuestCount, claimAllQuests } from "@/lib/quests";
 
+function safeLocalGet(key: string, fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    return window.localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 function addLocalMissionXp(amount: number) {
   if (typeof window === "undefined" || amount <= 0) return;
   const key = "zenkai_guest_xp_v1";
@@ -47,9 +55,9 @@ export function MissionsPage() {
   useEffect(() => { setNow(Date.now()); const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   syncDailyMissionDay();
   const localDailyState = {
-    mission_opened: Number(localStorage.getItem("zenkai_beta_opened") || "0"),
-    mission_recycled: Number(localStorage.getItem("zenkai_beta_recycled") || "0"),
-    mission_claims: JSON.parse(localStorage.getItem("zenkai_beta_claims") || "[]") as string[],
+    mission_opened: Number(safeLocalGet("zenkai_beta_opened", "0")),
+    mission_recycled: Number(safeLocalGet("zenkai_beta_recycled", "0")),
+    mission_claims: JSON.parse(safeLocalGet("zenkai_beta_claims", "[]")) as string[],
     mission_started_at: new Date().toISOString(),
   };
   const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
