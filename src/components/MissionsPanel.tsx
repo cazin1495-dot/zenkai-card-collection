@@ -36,7 +36,7 @@ export function useMissionData(userId: string | null, enabled = true) {
 
 export function MissionsPanel({ accountId, claimingAll = false }: { accountId: string | null; claimingAll?: boolean }) {
   const [scope, setScope] = useState<"account" | "local">("account");
-  const userId = scope === "account" ? accountId : null;
+  const userId = null;
   const { state, error, daily, dailyError } = useMissionData(userId);
   return <section className="mt-7 space-y-5">
         <section aria-label="Bonus de connexion journalier" className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-950/40 via-violet-950/30 to-background p-4 sm:p-5">
