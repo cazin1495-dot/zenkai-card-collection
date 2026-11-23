@@ -96,7 +96,7 @@ export function MarketSaleDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-md overflow-y-auto border-white/10 bg-[#12151e] p-5 text-white">
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-h-[92vh] max-w-md overflow-y-auto border-white/10 bg-[#12151e] p-5 text-white">
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl font-extrabold tracking-tight text-white">Mettre en vente</DialogTitle>
           <DialogDescription className="text-sm text-zinc-400">
@@ -104,8 +104,8 @@ export function MarketSaleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Sélecteur de personnage sans aucun code chiffré */}
-        <div>
+        {/* Sélecteur de personnage sans aucun code chiffré (uniquement si aucun personnage pré-sélectionné) */}
+        {!initialCopyId && <div>
           <label htmlFor="market-copy" className="mb-1.5 block text-xs font-medium text-zinc-400">
             Personnage sélectionné
           </label>
@@ -130,7 +130,7 @@ export function MarketSaleDialog({
               );
             })}
           </select>
-        </div>
+        </div>}
 
         {/* Carte aperçu style Kyara : miniature + nom + rareté + copies vendables */}
         {selected && selectedCard && (
