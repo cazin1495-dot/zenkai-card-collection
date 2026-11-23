@@ -1,8 +1,16 @@
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { betaEnded, hasBetaAccess } from "./beta";
 
-export function signInWithGoogle() {
-  return lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+export async function signInWithGoogle() {
+  try {
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (!res?.error) return res;
+  } catch {}
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin },
+  });
 }
 
 const LOCAL_GUEST_KEY = "zenkai:local-guest";
