@@ -111,6 +111,19 @@ export function parseUserRarityOverrides(raw: string | null): Record<string, Cat
   return Object.fromEntries(entries);
 }
 
+export const DEFAULT_USER_RARITY_OVERRIDES: Record<string, CardRarity> = {
+  "al-12464": "legendaire",
+  "al-12465": "legendaire",
+  "ds-muichiro": "legendaire",
+  "ds-obanai": "legendaire",
+  "ds-sanemi": "legendaire",
+  "ds-gyomei": "legendaire",
+  "hsr-1": "legendaire",
+  "hsr-6": "epique",
+  "hsr-7": "epique",
+  "hsr-8": "legendaire",
+};
+
 export function getUserRarityOverridesSnapshot(): string | null {
   return typeof window === "undefined" ? null : window.localStorage.getItem(USER_RARITY_OVERRIDES_KEY);
 }
