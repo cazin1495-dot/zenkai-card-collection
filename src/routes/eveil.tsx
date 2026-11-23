@@ -46,10 +46,24 @@ export function MissionsPage() {
     mission_claims: JSON.parse(localStorage.getItem("zenkai_beta_claims") || "[]") as string[],
   };
   const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
+  const todaySeed = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) || 1;
+  const missionPool = [
+    { id: "login", title: "Présence quotidienne", icon: LogIn, progress: 1, goal: 1, reward: "+100 Zen", xp: 0, zen: 100 },
+    { id: "open_2", title: "Ouvrir 2 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 2, reward: "+25 XP · +50 Zen", xp: 25, zen: 50 },
+    { id: "open_3", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+35 XP · +75 Zen", xp: 35, zen: 75 },
+    { id: "open_5", title: "Ouvrir 5 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 5, reward: "+60 XP · +120 Zen", xp: 60, zen: 120 },
+    { id: "recycle_1", title: "Recycler 1 doublon", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 1, reward: "+20 XP · +50 Zen", xp: 20, zen: 50 },
+    { id: "recycle_2", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+30 XP · +75 Zen", xp: 30, zen: 75 },
+    { id: "recycle_4", title: "Recycler 4 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 4, reward: "+50 XP · +110 Zen", xp: 50, zen: 110 },
+    { id: "cards_10", title: "Obtenir 10 cartes aujourd'hui", icon: Package, progress: Number(localStorage.getItem("zenkai_beta_daily_cards") || "0"), goal: 10, reward: "+35 XP · +80 Zen", xp: 35, zen: 80 },
+    { id: "zenkai_1", title: "Ouvrir 1 Booster Zenkai", icon: Package, progress: Number(localStorage.getItem("zenkai_beta_daily_zenkai_pack") || "0"), goal: 1, reward: "+50 XP · +150 Zen", xp: 50, zen: 150 },
+  ];
+  const openVariants = [missionPool[1], missionPool[2], missionPool[3]];
+  const thirdVariants = [missionPool[4], missionPool[5], missionPool[6], missionPool[7], missionPool[8]];
   const missions = [
-    { id: "login", title: "Se connecter", icon: LogIn, progress: 1, goal: 1, reward: "+100 Zen", xp: 0 },
-    { id: "open", title: "Ouvrir 3 boosters", icon: Package, progress: state?.mission_opened ?? 0, goal: 3, reward: "+30 XP · +50 Zen", xp: 30 },
-    { id: "recycle", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+25 XP · +50 Zen", xp: 25 },
+    missionPool[0],
+    openVariants[todaySeed % openVariants.length],
+    thirdVariants[(todaySeed * 3 + 1) % thirdVariants.length],
   ];
   const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
     (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);

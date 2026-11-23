@@ -69,6 +69,8 @@ export function syncDailyMissionDay() {
     localStorage.setItem("zenkai_beta_opened", "0");
     localStorage.setItem("zenkai_beta_recycled", "0");
     localStorage.setItem("zenkai_beta_claims", "[]");
+    localStorage.setItem("zenkai_beta_daily_zenkai_pack", "0");
+    localStorage.setItem("zenkai_beta_daily_cards", "0");
   }
 }
 export function recordDailyBoosterOpen(count = 1) {
@@ -76,10 +78,19 @@ export function recordDailyBoosterOpen(count = 1) {
   syncDailyMissionDay();
   const prev = Number(localStorage.getItem("zenkai_beta_opened") || "0");
   localStorage.setItem("zenkai_beta_opened", String(prev + Math.max(1, count)));
+  const prevCards = Number(localStorage.getItem("zenkai_beta_daily_cards") || "0");
+  localStorage.setItem("zenkai_beta_daily_cards", String(prevCards + Math.max(1, count) * 5));
 }
 export function recordDailyRecycle(count = 1) {
   if (typeof window === "undefined") return;
   syncDailyMissionDay();
   const prev = Number(localStorage.getItem("zenkai_beta_recycled") || "0");
   localStorage.setItem("zenkai_beta_recycled", String(prev + Math.max(1, count)));
+}
+
+export function recordDailyZenkaiPackOpen(count = 1) {
+  if (typeof window === "undefined") return;
+  syncDailyMissionDay();
+  const prev = Number(localStorage.getItem("zenkai_beta_daily_zenkai_pack") || "0");
+  localStorage.setItem("zenkai_beta_daily_zenkai_pack", String(prev + Math.max(1, count)));
 }
