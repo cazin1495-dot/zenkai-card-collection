@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import riku from "@/assets/characters/riku.jpg";
 import mei from "@/assets/characters/mei.jpg";
 import taro from "@/assets/characters/taro.jpg";
@@ -125,6 +126,9 @@ export function setUserRarityOverride(cardIdOrName: string, rarity: CatalogRarit
   const next = { ...getUserRarityOverrides(), [key]: rarity };
   window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(next));
   window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
+  void supabase
+    .from("card_rarity_overrides")
+    .upsert({ card_key: key, rarity, updated_at: new Date().toISOString() }, { onConflict: "card_key" });
 }
 
 export function subscribeUserRarityOverrides(onChange: () => void) {

@@ -268,7 +268,16 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-    const overrides = getUserRarityOverrides();
+    let remoteOverrides: Record<string, any> = {};
+    try {
+      const { data: rows } = await supabase.from("card_rarity_overrides").select("card_key, rarity");
+      if (Array.isArray(rows)) {
+        for (const row of rows) {
+          if (row?.card_key && row?.rarity) remoteOverrides[row.card_key] = row.rarity;
+        }
+      }
+    } catch {}
+    const overrides = { ...remoteOverrides, ...getUserRarityOverrides() };
     return [
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
@@ -288,7 +297,9 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },
-  staleTime: Infinity,
+  staleTime: 20_000,
+  refetchInterval: 20_000,
+  refetchOnWindowFocus: true,
 });
 
 export const profileQuery = (userId: string) =>
