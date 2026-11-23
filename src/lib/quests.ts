@@ -17,10 +17,31 @@ type QuestState = {
 };
 type Copy = { card_id: string; transcended: boolean; customTranscendance?: boolean | undefined };
 
+
+const DAILY_DAY_SEED = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) || 1;
+const DAILY_OPEN1_VARIANTS = [
+  { label: "Ouvrir 2 boosters aujourd'hui", target: 2, reward: 100, xp: 40 },
+  { label: "Ouvrir 3 boosters aujourd'hui", target: 3, reward: 120, xp: 50 },
+  { label: "Ouvrir 4 boosters aujourd'hui", target: 4, reward: 150, xp: 60 },
+];
+const DAILY_OPEN2_VARIANTS = [
+  { label: "Ouvrir 6 boosters aujourd'hui", target: 6, reward: 220, xp: 75 },
+  { label: "Ouvrir 8 boosters aujourd'hui", target: 8, reward: 280, xp: 90 },
+  { label: "Ouvrir 10 boosters aujourd'hui", target: 10, reward: 350, xp: 100 },
+];
+const DAILY_RECYCLE_VARIANTS = [
+  { label: "Recycler 2 doublons aujourd'hui", target: 2, reward: 100, xp: 45 },
+  { label: "Recycler 3 doublons aujourd'hui", target: 3, reward: 125, xp: 60 },
+  { label: "Recycler 5 doublons aujourd'hui", target: 5, reward: 150, xp: 75 },
+];
+const TODAY_OPEN1 = DAILY_OPEN1_VARIANTS[DAILY_DAY_SEED % DAILY_OPEN1_VARIANTS.length]!;
+const TODAY_OPEN2 = DAILY_OPEN2_VARIANTS[(DAILY_DAY_SEED * 2 + 1) % DAILY_OPEN2_VARIANTS.length]!;
+const TODAY_RECYCLE = DAILY_RECYCLE_VARIANTS[(DAILY_DAY_SEED * 3 + 2) % DAILY_RECYCLE_VARIANTS.length]!;
+
 export const QUESTS: { id: QuestId; label: string; target: number; reward: number; xp: number; daily: boolean }[] = [
-  { id: "open3", label: "Ouvrir 3 boosters aujourd'hui", target: 3, reward: 120, xp: 50, daily: true },
-  { id: "open10", label: "Ouvrir 10 boosters aujourd'hui", target: 10, reward: 350, xp: 100, daily: true },
-  { id: "recycle5", label: "Recycler 5 doublons aujourd'hui", target: 5, reward: 150, xp: 75, daily: true },
+  { id: "open3", ...TODAY_OPEN1, daily: true },
+  { id: "open10", ...TODAY_OPEN2, daily: true },
+  { id: "recycle5", ...TODAY_RECYCLE, daily: true },
   { id: "unique25", label: "Posséder 25 cartes uniques", target: 25, reward: 250, xp: 100, daily: false },
   { id: "mythic", label: "Obtenir une carte Mythique", target: 1, reward: 400, xp: 150, daily: false },
   { id: "transcendance", label: "Obtenir une carte Transcendance", target: 1, reward: 1000, xp: 300, daily: false },

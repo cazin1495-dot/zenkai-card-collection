@@ -307,6 +307,9 @@ export function BoostersPage() {
         : "Cartes sauvegardées, mais stock local indisponible.");
     }
     try {
+      if (session?.user?.id) {
+        recordBoosterOpen(session.user.id, count, ownedIdsBeforeOpen, localDraw.map((item) => item.card.id));
+      }
       recordBoosterOpen(null, count, ownedIdsBeforeOpen, localDraw.map((item) => item.card.id));
       recordSecretDraw(count, localDraw);
     } catch {

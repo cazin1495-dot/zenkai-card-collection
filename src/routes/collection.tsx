@@ -93,7 +93,7 @@ export function CollectionPage() {
       try {
         const gained = recycleGuestCollection([copy.id], cards.data, { total: value }, session ? getPlus(session.user.id, false).active : undefined);
         toast.success(`Doublon recyclé · +${gained} Zen locaux`);
-        try { recordQuestActivity(null, "recycled", 1); }
+        try { if (session?.user?.id) recordQuestActivity(session.user.id, "recycled", 1); recordQuestActivity(null, "recycled", 1); }
         catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       } catch (error) {
         toast.error(error instanceof Error ? `Recyclage impossible : ${error.message}` : "Recyclage impossible.");
@@ -312,7 +312,7 @@ function RecycleDialog({ cards, copies, active, userId, onClose }: {
   function submit() {
     try {
       const gain = recycleGuestCollection(selectedCopies.map((copy) => copy.id), cards, { rarities, total }, userId ? getPlus(userId, false).active : undefined);
-      try { recordQuestActivity(null, "recycled", selectedCopies.length); }
+      try { if (session?.user?.id) recordQuestActivity(session.user.id, "recycled", selectedCopies.length); recordQuestActivity(null, "recycled", selectedCopies.length); }
       catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
       onClose();
