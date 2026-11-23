@@ -1,5 +1,4 @@
 import { updateGuestState } from "@/lib/guest-collection";
-import { addGuestXp } from "@/lib/guest-level";
 import { syncDailyMissionDay } from "@/lib/game";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -18,6 +17,13 @@ import { MissionsPanel } from "@/components/MissionsPanel";
 import { useQuests } from "@/hooks/use-quests";
 import { availableQuestCount, claimAllQuests } from "@/lib/quests";
 
+function addLocalMissionXp(amount: number) {
+  if (typeof window === "undefined" || amount <= 0) return;
+  const key = "zenkai_guest_xp_v1";
+  const prev = Number(localStorage.getItem(key) || "0");
+  localStorage.setItem(key, String(prev + amount));
+  window.dispatchEvent(new Event("zenkai-guest-updated"));
+}
 export const Route = createFileRoute("/eveil")({
   head: () => ({ meta: [
     { title: "Missions & Niveaux — ZENKAI" },
@@ -44,6 +50,7 @@ export function MissionsPage() {
     mission_opened: Number(localStorage.getItem("zenkai_beta_opened") || "0"),
     mission_recycled: Number(localStorage.getItem("zenkai_beta_recycled") || "0"),
     mission_claims: JSON.parse(localStorage.getItem("zenkai_beta_claims") || "[]") as string[],
+    mission_started_at: new Date().toISOString(),
   };
   const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
   const todaySeed = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) || 1;
@@ -55,16 +62,9 @@ export function MissionsPage() {
     { id: "recycle_1", title: "Recycler 1 doublon", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 1, reward: "+20 XP · +50 Zen", xp: 20, zen: 50 },
     { id: "recycle_2", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+30 XP · +75 Zen", xp: 30, zen: 75 },
     { id: "recycle_4", title: "Recycler 4 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 4, reward: "+50 XP · +110 Zen", xp: 50, zen: 110 },
-    { id: "cards_10", title: "Obtenir 10 cartes aujourd'hui", icon: Package, progress: Number(localStorage.getItem("zenkai_beta_daily_cards") || "0"), goal: 10, reward: "+35 XP · +80 Zen", xp: 35, zen: 80 },
-    { id: "zenkai_1", title: "Ouvrir 1 Booster Zenkai", icon: Package, progress: Number(localStorage.getItem("zenkai_beta_daily_zenkai_pack") || "0"), goal: 1, reward: "+50 XP · +150 Zen", xp: 50, zen: 150 },
   ];
-  const openVariants = [missionPool[1], missionPool[2], missionPool[3]];
-  const thirdVariants = [missionPool[4], missionPool[5], missionPool[6], missionPool[7], missionPool[8]];
-  const missions = [
-    missionPool[0],
-    openVariants[todaySeed % openVariants.length],
-    thirdVariants[(todaySeed * 3 + 1) % thirdVariants.length],
-  ];
+  const openVariants = [missionPool.at(1)!, missionPool.at(2)!, missionPool.at(3)!];
+  const thirdVariants = [missionPool.at(4)!, missionPool.at(5)!, missionPool.at(6)!, missionPool.at(7)!, missionPool.at(8)!];
   const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
     (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);
   const onlineReady = state ? missions.filter((mission) => mission.progress >= mission.goal && !state.mission_claims.includes(mission.id)).length : 0;
