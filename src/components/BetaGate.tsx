@@ -10,7 +10,7 @@ import { betaCountdown, betaEnded, claimBetaAccess, hasBetaAccess, wipeBetaProgr
 export function BetaGate({ children }: { children: ReactNode }) {
   const { session, ready } = useAuth();
   const client = useQueryClient();
-  const [now, setNow] = useState<number | null>(null);
+  const [effectiveNow, setNow] = useState<number | null>(null);
   const [access, setAccess] = useState(false);
   const [creator, setCreator] = useState(false);
   const [code, setCode] = useState("");
@@ -19,16 +19,16 @@ export function BetaGate({ children }: { children: ReactNode }) {
   const [closed, setClosed] = useState(false);
   const [retry, setRetry] = useState(0);
   const clicks = useRef(0);
-  const expired = now !== null && betaEnded(now);
+  const expired = effectiveNow !== null && betaEnded(effectiveNow);
 
   useEffect(() => {
     const refresh = () => {
-      setNow(Date.now());
+      setNow(Date.effectiveNow());
       try { setAccess(hasBetaAccess()); }
       catch { setError("Stockage local indisponible. Autorise son utilisation et réessaie."); }
     };
     refresh();
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.effectiveNow()), 1000);
     window.addEventListener("storage", refresh);
     window.addEventListener("focus", refresh);
     return () => {
@@ -86,7 +86,7 @@ export function BetaGate({ children }: { children: ReactNode }) {
     } finally { setGoogleLoading(false); }
   }
 
-  if (now === null) return <p className="p-6 text-center">Chargement de la bêta…</p>;
+  if (effectiveNow === null) return <p className="p-6 text-center">Chargement de la bêta…</p>;
 
   if (!creator && expired) return (
     <div className="grid min-h-screen place-items-center px-4 py-8 text-center">
@@ -103,7 +103,7 @@ export function BetaGate({ children }: { children: ReactNode }) {
   const warning = "Connexion Google disponible pendant la Bêta Test. Attention : les cartes, Zen, niveaux et progrès de test sont destinés à être remis à zéro à la sortie officielle. La remise à zéro des comptes en ligne reste à configurer.";
   return <>
     <div className="border-b border-amber-400/40 bg-gradient-to-r from-violet-950 via-amber-950 to-violet-950 px-3 py-2 text-center text-xs font-bold text-amber-200 sm:text-sm">
-      {expired ? "✦ BÊTA TERMINÉE · ACCÈS LOCAL CRÉATEUR ✦" : `✦ BÊTA TEST (1 SEMAINE) · FIN DANS : ${betaCountdown(now)} · Les progrès de la Bêta seront réinitialisés à la sortie officielle ✦`}
+      {expired ? "✦ BÊTA TERMINÉE · ACCÈS LOCAL CRÉATEUR ✦" : `✦ BÊTA TEST (1 SEMAINE) · FIN DANS : ${betaCountdown(effectiveNow)} · Les progrès de la Bêta seront réinitialisés à la sortie officielle ✦`}
       <p className="mt-1 text-[10px] font-normal text-amber-100 sm:text-xs">{warning}</p>
     </div>
     {access || creator ? children : (
