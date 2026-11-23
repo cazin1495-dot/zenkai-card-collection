@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "../lib/queries";
 import { useEffect, useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil, X } from "lucide-react";
@@ -213,7 +214,7 @@ export function BoosterPreviewDialog({
                     <select
                       aria-label={`Rareté de ${entry.card.name}`}
                       value={entry.card.rarity}
-                      onChange={(event) => {
+                      onChange={async (event) => {
                         const value = event.target.value;
                         if (!isCatalogRarity(value)) {
                           toast.error("Rareté invalide.");
@@ -221,7 +222,13 @@ export function BoosterPreviewDialog({
                         }
                         try {
                           setUserRarityOverride(entry.card.id, value);
-                          toast.success("Rareté mise à jour !");
+                          const { error: syncErr } = await (supabase as any).from("card_rarity_overrides")
+    .upsert({ card_key: String(entry.card.id), rarity: value, updated_at: new Date().toISOString() }, { onConflict: "card_key" });
+  if (syncErr) {
+    toast.error("Modifié en local uniquement (Supabase : " + syncErr.message + ")");
+  } else {
+    toast.success("Rareté mise à jour pour tous les joueurs !");
+  }
                         } catch {
                           toast.error("Impossible d'enregistrer la rareté. Vérifie le stockage du navigateur.");
                         }

@@ -126,23 +126,24 @@ export function setUserRarityOverride(cardIdOrName: string, rarity: CatalogRarit
   const next = { ...getUserRarityOverrides(), [key]: rarity };
   window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(next));
   window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
-  void supabase
-    .from("card_rarity_overrides")
+  void (supabase as any).from("card_rarity_overrides")
     .upsert({ card_key: key, rarity, updated_at: new Date().toISOString() }, { onConflict: "card_key" })
     .then(({ error }) => {
       if (error) console.error("Erreur synchro rareté Supabase:", error.message);
     });
 }
 
-export async function syncAllLocalRaritiesToSupabase() {
+export async function syncAllLocalRaritiesToSupabase(): Promise<{ count: number; error?: string }> {
   const local = getUserRarityOverrides();
   const rows = Object.entries(local).map(([card_key, rarity]) => ({
     card_key,
     rarity,
     updated_at: new Date().toISOString(),
   }));
-  if (rows.length === 0) return;
-  await supabase.from("card_rarity_overrides").upsert(rows, { onConflict: "card_key" });
+  if (rows.length === 0) return { count: 0 };
+  const { error } = await (supabase as any).from("card_rarity_overrides").upsert(rows, { onConflict: "card_key" });
+  if (error) return { count: 0, error: error.message };
+  return { count: rows.length };
 }
 
 export function subscribeUserRarityOverrides(onChange: () => void) {

@@ -272,12 +272,13 @@ export const cardsQuery = queryOptions({
     try {
       const { data: authData } = await supabase.auth.getUser();
       if ((authData?.user?.email ?? "").toLowerCase().trim() === "cazin1495@gmail.com") {
-        await syncAllLocalRaritiesToSupabase();
+        const res = await syncAllLocalRaritiesToSupabase();
+        if (res.error) console.warn("Synchro raretés:", res.error);
       }
     } catch {}
     let remoteOverrides: Record<string, any> = {};
     try {
-      const { data: rows } = await supabase.from("card_rarity_overrides").select("card_key, rarity");
+      const { data: rows } = await (supabase as any).from("card_rarity_overrides").select("card_key, rarity");
       if (Array.isArray(rows)) {
         for (const row of rows) {
           if (row?.card_key && row?.rarity) remoteOverrides[row.card_key] = row.rarity;
@@ -304,8 +305,8 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card, overrides));
   },
-  staleTime: 10_000,
-  refetchInterval: 10_000,
+  staleTime: 5_000,
+  refetchInterval: 5_000,
   refetchOnWindowFocus: true,
 });
 
