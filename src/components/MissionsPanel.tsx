@@ -77,9 +77,9 @@ export function MissionsPanel({ accountId, claimingAll = false }: { accountId: s
             const progress = state ? Math.min(questProgress(state, quest.id), quest.target) : 0;
             const claimed = state && (daily ? state.dailyClaimed : state.achievementClaimed).includes(quest.id);
             return <div key={quest.id} className="flex items-center justify-between gap-3 rounded-xl border border-violet-400/20 bg-violet-950/20 p-3">
-              <div><p className="text-sm font-semibold">{quest.label}</p><p className="text-xs text-muted-foreground">{progress} / {quest.target} · +{quest.reward.toLocaleString("fr-FR")} Zen locaux · +{quest.xp} XP</p></div>
+              <div><p className="text-sm font-semibold">{quest.label}</p><p className="text-xs text-muted-foreground">{progress} / {quest.target} · +{quest.reward.toLocaleString("fr-FR")} Zen · +{quest.xp} XP</p></div>
               <Button size="sm" variant={progress >= quest.target && !claimed ? "hero" : "glass"} disabled={claimingAll || !state || !!claimed || progress < quest.target} onClick={() => {
-                try { const reward = claimQuest(userId, quest.id); toast.success(`Récompense réclamée ! +${reward} Zen locaux · +${quest.xp} XP`); }
+                try { const reward = claimQuest(userId, quest.id); toast.success(`Récompense réclamée ! +${reward} Zen · +${quest.xp} XP`); }
                 catch (reason) { toast.error(reason instanceof Error ? reason.message : "Récompense indisponible."); }
               }}>{claimed ? "Réclamée" : "Réclamer"}</Button>
             </div>;
