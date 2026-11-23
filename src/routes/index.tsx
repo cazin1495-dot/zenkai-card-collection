@@ -79,6 +79,7 @@ export function BoostersPage() {
   const [packFilter, setPackFilter] = useState<PackFilter>("free");
   const [isPackPreviewOpen, setIsPackPreviewOpen] = useState(false);
   const [isPackChoiceOpen, setIsPackChoiceOpen] = useState(false);
+  const [showAllPacks, setShowAllPacks] = useState(false);
   const [pulled, setPulled] = useState<PulledCard[]>([]);
   const [opened, setOpened] = useState(1);
   const [awake, setAwake] = useState<Awake>({});
