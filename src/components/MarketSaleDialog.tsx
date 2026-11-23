@@ -122,7 +122,7 @@ export function MarketSaleDialog({
             <option key={copy.id} value={copy.id}>
               {byId.get(copy.card_id)?.name}
               {copy.transcended || copy.customTranscendance ? " · Transcendance" : ""} ·{" "}
-              {card.rarity} · {(counts.get(card.id) ?? 1) > 1 ? `x${counts.get(card.id)} (doublon)` : "dernier exemplaire"}
+              {byId.get(copy.card_id)?.rarity ?? ""} · {(counts.get(copy.card_id) ?? 1) > 1 ? `x${counts.get(copy.card_id)} (doublon)` : "dernier exemplaire"}
             </option>
           ))}
         </select>
