@@ -162,7 +162,7 @@ export function MarketSaleDialog({
         {/* Carte aperçu style Kyara : miniature + nom + rareté + copies vendables */}
         {selected && selectedCard && (
           <div className="flex items-center gap-3.5 rounded-2xl border border-white/10 bg-[#181c27] p-3">
-            <img
+            <img loading="lazy" decoding="async"
               src={selectedCard.image_url}
               alt={selectedCard.name}
               className="h-20 w-14 shrink-0 rounded-lg border border-white/10 object-cover shadow-md"

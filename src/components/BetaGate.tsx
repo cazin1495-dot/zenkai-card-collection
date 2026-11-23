@@ -107,8 +107,8 @@ export function BetaGate({ children }: { children: ReactNode }) {
       <p className="mt-1 text-[10px] font-normal text-amber-100 sm:text-xs">{warning}</p>
     </div>
     {access || creator ? children : (
-      <div className="grid min-h-[70dvh] place-items-center px-4 py-8">
-        <div className="w-full max-w-md rounded-3xl border border-amber-400/40 bg-gradient-to-br from-violet-950 to-black p-6 text-center shadow-xl sm:p-8">
+      <div className="grid min-h-[70dvh] place-items-center px-4 py-8 transform-gpu will-change-transform">
+        <div className="w-full max-w-md rounded-3xl border border-amber-400/40 bg-[#120d24] p-6 text-center shadow-lg transform-gpu sm:p-8">
           <button type="button" onClick={unlockCreator} className="font-display text-3xl font-black text-amber-300">ZENKAI</button>
           <h1 className="mt-5 text-xl font-bold">Bêta Test Ouverte · 1 semaine</h1>
           <p className="mt-2 text-sm text-muted-foreground">Entre ton code d'accès pour commencer.</p>

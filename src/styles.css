@@ -1608,3 +1608,12 @@ body:has(.transcendence-slam-overlay) > header {
     animation: none;
   }
 }
+
+/* Optimisation fluidité tactile et rendu 60fps mobile */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  text-rendering: optimizeSpeed;
+}
+button, a, input, select {
+  touch-action: manipulation;
+}

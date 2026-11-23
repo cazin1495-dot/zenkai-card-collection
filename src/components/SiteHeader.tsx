@@ -130,7 +130,7 @@ export function SiteHeader() {
           </div>
         </details>
         <div className="hidden md:block">{session ? <div aria-label="Profil joueur" className="player-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-border bg-foreground/5 p-2">
-          {plusActive ? <PlusAvatar image={plusAvatar ?? avatar} name="Ton avatar" active /> : avatar ? <img src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
+          {plusActive ? <PlusAvatar image={plusAvatar ?? avatar} name="Ton avatar" active /> : avatar ? <img loading="lazy" decoding="async" src={avatar} alt="Avatar Son Goku" className="size-9 shrink-0 rounded-md object-cover sm:size-10" /> : <Zap className="size-8 text-rarity-legendaire" />}
           <div className="min-w-0"><p className="max-w-28 truncate text-[11px] font-semibold">{playerName}</p>{plusActive && <PlusBadge />}<LocalLevel compact /><div className="player-metrics mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-muted-foreground"><span title="Zenkai Coins" className="flex items-center gap-1 whitespace-nowrap"><Coins className="size-3 text-rarity-legendaire" /> {game.data?.coins ?? "…"}</span><span aria-label="Boosters disponibles" className="flex items-center gap-1 text-accent"><Package className="size-3" />{stock === null ? "…" : stock + (game.data?.bonus_boosters ?? 0)}</span></div></div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter" className="size-7"><LogOut className="size-3.5" /></Button>
         </div> : guest ? (

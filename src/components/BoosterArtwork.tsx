@@ -14,7 +14,7 @@ export function BoosterArtwork({ src, alt, className }: Props) {
   const imageSrc = !isProtagoniste && (failedSrc === src || !src) ? PACK_ARTWORK : src;
 
   return (
-    <img
+    <img loading="lazy" decoding="async"
       src={imageSrc}
       alt={alt}
       draggable={false}

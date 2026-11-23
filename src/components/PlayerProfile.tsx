@@ -606,7 +606,7 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
                   className="flex min-w-0 items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-950/30 p-2 text-left hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
                 >
                   {image.src ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={image.src}
                       alt=""
                       className="h-14 w-10 shrink-0 rounded object-cover"
@@ -648,7 +648,7 @@ function AvatarPortrait({
 }) {
   const [failed, setFailed] = useState(false);
   return portrait?.src && !failed ? (
-    <img src={portrait.src} alt={`Avatar ${portrait.name}`} onError={() => setFailed(true)} />
+    <img loading="lazy" decoding="async" src={portrait.src} alt={`Avatar ${portrait.name}`} onError={() => setFailed(true)} />
   ) : (
     <span>{username.trim().charAt(0).toLocaleUpperCase("fr") || "J"}</span>
   );

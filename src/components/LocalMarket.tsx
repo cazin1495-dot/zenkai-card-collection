@@ -234,7 +234,7 @@ export function LocalMarket() {
                 {card && (item.kind === "auction" || item.rarity === "transcendance") ? (
                   <AnimeCard card={card} transcended={item.copy?.transcended} customTranscendance={item.rarity === "transcendance" && !item.copy?.transcended} compact />
                 ) : card?.image_url && (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={card.image_url}
                     alt=""
                     className="aspect-[2.5/3.5] w-full rounded-lg object-cover"

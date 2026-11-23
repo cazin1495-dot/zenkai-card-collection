@@ -107,7 +107,7 @@ export function BoosterPack({
         {tearing ? (
           <>
             <div aria-hidden className="pack-first-card absolute left-1/2 top-1/2 mx-auto h-[268px] w-48 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-transparent">
-              <img
+              <img loading="lazy" decoding="async"
                 src={backImage}
                 alt=""
                 className={cn(

@@ -37,7 +37,7 @@ export function PlusAvatar({
       className={`relative inline-flex size-10 shrink-0 rounded-full ${active ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-violet-700 shadow-[0_0_15px_rgba(251,191,36,0.55)]" : ""}`}
     >
       {image ? (
-        <img src={image} alt={name} className="size-full rounded-full object-cover" />
+        <img loading="lazy" decoding="async" src={image} alt={name} className="size-full rounded-full object-cover" />
       ) : (
         <Zap className="size-full rounded-full bg-surface p-2 text-primary" />
       )}
@@ -132,7 +132,7 @@ export function ZenkaiPlus({ cards = [] }: { cards?: readonly Card[] }) {
                 className="rounded-xl border border-border p-2 text-center disabled:opacity-50 aria-pressed:border-primary"
               >
                 {plusAvatarImage(avatar.id, cards) ? (
-                  <img src={plusAvatarImage(avatar.id, cards)} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                  <img loading="lazy" decoding="async" src={plusAvatarImage(avatar.id, cards)} alt="" className="aspect-square w-full rounded-lg object-cover" />
                 ) : (
                   <span className="grid aspect-square w-full place-items-center rounded-lg bg-muted text-xs text-muted-foreground">Portrait indisponible</span>
                 )}
