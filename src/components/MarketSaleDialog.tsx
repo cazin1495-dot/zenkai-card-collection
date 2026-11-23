@@ -55,6 +55,7 @@ export function MarketSaleDialog({
   const [kind, setKind] = useState<"fixed" | "auction">(initialKind);
   const [price, setPrice] = useState(() => suggestedPrices(initialCopyId, initialKind).price);
   const [buyoutPrice, setBuyoutPrice] = useState(() => suggestedPrices(initialCopyId, initialKind).buyout);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [duration, setDuration] = useState("1440");
   const selected = selectable.find((copy) => copy.id === copyId);
   const last = selected && copies.filter((copy) => sameForm(copy, selected)).length === 1;
@@ -105,32 +106,58 @@ export function MarketSaleDialog({
         </DialogHeader>
 
         {/* Sélecteur de personnage sans aucun code chiffré (uniquement si aucun personnage pré-sélectionné) */}
-        {!initialCopyId && <div>
-          <label htmlFor="market-copy" className="mb-1.5 block text-xs font-medium text-zinc-400">
-            Personnage sélectionné
-          </label>
-          <select
-            id="market-copy"
-            value={copyId}
-            onChange={(event) => {
-              setCopyId(event.target.value);
-              const suggested = suggestedPrices(event.target.value, kind);
-              setPrice(suggested.price);
-              setBuyoutPrice(suggested.buyoutPrice);
-            }}
-            className="w-full rounded-xl border border-white/10 bg-[#191d28] px-3 py-2.5 text-sm font-medium text-white outline-none focus:border-amber-500"
-          >
-            {selectable.map((copy) => {
-              const c = byId.get(copy.card_id);
-              const count = selectable.filter((item) => item.card_id === copy.card_id).length;
-              return (
-                <option key={copy.id} value={copy.id}>
-                  {c?.name ?? "Carte"} · {c?.rarity ?? ""} {count > 1 ? `(${count} copies)` : ""}
-                </option>
-              );
-            })}
-          </select>
-        </div>}
+        {!initialCopyId && (
+          <div className="relative">
+            <span className="mb-1.5 block text-xs font-medium text-zinc-400">
+              Personnage sélectionné
+            </span>
+            <button
+              type="button"
+              onClick={() => setPickerOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-[#191d28] px-3.5 py-2.5 text-left text-sm font-semibold text-white transition hover:border-amber-500/60"
+            >
+              <span className="truncate">
+                {selectedCard ? `${selectedCard.name} · ${selectedCard.rarity}` : "Choisir un personnage"}
+              </span>
+              <span className="ml-2 text-xs text-zinc-400">{pickerOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {pickerOpen && (
+              <div className="mt-1.5 max-h-52 overflow-y-auto rounded-xl border border-white/10 bg-[#191d28] p-1 shadow-xl">
+                {selectable.map((copy) => {
+                  const c = byId.get(copy.card_id);
+                  const count = selectable.filter((item) => item.card_id === copy.card_id).length;
+                  const active = copy.id === copyId;
+                  return (
+                    <button
+                      key={copy.id}
+                      type="button"
+                      onClick={() => {
+                        setCopyId(copy.id);
+                        const suggested = suggestedPrices(copy.id, kind);
+                        setPrice(suggested.price);
+                        setBuyoutPrice(suggested.buyoutPrice);
+                        setPickerOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                        active
+                          ? "bg-amber-500/20 font-bold text-amber-300"
+                          : "text-zinc-200 hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="truncate">
+                        {c?.name ?? "Carte"} · <span className="text-xs text-zinc-400">{c?.rarity ?? ""}</span>
+                      </span>
+                      {count > 1 && (
+                        <span className="ml-2 shrink-0 text-xs text-zinc-400">({count} copies)</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Carte aperçu style Kyara : miniature + nom + rareté + copies vendables */}
         {selected && selectedCard && (
