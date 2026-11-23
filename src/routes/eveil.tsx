@@ -59,6 +59,8 @@ export function MissionsPage() {
     mission_recycled: Number(safeLocalGet("zenkai_beta_recycled", "0")),
     mission_claims: JSON.parse(safeLocalGet("zenkai_beta_claims", "[]")) as string[],
     mission_started_at: new Date().toISOString(),
+    level: 1,
+    xp: 0,
   };
   const state = game.data ? { ...game.data, ...localDailyState } : localDailyState;
   const todaySeed = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) || 1;
@@ -79,76 +81,62 @@ export function MissionsPage() {
   const totalReady = localReady + onlineReady;
   async function claim(id: string) {
     if (pending) return;
+    syncDailyMissionDay();
+    const mission = missions.find((m) => m.id === id);
+    if (!mission || mission.progress < mission.goal) {
+      toast.error("Mission pas encore terminée.");
+      return;
+    }
+    const claims: string[] = JSON.parse(safeLocalGet("zenkai_beta_claims", "[]"));
+    if (claims.includes(id)) {
+      toast.error("Récompense déjà réclamée aujourd'hui.");
+      return;
+    }
     setPending(id);
     try {
-      const { data, error } = await supabase.rpc("claim_mission", { _mission: id });
-      if (error) throw error;
-      queryClient.setQueryData(onlineMissionQuery(userId).queryKey, parseOnlineGameState(data));
-      void queryClient.invalidateQueries({ queryKey: gameQuery(userId).queryKey });
-      toast.success("Récompense ajoutée à ton profil.");
-    } catch { toast.error("Cette récompense n’est pas disponible. Actualise tes missions."); await game.refetch(); }
-    finally { setPending(null); }
+      const zenGain = mission.zen ?? 50;
+      const xpGain = mission.xp ?? 0;
+      const nextClaims = [...claims, id];
+      window.localStorage.setItem("zenkai_beta_claims", JSON.stringify(nextClaims));
+      updateGuestState((st) => ({ state: { ...st, zen: st.zen + zenGain }, result: true }));
+      if (xpGain > 0) addLocalMissionXp(xpGain);
+      await queryClient.invalidateQueries();
+      toast.success(`Récompense réclamée : +${zenGain} Zen${xpGain > 0 ? ` · +${xpGain} XP` : ""} !`);
+    } finally {
+      setPending(null);
+    }
   }
   async function claimAll() {
     if (pending) return;
+    syncDailyMissionDay();
+    const claims: string[] = JSON.parse(safeLocalGet("zenkai_beta_claims", "[]"));
+    const ready = missions.filter((m) => m.progress >= m.goal && !claims.includes(m.id));
+    const localReadyCount = accountQuests.readyCount + guestQuests.readyCount;
+    if (!ready.length && !localReadyCount) {
+      toast.error("Aucune mission disponible à réclamer.");
+      return;
+    }
     setPending("all");
-    let local = { count: 0, xp: 0, zen: 0 };
-    let onlineCount = 0;
-    let onlineXp = 0;
-    let coins = 0;
-    let boosters = 0;
-    const packs: Record<string, number> = {};
     try {
-      let online: GameState | undefined;
-      if (session) {
-        const fresh = await game.refetch({ throwOnError: true });
-        if (!fresh.data) throw new Error("État des missions en ligne indisponible.");
-        online = fresh.data;
+      let totalZen = 0;
+      let totalXp = 0;
+      const nextClaims = [...claims];
+      for (const m of ready) {
+        nextClaims.push(m.id);
+        totalZen += m.zen ?? 50;
+        totalXp += m.xp ?? 0;
       }
-      local = claimAllQuests(session ? [null, session.user.id] : [null]);
-      if (online) {
-        const snapshot = online;
-        const pendingMissions = missions.filter((mission) => {
-          const progress = mission.id === "open" ? snapshot.mission_opened : mission.id === "recycle" ? snapshot.mission_recycled : 1;
-          return progress >= mission.goal && !snapshot.mission_claims.includes(mission.id);
-        });
-        for (const mission of pendingMissions) {
-          const { data, error } = await supabase.rpc("claim_mission", { _mission: mission.id });
-          if (error) throw error;
-          const next = parseOnlineGameState(data);
-          coins += next.coins - online.coins;
-          boosters += next.bonus_boosters - online.bonus_boosters;
-          for (const [key, count] of Object.entries(next.reward_packs)) {
-            const gained = count - (online.reward_packs[key] ?? 0);
-            if (gained) packs[key] = (packs[key] ?? 0) + gained;
-          }
-          online = next;
-          onlineCount++;
-          onlineXp += mission.xp;
-          queryClient.setQueryData(onlineMissionQuery(userId).queryKey, next);
-        }
+      if (ready.length > 0) {
+        window.localStorage.setItem("zenkai_beta_claims", JSON.stringify(nextClaims));
+        updateGuestState((st) => ({ state: { ...st, zen: st.zen + totalZen }, result: true }));
+        if (totalXp > 0) addLocalMissionXp(totalXp);
       }
-      if (!local.count && !onlineCount) {
-        toast.error("Aucune mission disponible. La progression a peut-être changé.");
-        return;
-      }
-      toast.success(`Missions réclamées : +${local.zen.toLocaleString("fr-FR")} Zen locaux · +${local.xp} XP locaux${session ? ` · +${coins.toLocaleString("fr-FR")} Coins · +${onlineXp} XP en ligne · ${boosters} booster(s) bonus${Object.entries(packs).map(([key, count]) => ` · ${count} ${REWARD_LABELS[key] ?? key}`).join("")}` : ""}`);
-    } catch (reason) {
-      const message = reason instanceof Error ? reason.message :
-        reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string" ? reason.message : "Erreur du serveur ou du stockage.";
-      toast.error(`Réclamation interrompue : ${message}. Confirmé : ${local.count} mission(s) locale(s), +${local.zen.toLocaleString("fr-FR")} Zen, +${local.xp} XP ; ${onlineCount} mission(s) en ligne, +${coins.toLocaleString("fr-FR")} Coins, +${onlineXp} XP, ${boosters} booster(s) bonus${Object.entries(packs).map(([key, count]) => `, ${count} ${REWARD_LABELS[key] ?? key}`).join("")}. Vérifie les missions avant de réessayer.`);
+      if (accountQuests.readyCount > 0) accountQuests.claimAll();
+      if (guestQuests.readyCount > 0) guestQuests.claimAll();
+      await queryClient.invalidateQueries();
+      toast.success(`Missions réclamées !${totalZen > 0 ? ` +${totalZen} Zen` : ""}${totalXp > 0 ? ` · +${totalXp} XP` : ""}`);
     } finally {
-      try {
-        if (session) {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: onlineMissionQuery(userId).queryKey }),
-            queryClient.invalidateQueries({ queryKey: gameQuery(userId).queryKey }),
-            queryClient.invalidateQueries({ queryKey: ["profile", userId] }),
-          ]);
-        }
-      } catch {
-        toast.error("Actualisation des missions impossible. Vérifie ton profil avant de réessayer.");
-      } finally { setPending(null); }
+      setPending(null);
     }
   }
   const remaining = state && now !== null ? Math.max(0, new Date(state.mission_started_at).getTime() + 86400000 - now) : null;
