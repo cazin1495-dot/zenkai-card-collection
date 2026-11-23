@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "../lib/queries";
 import { useEffect, useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CATALOG_RARITIES, effectiveDropRate, inPack, isCatalogRarity, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, setUserRarityOverride, type Card, type PackId, type Rarity } from "@/lib/cards";
+import { applyRemoteRarityOverrides, CATALOG_RARITIES, effectiveDropRate, getUserRarityOverrides, inPack, isCatalogRarity, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, type Card, type PackId, type Rarity } from "@/lib/cards";
+import { saveRarityOverride } from "@/lib/rarity-overrides";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscendanceInPack, type CustomTranscendanceCard } from "@/lib/transcendance-cards";
 import { useFavoriteCards } from "@/lib/favorites";
 import { cn } from "@/lib/utils";
@@ -64,6 +63,7 @@ export function BoosterPreviewDialog({
   const [filter, setFilter] = useState<RarityFilter>("all");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [savingRarity, setSavingRarity] = useState(false);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({ pack, filter, favoritesOnly, open, search, count: PREVIEW_PAGE_SIZE });
   const visibleCount =
@@ -153,7 +153,7 @@ export function BoosterPreviewDialog({
             }
           }}>Exporter ma config</Button>}
         </div>
-        {editing && <p className="text-xs text-muted-foreground">Modifications locales sur cet appareil : les tirages et gains des comptes connectés restent régis par le serveur. Les Transcendances restent liées aux copies.</p>}
+        {editing && <p className="text-xs text-muted-foreground">Seul le propriétaire peut enregistrer les raretés globales. Les tirages et gains des comptes connectés restent régis par le serveur. Les Transcendances restent liées aux copies.</p>}
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par rareté">
           {filters.map((rarity) => (
             <Button
@@ -214,6 +214,7 @@ export function BoosterPreviewDialog({
                     <select
                       aria-label={`Rareté de ${entry.card.name}`}
                       value={entry.card.rarity}
+                      disabled={savingRarity}
                       onChange={async (event) => {
                         const value = event.target.value;
                         if (!isCatalogRarity(value)) {
@@ -221,16 +222,15 @@ export function BoosterPreviewDialog({
                           return;
                         }
                         try {
-                          setUserRarityOverride(entry.card.id, value);
-                          const { error: syncErr } = await (supabase as any).from("card_rarity_overrides")
-    .upsert({ card_key: String(entry.card.id), rarity: value, updated_at: new Date().toISOString() }, { onConflict: "card_key" });
-  if (syncErr) {
-    toast.error("Modifié en local uniquement (Supabase : " + syncErr.message + ")");
-  } else {
-    toast.success("Rareté mise à jour pour tous les joueurs !");
-  }
-                        } catch {
-                          toast.error("Impossible d'enregistrer la rareté. Vérifie le stockage du navigateur.");
+                          setSavingRarity(true);
+                          await saveRarityOverride(entry.card.id, value);
+                          applyRemoteRarityOverrides({ ...getUserRarityOverrides(), [entry.card.id]: value });
+                          toast.success("Rareté d'affichage enregistrée pour tous les joueurs.");
+                        } catch (error) {
+                          console.error(error);
+                          toast.error("Impossible d'enregistrer la rareté globale.");
+                        } finally {
+                          setSavingRarity(false);
                         }
                       }}
                       className="w-full rounded-lg border border-amber-400/40 bg-violet-950 px-2 py-1 text-xs text-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"

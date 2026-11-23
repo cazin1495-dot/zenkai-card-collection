@@ -2,7 +2,7 @@ import { createElement, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CUSTOM_RARITY, DEMON_SLAYER_MYTHIC_CARDS, inPack, isTranscendanceCatalogCard, setUserRarityOverride, type Card } from "./cards";
+import { applyRemoteRarityOverrides, CUSTOM_RARITY, DEFAULT_USER_RARITY_OVERRIDES, DEMON_SLAYER_MYTHIC_CARDS, inPack, isTranscendanceCatalogCard, type Card } from "./cards";
 import { CUSTOM_TRANSCENDANCE_CARDS } from "./transcendance-cards";
 import { cardsQuery, CUSTOM_RARITY as queryCustomRarity, useCards, useCardsByPack, useProfile, useUserCards } from "./queries";
 
@@ -18,6 +18,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: mockFrom } 
 describe("catalog query", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    applyRemoteRarityOverrides({});
     localStorage.removeItem("zenkai_admin_rarity_overrides");
   });
 
@@ -27,7 +28,7 @@ describe("catalog query", () => {
     for (const hero of DEMON_SLAYER_MYTHIC_CARDS) {
       const matches = cards.filter((card) => card.id === hero.id);
       expect(matches).toHaveLength(1);
-      expect(matches[0]).toMatchObject({ rarity: "mythique", category: "shonen", role: "protagoniste", series: "Demon Slayer" });
+      expect(matches[0]).toMatchObject({ rarity: DEFAULT_USER_RARITY_OVERRIDES[hero.id] ?? "mythique", category: "shonen", role: "protagoniste", series: "Demon Slayer" });
       expect(isTranscendanceCatalogCard(matches[0]!)).toBe(false);
       expect(CUSTOM_TRANSCENDANCE_CARDS.some((card) => card.id === hero.id)).toBe(false);
       for (const pack of ["shonen", "protagoniste", "zenkai"] as const) expect(inPack(matches[0]!, pack)).toBe(true);
@@ -50,7 +51,7 @@ describe("catalog query", () => {
       const matches = cards.filter((card) => card.name === name);
       expect(matches).toHaveLength(1);
       expect(matches[0]).toMatchObject({
-        title: `Demon Slayer · ${title}`, rarity: "mythique", series: "Demon Slayer",
+        title: `Demon Slayer · ${title}`, rarity: DEFAULT_USER_RARITY_OVERRIDES[matches[0]!.id] ?? "mythique", series: "Demon Slayer",
         image_url: `https://cdn.myanimelist.net/images/characters/${image}`,
       });
     }
@@ -72,7 +73,7 @@ describe("catalog query", () => {
       }
       return { ok: true, json: async () => ({}) };
     }));
-    setUserRarityOverride("al-89028", "rare");
+    applyRemoteRarityOverrides({ "al-89028": "rare" });
     const client = new QueryClient();
     client.setQueryData(["cards-v21"], [{ id: "stale" }]);
     const cards = await client.fetchQuery(cardsQuery);
@@ -142,7 +143,7 @@ describe("catalog query", () => {
       }
       return { ok: true, json: async () => ({}) };
     }));
-    setUserRarityOverride("al-31", "epique");
+    applyRemoteRarityOverrides({ "al-31": "epique" });
     const client = new QueryClient();
     client.setQueryData(["cards-v20"], [{ id: "stale" }]);
     const cards = await client.fetchQuery(cardsQuery);
@@ -180,9 +181,7 @@ describe("catalog query", () => {
   });
 
   it("applies saved id overrides to database, AniList and HSR cards", async () => {
-    setUserRarityOverride("nami", "epique");
-    setUserRarityOverride("al-1", "rare");
-    setUserRarityOverride("hsr-1", "commune");
+    applyRemoteRarityOverrides({ nami: "epique", "al-1": "rare", "hsr-1": "commune" });
     vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => ({
       ok: true,
       json: async () => typeof init?.body === "string" && init.body.includes("113415")

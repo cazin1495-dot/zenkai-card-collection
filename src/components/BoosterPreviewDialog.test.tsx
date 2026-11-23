@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
-import { DEMON_SLAYER_MYTHIC_CARDS, normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
+import { applyRemoteRarityOverrides, DEMON_SLAYER_MYTHIC_CARDS, normalizeCatalogCard, type Card, type PackId } from "@/lib/cards";
 import { BoosterPreviewDialog } from "./BoosterPreviewDialog";
 import { CUSTOM_TRANSCENDANCE_CARDS, type CustomTranscendanceCard } from "@/lib/transcendance-cards";
+
+const saveRarityOverride = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/rarity-overrides", () => ({ saveRarityOverride }));
 
 const cards: Card[] = [
   { id: "common", name: "Héros", title: "Shonen", rarity: "commune", description: "", sort_order: 1, category: "shonen" },
@@ -40,6 +43,7 @@ describe("booster content preview", () => {
   afterEach(() => {
     localStorage.removeItem("zenkai:favorite-cards");
     localStorage.removeItem("zenkai_admin_rarity_overrides");
+    applyRemoteRarityOverrides({});
     vi.restoreAllMocks();
   });
 
@@ -245,16 +249,32 @@ describe("booster content preview", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Vérification de ta collection");
   });
 
-  it("keeps favorites and search without exposing rarity editing while retaining existing overrides", () => {
+  it("ignores stale local rarity overrides in the preview", () => {
     localStorage.setItem("zenkai_admin_rarity_overrides", JSON.stringify({ common: "mythique" }));
     render(<PreviewHarness customCards={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
     expect(screen.getByRole("button", { name: "★ Mes favoris (0)" })).toBeTruthy();
     expect(screen.getByLabelText("Rechercher un personnage ou un anime")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Éditer les raretés" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Éditer les raretés" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Exporter ma config" })).toBeNull();
     expect(screen.queryByRole("combobox")).toBeNull();
-    expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Mythique");
+    expect(screen.getByText("Héros").closest("article")).toHaveTextContent("Commune");
+  });
+
+  it("only displays an edited rarity after the server confirms it", async () => {
+    saveRarityOverride.mockRejectedValueOnce(new Error("refusé")).mockResolvedValueOnce(undefined);
+    const error = vi.spyOn(toast, "error");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<PreviewHarness customCards={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Éditer les raretés" }));
+    const select = screen.getByLabelText("Rareté de Héros");
+    fireEvent.change(select, { target: { value: "epique" } });
+    await waitFor(() => expect(error).toHaveBeenCalledWith("Impossible d'enregistrer la rareté globale."));
+    expect(select).toHaveValue("commune");
+    fireEvent.change(select, { target: { value: "epique" } });
+    await waitFor(() => expect(select).toHaveValue("epique"));
+    expect(saveRarityOverride).toHaveBeenCalledWith("common", "epique");
   });
 
   it("shows other categories and exclusive cards outside Shonen in the universal preview", () => {
@@ -325,15 +345,20 @@ describe("booster content preview", () => {
   it.each(["shonen", "protagoniste", "zenkai"] as const)("shows the Demon Slayer cards in %s", (pack) => {
     render(<PreviewHarness pack={pack} catalog={[...cards, ...DEMON_SLAYER_MYTHIC_CARDS]} />);
     fireEvent.click(screen.getByRole("button", { name: "Voir les cartes du pack" }));
-    const names = ["Tanjiro Kamado", "Nezuko Kamado", "Zenitsu Agatsuma", "Inosuke Hashibira", "Kyojuro Rengoku", "Tengen Uzui", "Giyu Tomioka", "Shinobu Kocho", "Muichiro Tokito", "Mitsuri Kanroji", "Obanai Iguro", "Sanemi Shinazugawa", "Gyomei Himejima"];
+    const names = ["Tanjiro Kamado", "Nezuko Kamado", "Zenitsu Agatsuma", "Inosuke Hashibira", "Kyojuro Rengoku", "Tengen Uzui", "Giyu Tomioka", "Shinobu Kocho", "Mitsuri Kanroji"];
+    const legendary = ["Muichiro Tokito", "Obanai Iguro", "Sanemi Shinazugawa", "Gyomei Himejima"];
     fireEvent.click(screen.getByRole("button", { name: /Mythique.*%/ }));
     for (const name of names) {
       const article = screen.getByText(name).closest("article");
       expect(article).toHaveTextContent("Mythique");
       expect(article?.querySelector(".premium-energy-frame")).toBeNull();
     }
+    fireEvent.click(screen.getByRole("button", { name: /Légendaire.*%/ }));
+    for (const name of legendary) {
+      expect(screen.getByText(name).closest("article")).toHaveTextContent("Légendaire");
+    }
     fireEvent.click(screen.getByRole("button", { name: /Transcendance.*%/ }));
-    for (const name of names) expect(screen.queryByText(name)).toBeNull();
+    for (const name of [...names, ...legendary]) expect(screen.queryByText(name)).toBeNull();
   });
 
   it("persists favorites and combines the pack and rarity filters", () => {

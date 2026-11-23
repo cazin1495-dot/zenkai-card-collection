@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { MarketSaleDialog } from "@/components/MarketSaleDialog";
 import { AnimeCard } from "@/components/AnimeCard";
 import { cardsQuery } from "@/lib/queries";
-import { DEMON_SLAYER_MYTHIC_CARDS, getCardMarketPrice, getCardPopularityFactor, RARITY, subscribeUserRarityOverrides } from "@/lib/cards";
+import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
+import { DEMON_SLAYER_MYTHIC_CARDS, getCardMarketPrice, getCardPopularityFactor, normalizeCatalogCard, RARITY, subscribeUserRarityOverrides } from "@/lib/cards";
 import { getGuestCollection, getGuestState } from "@/lib/guest-collection";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard } from "@/lib/transcendance-cards";
 import {
@@ -30,6 +31,7 @@ type MarketSnapshot = ReturnType<typeof getGuestMarket>;
 export function LocalMarket() {
   const queryClient = useQueryClient();
   const cards = useQuery(cardsQuery);
+  const overrides = useRarityOverrides();
   const owned = useQuery({ queryKey: ["guest-collection"], queryFn: getGuestCollection });
   const [snapshot, setSnapshot] = useState<MarketSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export function LocalMarket() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bids, setBids] = useState<Record<string, string>>({});
   const catalog = useMemo(
-    () => [...(cards.data ?? (cards.isError ? DEMON_SLAYER_MYTHIC_CARDS : [])), ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard)],
-    [cards.data, cards.isError],
+    () => [...(cards.data ?? (cards.isError ? DEMON_SLAYER_MYTHIC_CARDS.map((card) => normalizeCatalogCard(card, overrides)) : [])), ...CUSTOM_TRANSCENDANCE_CARDS.map(customTranscendanceAsCard)],
+    [cards.data, cards.isError, overrides],
   );
   const byId = useMemo(() => new Map(catalog.map((card) => [card.id, card])), [catalog]);
 
@@ -221,6 +223,9 @@ export function LocalMarket() {
           .filter((item) => item.kind === tab)
           .map((item) => {
             const card = byId.get(item.cardId);
+            const rarity = item.copy?.transcended || item.copy?.customTranscendance || item.rarity === "transcendance"
+              ? "transcendance"
+              : card?.rarity ?? item.rarity;
             const canRaise = item.bid === null ||
               Number.isSafeInteger(item.bid + Math.max(50, Math.ceil(item.bid * 0.1)));
             const minimum = item.kind === "auction" && canRaise ? minimumAuctionBid(item) : item.price;
@@ -241,12 +246,12 @@ export function LocalMarket() {
                   />
                 )}
                 <p className="mt-2 text-sm font-bold">{item.cardName}</p>
-                <p className={`text-xs font-semibold ${RARITY[item.rarity].text}`}>
-                  {RARITY[item.rarity].label}
+                <p className={`text-xs font-semibold ${RARITY[rarity].text}`}>
+                  {RARITY[rarity].label}
                 </p>
                 {card && <>
                   {getCardPopularityFactor(card) >= 1.4 && <span className="mt-1 self-start rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-semibold text-amber-400">Populaire 🔥</span>}
-                  <p className="mt-1 text-xs text-muted-foreground">Valeur estimée : {getCardMarketPrice({ ...card, rarity: item.rarity }).toLocaleString("fr-FR")} Zen</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Valeur estimée : {getCardMarketPrice({ ...card, rarity }).toLocaleString("fr-FR")} Zen</p>
                 </>}
                 <p className="mt-1 text-xs text-muted-foreground">{item.sellerName}</p>
                 <p className="mt-2 text-sm font-bold text-primary">

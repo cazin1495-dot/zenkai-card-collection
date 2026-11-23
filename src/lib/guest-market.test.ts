@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CUSTOM_RARITY, DEMON_SLAYER_MYTHIC_CARDS, setUserRarityOverride, type Card } from "./cards";
+import { applyRemoteRarityOverrides, CUSTOM_RARITY, DEMON_SLAYER_MYTHIC_CARDS, type Card } from "./cards";
 import {
   addGuestCollectionCards,
   getGuestBalance,
@@ -447,14 +447,15 @@ describe("guest market", () => {
     }
   });
 
-  it("applies id-based local overrides to existing listings without changing prices or awakened copies", () => {
+  it("applies global id overrides to existing listings without changing prices or awakened copies", () => {
     const card: Card = { ...cards[0]!, id: "test-id", name: "Test" };
     addGuestCollectionCards([{ userCardId: "base", card }, { userCardId: "awake", card, transcended: true }]);
     const base = listGuestCopy("base", card, "fixed", 80, 2, now);
     const awake = listGuestCopy("awake", card, "fixed", 90, 2, now);
-    setUserRarityOverride("test-id", "mythique");
+    applyRemoteRarityOverrides({ "test-id": "mythique" });
     expect(getGuestMarket().listings.find((item) => item.id === base.id)).toMatchObject({ rarity: "mythique", price: 80 });
     expect(getGuestMarket().listings.find((item) => item.id === awake.id)?.rarity).toBe("transcendance");
+    applyRemoteRarityOverrides({});
   });
 
   it("applies fixed id rarities to existing market listings without changing their price", () => {

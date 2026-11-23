@@ -33,9 +33,12 @@ marges dans le sélecteur et pendant l'ouverture.
 En développement et pendant la bêta après validation du code, le mode invité permet
 des ouvertures gratuites simulées et non sauvegardées ; le Booster Zenkai nécessite
 une prise en charge sécurisée du Zen par le serveur et n'est pas encore disponible.
-Les raretés de certains personnages sont surchargées dans le catalogue affiché et les
-simulations locales. La table `CUSTOM_RARITY` dans `src/lib/cards.ts` accepte des noms
-complets en minuscules et prend priorité sur les surcharges existantes. Pour les comptes connectés, le serveur reste seul responsable des
+Les raretés officielles intégrées s'appliquent au catalogue et aux simulations locales.
+Les modifications globales enregistrées dans `card_rarity_overrides` priment sur ces
+valeurs et sont actualisées toutes les cinq secondes ; les anciennes modifications
+du stockage local ne sont plus utilisées ni envoyées au serveur. Si la synchronisation
+échoue, l'application le signale et conserve les dernières valeurs disponibles.
+Pour les comptes connectés, le serveur reste seul responsable des
 raretés utilisées pour sélectionner les cartes et calculer les gains de recyclage :
 ces règles nécessitent une mise à jour des données dans Lovable pour correspondre à l'affichage.
 Shonen Mix inclut tout le catalogue dans l'aperçu et les tirages invités, avec les taux
@@ -115,8 +118,9 @@ l'identifiant de la carte, y compris ses copies transcendées.
 Dans l'aperçu, la recherche par personnage ou anime ignore la casse et les accents.
 Les Transcendances non possédées restent masquées et ne sont pas recherchables par identité.
 
-Les choix de l'éditeur priment sur les valeurs par identifiant de `USER_RARITY_OVERRIDES`,
-qui priment à leur tour sur les règles de rareté par nom.
+Les valeurs globales priment sur les valeurs officielles intégrées, puis sur les valeurs
+par identifiant de `USER_RARITY_OVERRIDES` et les règles de rareté par nom. Seul le
+propriétaire autorisé peut enregistrer une modification globale.
 
 ## Marché et amis locaux
 

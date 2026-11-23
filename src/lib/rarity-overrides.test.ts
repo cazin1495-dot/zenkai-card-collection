@@ -1,10 +1,24 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { characterRarity, getUserRarityOverrides, normalizeCatalogCard, setUserRarityOverride, type Card } from "./cards";
+import { applyRemoteRarityOverrides, characterRarity, getUserRarityOverrides, normalizeCatalogCard, type Card } from "./cards";
 
 const card: Card = { id: "nami-1", name: "Nami", title: "", description: "", rarity: "rare", sort_order: 0 };
 
 describe("user rarity overrides", () => {
-  afterEach(() => localStorage.removeItem("zenkai_admin_rarity_overrides"));
+  afterEach(() => {
+    applyRemoteRarityOverrides({});
+    localStorage.removeItem("zenkai_admin_rarity_overrides");
+  });
+
+  it.each([
+    ["al-12464", "legendaire"], ["al-12465", "legendaire"],
+    ["ds-muichiro", "legendaire"], ["ds-obanai", "legendaire"],
+    ["ds-sanemi", "legendaire"], ["ds-gyomei", "legendaire"],
+    ["hsr-1", "legendaire"], ["hsr-6", "epique"],
+    ["hsr-7", "epique"], ["hsr-8", "legendaire"],
+  ] as const)("applies the official default for %s despite stale local and server values", (id, rarity) => {
+    localStorage.setItem("zenkai_admin_rarity_overrides", JSON.stringify({ [id]: "commune" }));
+    expect(normalizeCatalogCard({ ...card, id, rarity: "mythique" }).rarity).toBe(rarity);
+  });
 
   it.each([
     ["al-245", "mythique"],
@@ -33,36 +47,38 @@ describe("user rarity overrides", () => {
     }
   });
 
-  it("keeps local editor choices above the fixed list", () => {
+  it("keeps remote choices above defaults and the fixed list", () => {
     const fixedCard = { ...card, id: "al-245" };
-    setUserRarityOverride("Nami", "epique");
+    applyRemoteRarityOverrides({ Nami: "epique" });
     expect(normalizeCatalogCard(fixedCard).rarity).toBe("epique");
-    setUserRarityOverride(fixedCard.id, "commune");
+    applyRemoteRarityOverrides({ Nami: "epique", [fixedCard.id]: "commune", "hsr-1": "rare" });
     expect(normalizeCatalogCard(fixedCard).rarity).toBe("commune");
-    localStorage.removeItem("zenkai_admin_rarity_overrides");
+    expect(normalizeCatalogCard({ ...card, id: "hsr-1" }).rarity).toBe("rare");
+    applyRemoteRarityOverrides({});
     expect(normalizeCatalogCard(fixedCard).rarity).toBe("mythique");
+    expect(normalizeCatalogCard({ ...card, id: "hsr-1" }).rarity).toBe("legendaire");
   });
 
   it("prioritizes ids over names and built-in overrides without losing server rarity", () => {
-    setUserRarityOverride("  Nami  ", "epique");
+    applyRemoteRarityOverrides({ "  Nami  ": "epique" });
     expect(characterRarity(" Nami ", "rare")).toBe("epique");
     expect(normalizeCatalogCard(card)).toMatchObject({ rarity: "epique", serverRarity: "rare" });
-    setUserRarityOverride(card.id, "commune");
+    applyRemoteRarityOverrides({ Nami: "epique", [card.id]: "commune" });
     const normalized = normalizeCatalogCard(card);
     expect(normalized).toMatchObject({ rarity: "commune", serverRarity: "rare" });
-    setUserRarityOverride(card.id, "legendaire");
+    applyRemoteRarityOverrides({ Nami: "epique", [card.id]: "legendaire" });
     expect(normalizeCatalogCard(normalized)).toMatchObject({ rarity: "legendaire", serverRarity: "rare" });
     expect(getUserRarityOverrides()).toEqual({ Nami: "epique", "nami-1": "legendaire" });
   });
 
   it("does not override evolved or exclusive cards and rejects invalid stored values", () => {
-    setUserRarityOverride("nami", "epique");
+    applyRemoteRarityOverrides({ nami: "epique" });
     expect(characterRarity("Nami", "transcendance")).toBe("transcendance");
     expect(normalizeCatalogCard({ ...card, id: "nami-TR" }).rarity).toBe("rare");
     expect(normalizeCatalogCard({ ...card, transcendance_series_number: "001" }).rarity).toBe("rare");
     expect(normalizeCatalogCard({ ...card, id: "al-245", transcendance_series_number: "001" }).rarity).toBe("rare");
     expect(characterRarity("Nami", "transcendance", "al-245")).toBe("transcendance");
     localStorage.setItem("zenkai_admin_rarity_overrides", '{"nami":"transcendance"}');
-    expect(getUserRarityOverrides).toThrow("Configuration des raretés locales invalide");
+    expect(getUserRarityOverrides()).toEqual({ nami: "epique" });
   });
 });

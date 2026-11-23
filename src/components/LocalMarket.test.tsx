@@ -110,6 +110,16 @@ describe("guest market interface", () => {
     expect(within(offer).getByText("15 Zen")).toBeTruthy();
   });
 
+  it("uses the current catalogue rarity rather than a stored listing rarity", async () => {
+    initializeGuestMarket(cards);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+    client.setQueryData(["cards-market-test"], [{ ...cards[0]!, rarity: "legendaire" }, cards[1]!]);
+    render(<QueryClientProvider client={client}><LocalMarket /></QueryClientProvider>);
+    const offer = (await screen.findByText("Alpha")).closest("article")!;
+    expect(offer).toHaveTextContent("Légendaire");
+    expect(within(offer).getByText("10 Zen")).toBeTruthy();
+  });
+
   it("renders exclusive and evolved Transcendance listings with their correct art", async () => {
     const gon = CUSTOM_TRANSCENDANCE_CARDS.find((entry) => entry.id === "trans-gon");
     if (!gon) throw new Error("Gon Transcendance absent.");

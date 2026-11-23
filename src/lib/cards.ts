@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
 import riku from "@/assets/characters/riku.jpg";
 import mei from "@/assets/characters/mei.jpg";
 import taro from "@/assets/characters/taro.jpg";
@@ -101,17 +100,17 @@ export function parseUserRarityOverrides(raw: string | null): Record<string, Cat
   if (raw === null) return {};
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("Configuration des raretés locales invalide.");
+    throw new Error("Configuration des raretés globales invalide.");
   }
   const entries: [string, CatalogRarity][] = [];
   for (const [key, rarity] of Object.entries(parsed)) {
-    if (!key.trim() || !isCatalogRarity(rarity)) throw new Error("Configuration des raretés locales invalide.");
+    if (!key.trim() || !isCatalogRarity(rarity)) throw new Error("Configuration des raretés globales invalide.");
     entries.push([key, rarity]);
   }
   return Object.fromEntries(entries);
 }
 
-export const DEFAULT_USER_RARITY_OVERRIDES: Record<string, CardRarity> = {
+export const DEFAULT_USER_RARITY_OVERRIDES: Readonly<Record<string, CatalogRarity>> = {
   "al-12464": "legendaire",
   "al-12465": "legendaire",
   "ds-muichiro": "legendaire",
@@ -124,68 +123,33 @@ export const DEFAULT_USER_RARITY_OVERRIDES: Record<string, CardRarity> = {
   "hsr-8": "legendaire",
 };
 
+let remoteRarityOverridesSnapshot: string | null = null;
+let remoteRarityOverridesRevision = 0;
+
 export function getUserRarityOverridesSnapshot(): string | null {
-  return typeof window === "undefined" ? null : window.localStorage.getItem(USER_RARITY_OVERRIDES_KEY);
+  return typeof window === "undefined" ? null : remoteRarityOverridesSnapshot;
+}
+
+export function getRarityOverridesRevision() {
+  return remoteRarityOverridesRevision;
 }
 
 export function getUserRarityOverrides(): Record<string, CatalogRarity> {
   return parseUserRarityOverrides(getUserRarityOverridesSnapshot());
 }
 
-export function setUserRarityOverride(cardIdOrName: string, rarity: CatalogRarity) {
-  const key = cardIdOrName.trim();
-  if (!key || !isCatalogRarity(rarity)) throw new Error("Rareté locale invalide.");
-  if (typeof window === "undefined") throw new Error("Stockage local indisponible.");
-  const next = { ...getUserRarityOverrides(), [key]: rarity };
-  window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(next));
+export function applyRemoteRarityOverrides(remote: Record<string, CatalogRarity>) {
+  if (typeof window === "undefined") return;
+  const next = JSON.stringify(remote);
+  remoteRarityOverridesRevision++;
+  if (next === remoteRarityOverridesSnapshot) return;
+  remoteRarityOverridesSnapshot = next;
   window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
-  void (supabase as any).from("card_rarity_overrides")
-    .upsert({ card_key: key, rarity, updated_at: new Date().toISOString() }, { onConflict: "card_key" })
-    .then(({ error }) => {
-      if (error) console.error("Erreur synchro rareté Supabase:", error.message);
-    });
-}
-
-export async function syncAllLocalRaritiesToSupabase(): Promise<{ count: number; error?: string }> {
-  const local = getUserRarityOverrides();
-  const rows = Object.entries(local).map(([card_key, rarity]) => ({
-    card_key,
-    rarity,
-    updated_at: new Date().toISOString(),
-  }));
-  if (rows.length === 0) return { count: 0 };
-  const { error } = await (supabase as any).from("card_rarity_overrides").upsert(rows, { onConflict: "card_key" });
-  if (error) return { count: 0, error: error.message };
-  return { count: rows.length };
-}
-
-export function applyRemoteRarityOverrides(remote: Record<string, string>) {
-  if (typeof window === "undefined" || !remote || typeof remote !== "object") return;
-  const current = getUserRarityOverrides();
-  let changed = false;
-  const merged: Record<string, string> = { ...current };
-  for (const [k, v] of Object.entries(remote)) {
-    if (k && v && merged[k] !== v) {
-      merged[k] = v;
-      changed = true;
-    }
-  }
-  if (changed) {
-    window.localStorage.setItem(USER_RARITY_OVERRIDES_KEY, JSON.stringify(merged));
-    window.dispatchEvent(new Event(USER_RARITY_OVERRIDES_UPDATED));
-  }
 }
 
 export function subscribeUserRarityOverrides(onChange: () => void) {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === USER_RARITY_OVERRIDES_KEY || event.key === null) onChange();
-  };
   window.addEventListener(USER_RARITY_OVERRIDES_UPDATED, onChange);
-  window.addEventListener("storage", onStorage);
-  return () => {
-    window.removeEventListener(USER_RARITY_OVERRIDES_UPDATED, onChange);
-    window.removeEventListener("storage", onStorage);
-  };
+  return () => window.removeEventListener(USER_RARITY_OVERRIDES_UPDATED, onChange);
 }
 
 export type Genre = "shonen" | "seinen" | "shojo" | "sport";
@@ -438,6 +402,9 @@ export function characterRarity(
     ?? (Object.hasOwn(overrides, normalizedName) ? overrides[normalizedName] : undefined)
     ?? Object.entries(overrides).find(([key]) => key.trim().toLowerCase() === normalizedName)?.[1];
   if (override) return override;
+  const defaultOverride = cardId && Object.hasOwn(DEFAULT_USER_RARITY_OVERRIDES, cardId)
+    ? DEFAULT_USER_RARITY_OVERRIDES[cardId] : undefined;
+  if (defaultOverride) return defaultOverride;
   const fixedOverride = cardId && Object.hasOwn(USER_RARITY_OVERRIDES, cardId) ? USER_RARITY_OVERRIDES[cardId] : undefined;
   if (fixedOverride) return fixedOverride;
   const lowercaseName = name.trim().toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
@@ -454,7 +421,7 @@ export function characterRarity(
 }
 
 
-/** Applies local catalog overrides for known cards without creating duplicate records. */
+/** Applies global catalog overrides without changing the original rarity. */
 export function normalizeCatalogCard(card: Card, overrides = getUserRarityOverrides()): Card {
   if (isTranscendanceCatalogCard(card)) return card;
   const baseRarity = card.serverRarity ?? card.rarity;

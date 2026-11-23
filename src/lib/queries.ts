@@ -1,8 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DEMON_SLAYER_MYTHIC_CARDS, getUserRarityOverrides,
-  syncAllLocalRaritiesToSupabase,
-  applyRemoteRarityOverrides, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
+import { DEMON_SLAYER_MYTHIC_CARDS, inPack, isDemonSlayerMythicCardId, isTranscendanceCatalogCard, normalizeCatalogCard, type Card, type CatalogRarity, type PackId } from "./cards";
 import { getCards } from "./cards.functions";
 
 export { CUSTOM_RARITY } from "./cards";
@@ -257,37 +255,19 @@ export const cardsQuery = queryOptions({
       fetchAnimeCharacters(105333, "Dr. STONE", DRSTONE_MYTHIC_IDS, DRSTONE_LEGENDARY_IDS, DRSTONE_ANTAGONIST_IDS, 1900, "Antagoniste", "Scientifique"),
     ]);
 
-    const fairyTail = fairyTailRaw.map((c) => ({ ...c, category: "shonen" }));
-    const snk = snkRaw.map((c) => ({ ...c, category: "shonen" }));
-    const yozakura = yozakuraRaw.map((c) => ({ ...c, category: "shonen" }));
-    const atelier = atelierRaw.map((c) => ({ ...c, category: "seinen" }));
-    const doremi = doremiRaw.map((c) => ({ ...c, category: "shojo" }));
-    const kilari = kilariRaw.map((c) => ({ ...c, category: "shojo" }));
-    const inazuma = inazumaRaw.map((c) => ({ ...c, category: "sport" }));
-    const mewmew = mewmewRaw.map((c) => ({ ...c, category: "shojo" }));
-    const drStone = drStoneRaw.map((c) => ({ ...c, category: "shonen" }));
+    const fairyTail = fairyTailRaw.map((c): Card => ({ ...c, category: "shonen" }));
+    const snk = snkRaw.map((c): Card => ({ ...c, category: "shonen" }));
+    const yozakura = yozakuraRaw.map((c): Card => ({ ...c, category: "shonen" }));
+    const atelier = atelierRaw.map((c): Card => ({ ...c, category: "seinen" }));
+    const doremi = doremiRaw.map((c): Card => ({ ...c, category: "shojo" }));
+    const kilari = kilariRaw.map((c): Card => ({ ...c, category: "shojo" }));
+    const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
+    const mewmew = mewmewRaw.map((c): Card => ({ ...c, category: "shojo" }));
+    const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      if ((authData?.user?.email ?? "").toLowerCase().trim() === "cazin1495@gmail.com") {
-        const res = await syncAllLocalRaritiesToSupabase();
-        if (res.error) console.warn("Synchro raretés:", res.error);
-      }
-    } catch {}
-    let remoteOverrides: Record<string, any> = {};
-    try {
-      const { data: rows } = await (supabase as any).from("card_rarity_overrides").select("card_key, rarity");
-      if (Array.isArray(rows)) {
-        for (const row of rows) {
-          if (row?.card_key && row?.rarity) remoteOverrides[row.card_key] = row.rarity;
-        }
-      }
-    } catch {}
-    applyRemoteRarityOverrides(remoteOverrides);
-    const overrides = { ...getUserRarityOverrides(), ...remoteOverrides };
     return [
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
@@ -305,7 +285,7 @@ export const cardsQuery = queryOptions({
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...mewmew.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
-    ].map((card) => normalizeCatalogCard(card, overrides));
+    ].map((card) => normalizeCatalogCard(card));
   },
   staleTime: 5_000,
   refetchInterval: 5_000,
