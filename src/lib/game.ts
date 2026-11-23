@@ -33,7 +33,7 @@ export const onlineMissionQuery = (userId: string) => queryOptions({
   queryKey: ["online-missions", userId],
   queryFn: async () => {
     const { data, error } = await supabase.rpc("game_state");
-    if (error) throw error;
+    if (error) return null;
     return parseOnlineGameState(data);
   },
   staleTime: 2_000,
@@ -43,7 +43,7 @@ export const gameQuery = (userId: string) => queryOptions({
   queryKey: ["game", userId],
   queryFn: async () => {
     const { data, error } = await supabase.rpc("game_state");
-    if (error) throw error;
+    if (error) return null;
     const state = data as unknown as GameState;
     const localXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
     const prog = levelProgress(localXp);

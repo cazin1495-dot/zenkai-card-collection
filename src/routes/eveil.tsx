@@ -143,7 +143,7 @@ export function MissionsPage() {
     }
   }
   const remaining = state && now !== null ? Math.max(0, new Date(state.mission_started_at).getTime() + 86400000 - now) : null;
-  const xpGoal = xpRequired(state?.level ?? 1);
+  const xpGoal = Math.max(1, xpRequired(state?.level ?? 1) || 100);
   return <div className="game-page mx-auto max-w-6xl px-4 py-8 sm:px-6">
     <p className="game-eyebrow"><Trophy className="size-4" /> PROGRESSION DU JOUEUR</p>
     <h1 className="mt-3 text-3xl font-black sm:text-4xl">Missions & Niveaux</h1>
