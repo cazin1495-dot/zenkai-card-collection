@@ -88,112 +88,177 @@ export function MarketSaleDialog({
     }
   }
 
+  const selectedCard = selected ? byId.get(selected.card_id) : undefined;
+  const sellableCount = selected ? selectable.filter((item) => item.card_id === selected.card_id).length : 0;
+  const recommendedPrice = selected ? suggestedPrices(selected.id, kind).price : 0;
+
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
-      <DialogContent className="rounded-2xl border-primary/40 bg-surface">
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="max-w-md border-white/10 bg-[#14171f] text-white">
         <DialogHeader>
-          <DialogTitle>Mettre une carte en vente</DialogTitle>
-          <DialogDescription>
-            Vente sur le marché : la copie sera retirée de ta collection jusqu’à la vente ou
-            l’annulation.
+          <DialogTitle className="text-xl font-bold">Mettre en vente</DialogTitle>
+          <DialogDescription className="text-sm text-zinc-400">
+            Choisissez votre personnage, votre mode de vente et le prix en Zen.
           </DialogDescription>
         </DialogHeader>
-        <label htmlFor="market-copy" className="text-sm font-semibold">
-          Copie de ta collection
-        </label>
-        <select
-          id="market-copy"
-          value={copyId}
-          onChange={(event) => {
-            setCopyId(event.target.value);
-            const suggested = suggestedPrices(event.target.value, kind);
-            setPrice(suggested.price);
-            setBuyoutPrice(suggested.buyout);
-          }}
-          className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-        >
-          <option value="">Choisir une carte</option>
-          {selectable.map((copy) => (
-            <option key={copy.id} value={copy.id}>
-              {byId.get(copy.card_id)?.name}
-              {copy.transcended || copy.customTranscendance ? " · Transcendance" : ""} ·{" "}
-              {byId.get(copy.card_id)?.rarity ?? ""} · {selectable.filter((item) => item.card_id === copy.card_id).length > 1 ? `x${selectable.filter((item) => item.card_id === copy.card_id).length} (doublon)` : "dernier exemplaire"}
-            </option>
-          ))}
-        </select>
-        {selectable.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Aucune copie disponible dans le catalogue chargé.
-          </p>
-        )}
-        {last && (
-          <p role="status" className="text-xs font-semibold text-amber-400">
-            Dernier exemplaire : une confirmation sera demandée.
-          </p>
-        )}
-        <label htmlFor="market-kind" className="text-sm font-semibold">
-          Mode de vente
-        </label>
-        <select
-          id="market-kind"
-          value={kind}
-          onChange={(event) => {
-            const nextKind = event.target.value === "auction" ? "auction" : "fixed";
-            if (price === suggestedPrices(copyId, kind).price) setPrice(suggestedPrices(copyId, nextKind).price);
-            setKind(nextKind);
-          }}
-          className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-        >
-          <option value="fixed">Vente directe</option>
-          <option value="auction">Enchère</option>
-        </select>
-        <label htmlFor="market-price" className="text-sm font-semibold">
-          {kind === "fixed" ? "Prix" : "Prix de départ"} en Zen
-        </label>
-        <Input
-          id="market-price"
-          type="number"
-          min="1"
-          step="1"
-          value={price}
-          onChange={(event) => setPrice(event.target.value)}
-        />
-        {kind === "auction" && (
-          <>
-            <label htmlFor="market-buyout" className="text-sm font-semibold">
-              Prix d'achat immédiat (optionnel, en Zen)
-            </label>
-            <Input
-              id="market-buyout"
-              type="number"
-              min="1"
-              step="1"
-              value={buyoutPrice}
-              onChange={(event) => setBuyoutPrice(event.target.value)}
-              placeholder="Sans achat immédiat"
+
+        {selected && selectedCard && (
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <img
+              src={selectedCard.image_url}
+              alt={selectedCard.name}
+              className="h-20 w-14 rounded-lg object-cover shadow"
             />
-            <label htmlFor="market-duration" className="text-sm font-semibold">
-              Durée
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-base font-bold text-white">{selectedCard.name}</div>
+              <div className="text-xs font-semibold text-amber-400">
+                {selectedCard.rarity} · {sellableCount} copie{sellableCount > 1 ? "s" : ""} vendable{sellableCount > 1 ? "s" : ""}
+              </div>
+              <div className="mt-1 text-xs text-zinc-400">
+                Prix conseillé : <span className="font-semibold text-amber-300">{recommendedPrice} Zen</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="market-copy" className="mb-1 block text-xs font-medium text-zinc-400">
+              Personnage à vendre
             </label>
             <select
-              id="market-duration"
-              value={duration}
-              onChange={(event) => setDuration(event.target.value)}
-              className="h-10 rounded-md border border-border bg-background px-3 text-sm"
+              id="market-copy"
+              value={copyId}
+              onChange={(event) => {
+                setCopyId(event.target.value);
+                const suggested = suggestedPrices(event.target.value, kind);
+                setPrice(suggested.price);
+                setBuyoutPrice(suggested.buyoutPrice);
+              }}
+              className="w-full rounded-xl border border-white/10 bg-[#1b1f2a] px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
             >
-              {AUCTION_DURATIONS.map((option) => (
-                <option key={option.minutes} value={option.minutes}>{option.label}</option>
-              ))}
+              {selectable.map((copy) => {
+                const c = byId.get(copy.card_id);
+                const count = selectable.filter((item) => item.card_id === copy.card_id).length;
+                return (
+                  <option key={copy.id} value={copy.id}>
+                    {c?.name ?? "Carte"} · {c?.rarity ?? ""} {count > 1 ? `(x${count})` : ""}
+                  </option>
+                );
+              })}
             </select>
-          </>
-        )}
-        <Button variant="hero" disabled={!selected || !price} onClick={publish}>
-          Publier l’annonce fictive
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setKind("fixed");
+                if (copyId) setPrice(suggestedPrices(copyId, "fixed").price);
+              }}
+              className={`rounded-xl border py-2 text-sm font-semibold transition ${
+                kind === "fixed"
+                  ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                  : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white"
+              }`}
+            >
+              Prix fixe
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKind("auction");
+                if (copyId) {
+                  const s = suggestedPrices(copyId, "auction");
+                  setPrice(s.price);
+                  setBuyoutPrice(s.buyoutPrice);
+                }
+              }}
+              className={`rounded-xl border py-2 text-sm font-semibold transition ${
+                kind === "auction"
+                  ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                  : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white"
+              }`}
+            >
+              Enchère
+            </button>
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between text-xs text-zinc-400">
+              <span>{kind === "fixed" ? "Prix de vente (Zen)" : "Prix de départ (Zen)"}</span>
+              {recommendedPrice > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPrice(String(recommendedPrice))}
+                  className="font-medium text-amber-400 hover:underline"
+                >
+                  Appliquer {recommendedPrice} Zen
+                </button>
+              )}
+            </div>
+            <input
+              type="number"
+              min={1}
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              placeholder="Ex. 250"
+              className="w-full rounded-xl border border-white/10 bg-[#1b1f2a] px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
+            />
+          </div>
+
+          {kind === "auction" && (
+            <div>
+              <label className="mb-1 block text-xs text-zinc-400">Achat immédiat (optionnel)</label>
+              <input
+                type="number"
+                min={1}
+                value={buyoutPrice}
+                onChange={(event) => setBuyoutPrice(event.target.value)}
+                placeholder="Ex. 500"
+                className="w-full rounded-xl border border-white/10 bg-[#1b1f2a] px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
+              />
+            </div>
+          )}
+
+          <div>
+            <span className="mb-1 block text-xs text-zinc-400">Durée de l'annonce</span>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: "720", label: "12 h" },
+                { value: "1440", label: "24 h" },
+                { value: "2880", label: "48 h" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setDuration(opt.value)}
+                  className={`rounded-xl border py-2 text-sm font-semibold transition ${
+                    duration === opt.value
+                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                      : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {last && (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+              Attention : il s'agit de votre dernier exemplaire de ce personnage.
+            </p>
+          )}
+        </div>
+
+        <Button
+          variant="hero"
+          className="mt-2 w-full py-5 text-base font-bold"
+          disabled={!selected || !price}
+          onClick={publish}
+        >
+          Mettre en vente
         </Button>
       </DialogContent>
     </Dialog>
