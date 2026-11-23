@@ -60,6 +60,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <p className="mt-2 text-sm text-muted-foreground">
           Un problème est survenu. Réessaie ou retourne à l'accueil.
         </p>
+        {error ? <pre className="mt-3 max-w-full overflow-x-auto rounded bg-muted/60 p-2 text-left text-xs text-destructive">{error instanceof Error ? error.message : String(error)}</pre> : null}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
