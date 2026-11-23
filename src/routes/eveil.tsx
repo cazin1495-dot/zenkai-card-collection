@@ -78,6 +78,11 @@ export function MissionsPage() {
   ];
   const openVariants = [missionPool.at(1)!, missionPool.at(2)!, missionPool.at(3)!];
   const thirdVariants = [missionPool.at(4)!, missionPool.at(5)!, missionPool.at(6)!, missionPool.at(7)!, missionPool.at(8)!];
+  const missions = [
+    missionPool.at(0)!,
+    openVariants.at(todaySeed % openVariants.length)!,
+    thirdVariants.at((todaySeed * 3 + 1) % thirdVariants.length)!,
+  ];
   const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
     (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);
   const onlineReady = state ? missions.filter((mission) => mission.progress >= mission.goal && !state.mission_claims.includes(mission.id)).length : 0;
