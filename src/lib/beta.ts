@@ -1,7 +1,7 @@
 import { getGuestState, updateGuestState } from "./guest-collection";
 import { INITIAL_ZEN } from "./shards";
 
-export const BETA_END = "2026-11-29T15:30:00+01:00";
+export const BETA_END = "2026-11-23T18:00:00+01:00";
 export const BETA_ACCESS_KEY = "zenkai_beta_access_v2";
 export const BETA_WIPE_KEY = "zenkai_beta_wipe_v2";
 const END_MS = Date.parse(BETA_END);
