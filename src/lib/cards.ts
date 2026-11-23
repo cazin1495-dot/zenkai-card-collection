@@ -107,11 +107,15 @@ export function parseUserRarityOverrides(raw: string | null): Record<string, Cat
     if (!key.trim() || !isCatalogRarity(rarity)) throw new Error("Configuration des raretés globales invalide.");
     entries.push([key, rarity]);
   }
-  return Object.fromEntries(entries);
+  return { ...DEFAULT_USER_RARITY_OVERRIDES, ...Object.fromEntries(entries) };
 }
 
 export const DEFAULT_USER_RARITY_OVERRIDES: Readonly<Record<string, CatalogRarity>> = {
   "al-12464": "legendaire",
+  "name:muichiro tokito": "legendaire",
+  "name:obanai iguro": "legendaire",
+  "name:sanemi shinazugawa": "legendaire",
+  "name:gyomei himejima": "legendaire",
   "al-12465": "legendaire",
   "al-464903": "legendaire",
   "al-466014": "legendaire",
