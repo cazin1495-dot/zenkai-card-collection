@@ -40,7 +40,12 @@ export function createLocalGuestDraw(
         card = pool[Math.floor(Math.random() * pool.length)];
       }
 
-      if (!card) throw new Error(`Impossible de sélectionner une carte ${rarity} ou une Commune de repli dans le pack ${pack}.`);
+      if (!card) {
+    const anyPackPool = remaining.length > 0 ? remaining : cards.filter((c) => c.packs?.includes(pack));
+    const fallbackPool = anyPackPool.length > 0 ? anyPackPool : cards;
+    card = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+  }
+  if (!card) throw new Error(`Aucune carte disponible pour le pack ${pack}.`);
       usedIds.add(card.id);
       const standardIndex = remaining.findIndex((candidate) => candidate.id === card.id);
       if (standardIndex >= 0) remaining.splice(standardIndex, 1);
