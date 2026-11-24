@@ -37,7 +37,7 @@ export function createLocalGuestDraw(
       } else {
         const matchingRarity = remaining.filter((candidate) => candidate.rarity === rarity);
         const pool = matchingRarity.length > 0 ? matchingRarity : remaining.filter((candidate) => candidate.rarity === "commune");
-        card = pool[Math.floor(Math.random() * pool.length)]; if (card && ownedSet.has(card.id) && pool.length > 1 && Math.random() < 0.35) { card = pool[Math.floor(Math.random() * pool.length)]; }
+        card = pool[Math.floor(Math.random() * pool.length)]; if (card && ownedSet.has(card.id) && pool.length > 1 && Math.random() < 0.45) { card = pool[Math.floor(Math.random() * pool.length)]; }
       }
 
       if (!card) {
@@ -46,7 +46,7 @@ export function createLocalGuestDraw(
     card = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
   }
   if (!card) throw new Error(`Aucune carte disponible pour le pack ${pack}.`);
-      usedIds.add(card.id);
+      usedIds.add(card.id); ownedSet.add(card.id);
       const standardIndex = remaining.findIndex((candidate) => candidate.id === card.id);
       if (standardIndex >= 0) remaining.splice(standardIndex, 1);
       return {
