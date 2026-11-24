@@ -41,7 +41,7 @@ export function SiteHeader() {
   const plus = useZenkaiPlus();
   const missions = useMissionData(session?.user.id ?? null);
   const localMissions = useMissionData(null, !!session);
-  const readyMissions = missions.ready + (session && localMissions.state ? availableQuestCount(localMissions.state) : 0) + (missions.daily && !missions.daily.claimed ? 1 : 0);
+  const readyMissions = missions.ready + (missions.daily && !missions.daily.claimed ? 1 : 0);
   const [now, setNow] = useState<number | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [guestZen, setGuestZen] = useState<number | null>(null);
