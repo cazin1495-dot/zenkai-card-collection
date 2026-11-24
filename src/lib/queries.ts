@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v60";
+const CARDS_LS_KEY = "zenkai_cards_cache_v61";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v60"],
+  queryKey: ["cards-v61"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -390,6 +390,18 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "sv-shouko", name: "Shouko Nishimiya", title: "Silent Voice • Shouko Nishimiya", rarity: "mythique", description: "Jeune fille sourde au sourire lumineux qui tente de se faire accepter malgré les blessures du passé.", sort_order: 12301, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b80243-RzxE51iUU5eq.png", popularity: 51000 },
+  { id: "sv-shouya", name: "Shouya Ishida", title: "Silent Voice • Shouya Ishida", rarity: "mythique", description: "Ancien harceleur rongé par les remords qui cherche la rédemption en apprenant la langue des signes pour Shouko.", sort_order: 12302, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b80491-NK6pxb6oH61P.png", popularity: 48000 },
+  { id: "sv-yuzuru", name: "Yuzuru Nishimiya", title: "Silent Voice • Yuzuru Nishimiya", rarity: "legendaire", description: "Petite sœur protectrice de Shouko et passionnée de photographie prête à tout pour la défendre.", sort_order: 12303, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b89335-3fy5a7Qa9h9J.jpg", popularity: 26000 },
+  { id: "sv-nagatsuka", name: "Tomohiro Nagatsuka", title: "Silent Voice • Tomohiro Nagatsuka", rarity: "legendaire", description: "Meilleur ami loyal et enthousiaste de Shouya toujours présent pour le soutenir.", sort_order: 12304, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124035-Il86uF1hboRA.jpg", popularity: 19000 },
+  { id: "sv-naoka", name: "Naoka Ueno", title: "Silent Voice • Naoka Ueno", rarity: "epique", description: "Ancienne camarade de classe au caractère impulsif et jaloux qui refuse d’affronter ses torts.", sort_order: 12305, category: "shojo", series: "Silent Voice", role: "antagoniste", pack_ids: ["shojo", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124026-KcQmX7heg7im.jpg", popularity: 16000 },
+  { id: "sv-sahara", name: "Miyoko Sahara", title: "Silent Voice • Miyoko Sahara", rarity: "epique", description: "Amie douce et fidèle de Shouko qui n’a jamais cessé d’apprendre la langue des signes pour elle.", sort_order: 12306, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124038-tmsS0TUxwx87.jpg", popularity: 14500 },
+  { id: "sv-miyako", name: "Miyako Ishida", title: "Silent Voice • Miyako Ishida", rarity: "rare", description: "Mère courageuse et dévouée de Shouya tenant un salon de coiffure.", sort_order: 12307, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124030-YoZ0Drg5cHXX.jpg", popularity: 11000 },
+  { id: "sv-mashiba", name: "Satoshi Mashiba", title: "Silent Voice • Satoshi Mashiba", rarity: "rare", description: "Lycéen calme doté d’un fort sens de la justice qui se lie d’amitié avec Shouya.", sort_order: 12308, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124034-94AX4zhTaQZB.jpg", popularity: 9500 },
+  { id: "sv-maria", name: "Maria Ishida", title: "Silent Voice • Maria Ishida", rarity: "non_commune", description: "Petite nièce espiègle et pleine de joie de Shouya.", sort_order: 12309, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124031-ErVGKjxFH56V.jpg", popularity: 8000 },
+  { id: "sv-yaeko", name: "Yaeko Nishimiya", title: "Silent Voice • Yaeko Nishimiya", rarity: "non_commune", description: "Mère stricte et profondément protectrice de Shouko et Yuzuru.", sort_order: 12310, category: "shojo", series: "Silent Voice", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/124037-3KFDLRIT66Bn.jpg", popularity: 7500 },
+  { id: "sv-shimada", name: "Kazuki Shimada", title: "Silent Voice • Kazuki Shimada", rarity: "commune", description: "Ancien ami d’enfance de Shouya qui lui a tourné le dos au primaire.", sort_order: 12311, category: "shojo", series: "Silent Voice", role: "antagoniste", pack_ids: ["shojo", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b124039-gbt1fKyZRdBp.jpg", popularity: 6000 },
+  { id: "sv-takeuchi", name: "Takeuchi", title: "Silent Voice • Takeuchi", rarity: "commune", description: "Ancien professeur d’école primaire de Shouya et Shouko.", sort_order: 12312, category: "shojo", series: "Silent Voice", role: "antagoniste", pack_ids: ["shojo", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b135851-7gmFc8ZB594q.jpg", popularity: 5500 },
   { id: "tot-totoro", name: "Totoro", title: "Mon Voisin Totoro • Totoro", rarity: "mythique", description: "Esprit bienveillant et géant de la forêt qui veille sur Satsuki et Mei.", sort_order: 12001, category: "shojo", series: "Mon Voisin Totoro", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b269-sbPL4w1ygjSe.jpg", popularity: 54000 },
   { id: "tot-mei", name: "Mei Kusakabe", title: "Mon Voisin Totoro • Mei Kusakabe", rarity: "mythique", description: "Petite sœur curieuse et pleine de vie qui découvre la tanière secrète de Totoro.", sort_order: 12002, category: "shojo", series: "Mon Voisin Totoro", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/268.jpg", popularity: 40000 },
   { id: "tot-satsuki", name: "Satsuki Kusakabe", title: "Mon Voisin Totoro • Satsuki Kusakabe", rarity: "legendaire", description: "Grande sœur courageuse et attentionnée qui protège Mei au quotidien.", sort_order: 12003, category: "shojo", series: "Mon Voisin Totoro", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/267.jpg", popularity: 25000 },
