@@ -339,43 +339,38 @@ export const pityQuery = (userId: string) =>
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
   if (typeof window === "undefined") return cards;
-  const cacheKey = "zenkai_jikan_v5";
+  const cacheKey = "zenkai_al_final_v1";
   let cachedMap: Record<string, string> = {};
   try { const raw = localStorage.getItem(cacheKey); if (raw) cachedMap = JSON.parse(raw); } catch {}
   if (Object.keys(cachedMap).length < 10) {
-    const mapNames: Record<string, string> = {
-      "Sano, Manjirou": "tr-mikey", "Sano, Manjiro": "tr-mikey",
-      "Ryuuguji, Ken": "tr-draken", "Ryuguji, Ken": "tr-draken",
-      "Hanagaki, Takemichi": "tr-takemichi",
-      "Baji, Keisuke": "tr-baji",
-      "Matsuno, Chifuyu": "tr-chifuyu",
-      "Tachibana, Hinata": "tr-hinata",
-      "Mitsuya, Takashi": "tr-mitsuya",
-      "Kisaki, Tetta": "tr-kisaki",
-      "Hanma, Shuuji": "tr-hanma", "Hanma, Shuji": "tr-hanma",
-      "Hanemiya, Kazutora": "tr-kazutora",
-      "Momomiya, Ichigo": "mm-ichigo",
-      "Fujiwara, Zakuro": "mm-zakuro",
-      "Aizawa, Mint": "mm-mint",
-      "Midorikawa, Lettuce": "mm-lettuce",
-      "Fong, Pudding": "mm-pudding"
+    const u = "https://" + ["graphql", "anilist", "co"].join(".");
+    const q = `query{tr:Media(id:120120){characters(sort:FAVOURITES_DESC,perPage:20){nodes{id image{large}}}}mm:Media(id:687){characters(sort:FAVOURITES_DESC,perPage:15){nodes{id image{large}}}}}`;
+    const m: Record<number, string> = {
+      145341: "tr-mikey", 145345: "tr-draken", 145342: "tr-takemichi",
+      145343: "tr-baji", 145344: "tr-chifuyu", 170484: "tr-hinata",
+      167841: "tr-mitsuya", 170483: "tr-kisaki", 167845: "tr-hanma",
+      167846: "tr-kazutora", 1755: "mm-ichigo", 1759: "mm-zakuro",
+      1756: "mm-mint", 1757: "mm-lettuce", 1758: "mm-pudding"
     };
-    for (const id of "42249,13".split(",")) {
-      try {
-        const r = await fetch("https://api." + "jikan.moe/v4/anime/" + id + "/characters");
-        if (r.ok) {
-          const j = await r.json();
-          for (const it of (j.data || [])) {
-            const cid = mapNames[it?.character?.name];
-            const img = it?.character?.images?.jpg?.image_url;
-            if (cid && img) cachedMap[cid] = img;
-          }
+    try {
+      const r = await fetch(u, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const nodes = [...(j?.data?.tr?.characters?.nodes || []), ...(j?.data?.mm?.characters?.nodes || [])];
+        for (const n of nodes) {
+          const cid = m[Number(n?.id)];
+          const img = n?.image?.large;
+          if (cid && img) cachedMap[cid] = img;
         }
-      } catch {}
-    }
-    if (Object.keys(cachedMap).length > 0) {
-      try { localStorage.setItem(cacheKey, JSON.stringify(cachedMap)); } catch {}
-    }
+        if (Object.keys(cachedMap).length > 0) {
+          try { localStorage.setItem(cacheKey, JSON.stringify(cachedMap)); } catch {}
+        }
+      }
+    } catch {}
   }
   return cards.map((c) => cachedMap[c.id] ? { ...c, image_url: cachedMap[c.id] } : c);
 }
