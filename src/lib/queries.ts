@@ -273,7 +273,7 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-    return [
+    const finalCards = [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
     ...tr.filter((c) => !existingIds.has(c.id)),
     ...tr.filter((c) => !existingIds.has(c.id)),
@@ -293,7 +293,7 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card));
   },
-  staleTime: 5_000,
+  staleTime: Infinity, gcTime: Infinity,
   refetchInterval: 5_000,
   refetchOnWindowFocus: true,
 });
