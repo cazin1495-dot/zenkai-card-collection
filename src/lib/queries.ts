@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v50";
+const CARDS_LS_KEY = "zenkai_cards_cache_v51";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v50"],
+  queryKey: ["cards-v51"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -390,6 +390,13 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "yoi-yuri", name: "Yuri Katsuki", title: "Yuri!!! on Ice • Yuri Katsuki", rarity: "mythique", description: "Patineur artistique japonais retrouvant sa flamme grâce à Victor.", sort_order: 10501, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b90223-N2yiCBMBHxZu.png", popularity: 21000 },
+  { id: "yoi-victor", name: "Victor Nikiforov", title: "Yuri!!! on Ice • Victor Nikiforov", rarity: "mythique", description: "Légende russe quintuple champion du monde devenu entraîneur de Yuri.", sort_order: 10502, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b90225-5NweNvd4YiDr.png", popularity: 22500 },
+  { id: "yoi-phichit", name: "Phichit Chulanont", title: "Yuri!!! on Ice • Phichit Chulanont", rarity: "legendaire", description: "Patineur thaïlandais solaire et meilleur ami de Yuri Katsuki.", sort_order: 10503, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121768-p0QzN6CW8blh.jpg", popularity: 5400 },
+  { id: "yoi-otabek", name: "Otabek Altin", title: "Yuri!!! on Ice • Otabek Altin", rarity: "legendaire", description: "Prodige kazakh au style puissant et ami fidèle de Yuri Plisetsky.", sort_order: 10504, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121765-xjvcgZIq1e1b.jpg", popularity: 5600 },
+  { id: "yoi-chris", name: "Christophe Giacometti", title: "Yuri!!! on Ice • Christophe Giacometti", rarity: "legendaire", description: "Patineur suisse charismatique et rival historique de Victor.", sort_order: 10505, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121767-Y9lmX1O1PPUs.jpg", popularity: 5100 },
+  { id: "yoi-jj", name: "Jean-Jacques Leroy", title: "Yuri!!! on Ice • Jean-Jacques Leroy", rarity: "legendaire", description: "Champion canadien flamboyant persuadé de sa victoire.", sort_order: 10506, category: "sport", series: "Yuri!!! on Ice", role: "antagoniste", pack_ids: ["sport", "shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/121766-rlhQWsmfH6D7.jpg", popularity: 4900 },
+  { id: "yoi-minami", name: "Kenjirou Minami", title: "Yuri!!! on Ice • Kenjirou Minami", rarity: "epique", description: "Jeune patineur japonais plein d’énergie admirant Yuri Katsuki.", sort_order: 10507, category: "sport", series: "Yuri!!! on Ice", role: "protagoniste", pack_ids: ["sport", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b135073-a8YsxxyptL4n.png", popularity: 2400 },
   { id: "kl-kirari", name: "Kilari Tsukishima", title: "Kilari • Kilari Tsukishima", rarity: "mythique", description: "Jeune idole solaire et gourmande devenue la star numéro un du Japon.", sort_order: 10401, category: "shojo", series: "Kilari", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b4465-id9hl3vU8404.png", popularity: 20000 },
   { id: "kl-hiroto", name: "Hiroto Kazama", title: "Kilari • Hiroto Kazama", rarity: "mythique", description: "Membre du duo d’idoles SHIPS et mentor taquin mais protecteur de Kilari.", sort_order: 10402, category: "shojo", series: "Kilari", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/5676.jpg", popularity: 17500 },
   { id: "kl-seiji", name: "Seiji Hiwatari", title: "Kilari • Seiji Hiwatari", rarity: "legendaire", description: "Second membre doux et bienveillant du célèbre duo d’idoles SHIPS.", sort_order: 10403, category: "shojo", series: "Kilari", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/5566.jpg", popularity: 5400 },
