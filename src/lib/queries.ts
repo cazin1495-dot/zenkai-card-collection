@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v33"],
+  queryKey: ["cards-v35"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
@@ -376,6 +376,15 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "csm-makima", name: "Makima", title: "Chainsaw Man • Makima", rarity: "mythique", description: "Directrice de la Sécurité Publique au pouvoir terrifiant.", sort_order: 9201, category: "dark", series: "Chainsaw Man", role: "Antagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b137080-UHcynYNjb5ZU.png", popularity: 19000 },
+  { id: "csm-reze", name: "Reze", title: "Chainsaw Man • Reze", rarity: "mythique", description: "Jeune fille mystérieuse portant le démon Bombe.", sort_order: 9202, category: "dark", series: "Chainsaw Man", role: "Antagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b148740-ceAibPxLW8rR.png", popularity: 16500 },
+  { id: "csm-denji", name: "Denji", title: "Chainsaw Man • Denji", rarity: "mythique", description: "Chasseur de démons fusionné avec Pochita, le Chainsaw Man.", sort_order: 9203, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b130102-FO1VHNnEnLlB.png", popularity: 18500 },
+  { id: "csm-power", name: "Power", title: "Chainsaw Man • Power", rarity: "mythique", description: "Homme-démon du Sang explosif et imprévisible.", sort_order: 9204, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b137079-6yLEUYR3bmpr.png", popularity: 17500 },
+  { id: "csm-aki", name: "Aki Hayakawa", title: "Chainsaw Man • Aki Hayakawa", rarity: "legendaire", description: "Chasseur de démons dévoué utilisant le démon Renard et Malédiction.", sort_order: 9205, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b137081-TSrUR3mUJL6r.png", popularity: 6000 },
+  { id: "csm-kishibe", name: "Kishibe", title: "Chainsaw Man • Kishibe", rarity: "legendaire", description: "Le plus redoutable chasseur de démons de la Sécurité Publique.", sort_order: 9206, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b144593-hdCTT9t54z0s.png", popularity: 4800 },
+  { id: "csm-katana", name: "Katana Man", title: "Chainsaw Man • Katana Man", rarity: "legendaire", description: "Hybride redoutable maniant les lames de katana.", sort_order: 9207, category: "dark", series: "Chainsaw Man", role: "Antagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b157241-GkgQVzkFrmUD.jpg", popularity: 4200 },
+  { id: "csm-himeno", name: "Himeno", title: "Chainsaw Man • Himeno", rarity: "epique", description: "Partenaire expérimentée d’Aki liée au démon Fantôme.", sort_order: 9208, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b144596-kvL6SD2litJu.png", popularity: 2200 },
+  { id: "csm-kobeni", name: "Kobeni Higashiyama", title: "Chainsaw Man • Kobeni Higashiyama", rarity: "epique", description: "Recrue anxieuse dotée d’une agilité surhumaine.", sort_order: 9209, category: "shonen", series: "Chainsaw Man", role: "Protagoniste", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b144594-0dbO1NSYeZ12.png", popularity: 2100 },
   { id: "tr-mikey", name: "Manjirou Sano", title: "Tokyo Revengers • Manjirou Sano", rarity: "mythique", description: "Commandant invaincu du Tokyo Manjikai, surnommé Mikey.", sort_order: 9001, category: "shonen", series: "Tokyo Revengers", role: "Membre du Toman", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b145341-CuPldCLZMvvf.png", popularity: 18000 },
   { id: "tr-draken", name: "Ken Ryuuguji", title: "Tokyo Revengers • Ken Ryuuguji", rarity: "mythique", description: "Vice-commandant du Toman, surnommé Draken.", sort_order: 9002, category: "shonen", series: "Tokyo Revengers", role: "Membre du Toman", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b145345-zyirrSsKIDCb.png", popularity: 12000 },
   { id: "tr-takemichi", name: "Takemichi Hanagaki", title: "Tokyo Revengers • Takemichi Hanagaki", rarity: "mythique", description: "Voyageur temporel prêt à tout pour sauver ses amis.", sort_order: 9003, category: "shonen", series: "Tokyo Revengers", role: "Membre du Toman", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b145342-GSUutL83jGgI.png", popularity: 9500 },
