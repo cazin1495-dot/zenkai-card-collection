@@ -273,9 +273,8 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-    return [
+    const result = [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
-    ...tr.filter((c) => !existingIds.has(c.id)),
     ...tr.filter((c) => !existingIds.has(c.id)),
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
