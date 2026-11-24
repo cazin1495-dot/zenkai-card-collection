@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v28"],
+  queryKey: ["cards-v31"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
