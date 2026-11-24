@@ -286,6 +286,7 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
       ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
+  return resolveStaticCardImages(normalizedCards);
   },
   staleTime: Infinity,
   refetchInterval: false,
