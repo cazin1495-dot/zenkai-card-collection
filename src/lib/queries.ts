@@ -255,6 +255,7 @@ export const cardsQuery = queryOptions({
     const yozakura = yozakuraRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const atelier = atelierRaw.map((c): Card => ({ ...c, category: "seinen" }));
     const doremi = doremiRaw.map((c): Card => ({ ...c, category: "shojo" }));
+  const trRaw = await fetchAnimeCharacters(120120, "Tokyo Revengers", TR_MYTHIC_IDS, TR_LEGENDARY_IDS, TR_ANTAGONIST_IDS, 1800, "Antagoniste", "Membre du Toman");
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
