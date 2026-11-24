@@ -58,7 +58,7 @@ const DRSTONE_LEGENDARY_IDS = parseIds("124037,124038,136028,136029");
 const DRSTONE_ANTAGONIST_IDS = parseIds("124036,136029,158711");
 
 const TR_MYTHIC_IDS = parseIds("145341,145345,145342");
-const TR_LEGENDARY_IDS = parseIds("145343,145344,167841,170483,167845,170484");
+const TR_LEGENDARY_IDS = parseIds("145343,145344,167841,170483,167845,170484,170484");
 const TR_ANTAGONIST_IDS = parseIds("170483,167845,167846,170480");
 
 const HXH_MYTHIC_IDS = parseIds("27,30,31,28,23277,57,23338,23278");
@@ -292,7 +292,7 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
   if (typeof window !== "undefined" && mewMew.length > 0 && tr.length > 0) {
-    try { localStorage.setItem("zenkai_cards_ok_v1", JSON.stringify(result)); } catch {}
+    try { localStorage.setItem("zenkai_cards_ok_v2", JSON.stringify(result)); } catch {}
   }
   return result;
   },
