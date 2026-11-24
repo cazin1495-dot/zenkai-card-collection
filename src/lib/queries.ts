@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v100";
+const CARDS_LS_KEY = "zenkai_cards_cache_v101";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,13 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "c30-sawada", name: "Honoka Sawada", title: "Horimiya • Honoka Sawada", rarity: "commune", description: "Élève timide admirant profondément Kyoko Hori.", sort_order: 16910, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b72459-NbyXnBAjLxKT.png", popularity: 5900 },
+  { id: "c30-souta", name: "Souta Hori", title: "Horimiya • Souta Hori", rarity: "commune", description: "Petit frère attachant de Kyoko adorant passer du temps avec Miyamura.", sort_order: 16912, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b66969-w9HNa7igeTeF.png", popularity: 6200 },
+  { id: "c30-anna", name: "Anna", title: "The Promised Neverland • Anna", rarity: "commune", description: "Orpheline calme et attentionnée chargée des soins à Grace Field.", sort_order: 16904, category: "shonen", series: "The Promised Neverland", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n126504-xHMVYY9uEfkh.png", popularity: 5900 },
+  { id: "c30-thoma", name: "Thoma", title: "The Promised Neverland • Thoma", rarity: "commune", description: "Petit farceur énergique et inséparable compagnon de Lannion.", sort_order: 16905, category: "shonen", series: "The Promised Neverland", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b129784-fn5VoMYAqCsk.jpg", popularity: 5800 },
+  { id: "c30-lannion", name: "Lannion", title: "The Promised Neverland • Lannion", rarity: "commune", description: "Jeune orphelin espiègle toujours prêt à suivre Emma.", sort_order: 16906, category: "shonen", series: "The Promised Neverland", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b129783-6KAMdcOzkmCv.jpg", popularity: 5800 },
+  { id: "c30-yanagi", name: "Akane Yanagi", title: "Horimiya • Akane Yanagi", rarity: "commune", description: "Lycéen poli au visage angélique souffrant d’une myopie sévère.", sort_order: 16907, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b72453-f9gRbQBUjKo6.png", popularity: 6100 },
+  { id: "c30-iura", name: "Shuu Iura", title: "Horimiya • Shuu Iura", rarity: "commune", description: "Boute-en-train exubérant du groupe d’amis au lycée Katagiri.", sort_order: 16908, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b66967-driczOA04cxe.png", popularity: 6200 },
   { id: "cm2-niichan", name: "Nii-chan", title: "Blue Exorcist • Nii-chan", rarity: "commune", description: "Petit familier esprit vert adoré de Shiemi Moriyama.", sort_order: 16809, category: "shonen", series: "Blue Exorcist", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b47527-Ms1bzAyPzCih.png", popularity: 5900 },
   { id: "cm2-natsumi", name: "Natsumi Raimon", title: "Inazuma Eleven • Natsumi Raimon", rarity: "commune", description: "Manageuse exigeante et brillante de l’équipe de Raimon.", sort_order: 16810, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b31783-F4bSTx1oJiBg.png", popularity: 6300 },
   { id: "cm2-fudou", name: "Akio Fudou", title: "Inazuma Eleven • Akio Fudou", rarity: "commune", description: "Milieu stratège provocateur devenu pièce maîtresse d’Inazuma Japon.", sort_order: 16811, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b32308-dTBRrI4iDYig.jpg", popularity: 6400 },
