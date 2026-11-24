@@ -273,7 +273,7 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-    const result = [
+  const result = [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
     ...tr.filter((c) => !existingIds.has(c.id)),
       ...cleaned,
@@ -290,7 +290,11 @@ export const cardsQuery = queryOptions({
       ...doremi.filter((card) => !existingIds.has(card.id)),
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
-    ].map((card) => normalizeCatalogCard(card));
+  ].map((card) => normalizeCatalogCard(card));
+  if (typeof window !== "undefined" && mewMew.length > 0 && tr.length > 0) {
+    try { localStorage.setItem("zenkai_cards_ok_v1", JSON.stringify(result)); } catch {}
+  }
+  return result;
   },
   staleTime: Infinity, gcTime: Infinity,
   refetchInterval: 5_000,
