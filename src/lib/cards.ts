@@ -18,6 +18,16 @@ export type Rarity = BaseRarity;
 
 export const CATALOG_RARITIES = ["commune", "non_commune", "rare", "epique", "legendaire", "mythique"] as const satisfies readonly CatalogRarity[];
 export const USER_RARITY_OVERRIDES: Record<string, CatalogRarity> = {
+  "tr-hinata": "legendaire",
+  "tr-baji": "legendaire",
+  "tr-chifuyu": "legendaire",
+  "tr-mitsuya": "legendaire",
+  "tr-kisaki": "legendaire",
+  "tr-hanma": "legendaire",
+  "tr-kazutora": "epique",
+  "mm-mint": "legendaire",
+  "mm-lettuce": "legendaire",
+  "mm-pudding": "legendaire",
   "al-64771": "mythique",
   "al-162969": "mythique",
   "al-162213": "mythique",
