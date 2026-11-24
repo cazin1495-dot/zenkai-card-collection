@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v30"],
+  queryKey: ["cards-v28"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
@@ -286,7 +286,7 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
       ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
-  return resolveStaticCardImages(rebalancePopularityRarities(normalized));
+  return resolveStaticCardImages(normalized);
   return resolveStaticCardImages(normalizedCards);
   return resolveStaticCardImages(normalizedCards);
   },
@@ -336,24 +336,6 @@ export const pityQuery = (userId: string) =>
       return data?.counter ?? 0;
     },
   });
-
-function rebalancePopularityRarities(cards: Card[]): Card[] {
-  const eligible = cards.filter((c) => !isTranscendanceCatalogCard(c));
-  const sorted = [...eligible].sort((a, b) => ((b.popularity ?? 0) - (a.popularity ?? 0)) || ((a.sort_order ?? 9999) - (b.sort_order ?? 9999)));
-  const total = sorted.length || 1;
-  const rankMap: Record<string, CatalogRarity> = {};
-  sorted.forEach((c, idx) => {
-    const ratio = idx / total;
-    let r: CatalogRarity = "commune";
-    if (ratio < 0.06) r = "mythique";
-    else if (ratio < 0.20) r = "legendaire";
-    else if (ratio < 0.45) r = "epique";
-    else if (ratio < 0.75) r = "rare";
-    if (c.id === "tr-hinata" && r === "mythique") r = "legendaire";
-    rankMap[c.id] = r;
-  });
-  return cards.map((c) => rankMap[c.id] ? { ...c, rarity: rankMap[c.id], serverRarity: rankMap[c.id] } : c);
-}
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
   if (typeof window === "undefined") return cards;
