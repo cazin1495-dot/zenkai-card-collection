@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v38"],
+  queryKey: ["cards-v39"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
@@ -376,6 +376,12 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "sxf-loid", name: "Loid Forger", title: "SPY x FAMILY • Loid Forger", rarity: "mythique", description: "Espion d’élite de Westalis connu sous le nom de code Twilight.", sort_order: 9401, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b138101-7NCB0Md8zA6G.png", popularity: 19500 },
+  { id: "sxf-anya", name: "Anya Forger", title: "SPY x FAMILY • Anya Forger", rarity: "mythique", description: "Télépathe espiègle adoptée par Loid et Yor pour l’opération Strix.", sort_order: 9402, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b138100-4Li0tWRCa5bQ.png", popularity: 21000 },
+  { id: "sxf-yor", name: "Yor Forger", title: "SPY x FAMILY • Yor Forger", rarity: "mythique", description: "Redoutable tueuse à gages surnommée Princesse Ibara au grand cœur.", sort_order: 9403, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b138102-ZOAu9jI2d5ke.png", popularity: 20000 },
+  { id: "sxf-damian", name: "Damian Desmond", title: "SPY x FAMILY • Damian Desmond", rarity: "legendaire", description: "Fils cadet de Donovan Desmond et camarade de classe d’Anya à Eden.", sort_order: 9404, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b150424-4B4psF6I4dgO.png", popularity: 5200 },
+  { id: "sxf-becky", name: "Becky Blackbell", title: "SPY x FAMILY • Becky Blackbell", rarity: "epique", description: "Meilleure amie d’Anya à l’académie Eden, toujours prête à la soutenir.", sort_order: 9405, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b150423-RxXwrHzeLCss.jpg", popularity: 2400 },
+  { id: "sxf-franky", name: "Franky Franklin", title: "SPY x FAMILY • Franky Franklin", rarity: "epique", description: "Informateur fidèle et inventeur débrouillard allié de Twilight.", sort_order: 9406, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b157888-zkSfIT5Z8y2S.png", popularity: 2100 },
   { id: "yn-mitsuha", name: "Mitsuha Miyamizu", title: "Your Name • Mitsuha Miyamizu", rarity: "mythique", description: "Lycéenne d’Itomori liée à Taki par un mystérieux échange de corps.", sort_order: 9301, category: "shojo", series: "Your Name", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121514-MGI7JRluscpz.png", popularity: 16000 },
   { id: "yn-taki", name: "Taki Tachibana", title: "Your Name • Taki Tachibana", rarity: "mythique", description: "Lycéen de Tokyo prêt à tout pour retrouver Mitsuha à travers le temps.", sort_order: 9302, category: "shojo", series: "Your Name", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121516-kuPVJLNsH5uE.png", popularity: 15000 },
   { id: "yn-miki", name: "Miki Okudera", title: "Your Name • Miki Okudera", rarity: "legendaire", description: "Collègue élégante et bienveillante de Taki au restaurant italien.", sort_order: 9303, category: "shojo", series: "Your Name", role: "protagoniste", pack_ids: ["shojo", "shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b121522-TeGSD6ESVtc0.jpg", popularity: 4200 },
