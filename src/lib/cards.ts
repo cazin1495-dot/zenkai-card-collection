@@ -415,7 +415,7 @@ export function characterRarity(
   if (Object.hasOwn(CUSTOM_RARITY, lowercaseName) && CUSTOM_RARITY[lowercaseName]) return CUSTOM_RARITY[lowercaseName];
   const activeOverrides = overrides ?? getUserRarityOverrides();
   const normKey = lowercaseName.replace(/\s+/g, " ").trim();
-  if (id && Object.hasOwn(activeOverrides, id)) return activeOverrides[id];
+  if (cardId && Object.hasOwn(activeOverrides, cardId)) return activeOverrides[cardId];
   if (Object.hasOwn(activeOverrides, "name:" + normKey)) return activeOverrides["name:" + normKey];
   if (Object.hasOwn(activeOverrides, normKey)) return activeOverrides[normKey];
   const words = lowercaseName.split(/[\s\-·()]+/);
