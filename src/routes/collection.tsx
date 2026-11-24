@@ -106,6 +106,7 @@ export function CollectionPage() {
   }
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
+  const [animeSearch, setAnimeSearch] = useState("");
   const [sort, setSort] = useState<CollectionSort>("owned-rarest");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const { favoriteCardIds } = useFavoriteCards();
@@ -129,9 +130,16 @@ export function CollectionPage() {
   for (const entry of packEntries) {
     if (entry.count) rarityCounts.set(entry.rarity, (rarityCounts.get(entry.rarity) ?? 0) + 1);
   }
-  const filtered = packEntries.filter((entry) =>
-    (rarityFilter === "all" || entry.rarity === rarityFilter) && (!favoritesOnly || favoriteIds.has(entry.card.id)),
-  );
+  const termeRecherche = animeSearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const filtered = packEntries.filter((entry) => {
+    const correspondRarete = rarityFilter === "all" || entry.rarity === rarityFilter;
+    const correspondFavori = !favoritesOnly || favoriteIds.has(entry.card.id);
+    if (!correspondRarete || !correspondFavori) return false;
+    if (!termeRecherche) return true;
+    const animeNorm = String(entry.card.anime ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const nomNorm = String(entry.card.name ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return animeNorm.includes(termeRecherche) || nomNorm.includes(termeRecherche);
+  });
   const list = sortCollectionEntries(filtered, sort);
   const recycleGroups = useMemo(() => guestRecycleGroups(
     guestOwned.data ?? [], cards.data ?? [], localBonus,
@@ -234,6 +242,25 @@ export function CollectionPage() {
         ))}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">Compteurs : formes différentes possédées, après filtre de pack.</p>
+      <div className="mt-3 flex items-center gap-2 max-w-md">
+        <input
+          type="text"
+          value={animeSearch}
+          onChange={(e) => setAnimeSearch(e.target.value)}
+          placeholder="Rechercher par nom d'animé (ex : Naruto, Demon Slayer...)"
+          className="w-full rounded-xl border border-border bg-surface-raised px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+        {animeSearch && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setAnimeSearch("")}
+          >
+            Effacer
+          </Button>
+        )}
+      </div>
 
       {ownedRows && ownedRows.length === 0 && (
         <div className="mt-10 rounded-2xl border border-border bg-surface/60 p-8 text-center">
