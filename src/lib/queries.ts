@@ -339,11 +339,10 @@ export const pityQuery = (userId: string) =>
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
   if (typeof window === "undefined") return cards;
-  const cacheKey = "zenkai_jikan_imgs_final";
+  const cacheKey = "zenkai_jikan_v5";
   let cachedMap: Record<string, string> = {};
   try { const raw = localStorage.getItem(cacheKey); if (raw) cachedMap = JSON.parse(raw); } catch {}
-  const missing = cards.some((c) => (c.id.startsWith("tr-") || c.id.startsWith("mm-")) && !cachedMap[c.id]);
-  if (missing) {
+  if (Object.keys(cachedMap).length < 10) {
     const mapNames: Record<string, string> = {
       "Sano, Manjirou": "tr-mikey", "Sano, Manjiro": "tr-mikey",
       "Ryuuguji, Ken": "tr-draken", "Ryuguji, Ken": "tr-draken",
