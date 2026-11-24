@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v28"],
+  queryKey: ["cards-v29"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
@@ -286,7 +286,7 @@ export const cardsQuery = queryOptions({
       ...drStone.filter((card) => !existingIds.has(card.id)),
       ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
-  return resolveStaticCardImages(normalized);
+  return resolveStaticCardImages(rebalancePopularityRarities(normalized));
   return resolveStaticCardImages(normalizedCards);
   return resolveStaticCardImages(normalizedCards);
   },
@@ -336,6 +336,36 @@ export const pityQuery = (userId: string) =>
       return data?.counter ?? 0;
     },
   });
+
+function rebalancePopularityRarities(cards: Card[]): Card[] {
+  const overrides = getUserRarityOverrides();
+  const eligible = cards.filter((c) => {
+    if (isTranscendanceCatalogCard(c)) return false;
+    const key = c.name.trim().toLowerCase();
+    if (overrides[c.id] || overrides[key]) return false;
+    return true;
+  });
+
+  const sorted = [...eligible].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+  const total = sorted.length || 1;
+  const rankMap = new Map<string, CatalogRarity>();
+
+  sorted.forEach((c, idx) => {
+    const ratio = idx / total;
+    let r: CatalogRarity = "commune";
+    if (ratio < 0.08) r = "mythique";
+    else if (ratio < 0.25) r = "legendaire";
+    else if (ratio < 0.50) r = "epique";
+    else if (ratio < 0.78) r = "rare";
+    rankMap.set(c.id, r);
+  });
+
+  return cards.map((c) => {
+    const newRarity = rankMap.get(c.id);
+    if (!newRarity) return c;
+    return { ...c, rarity: newRarity, serverRarity: newRarity };
+  });
+}
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
   if (typeof window === "undefined") return cards;
