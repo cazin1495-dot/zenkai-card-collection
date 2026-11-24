@@ -259,7 +259,7 @@ export const cardsQuery = queryOptions({
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
-  const mewMewRaw = await fetchAnimeCharacters(756, "Tokyo Mew Mew", new Set(), new Set(), new Set(), 150, "Antagoniste", "Mew Mew");
+  const mewMewRaw = await fetchAnimeCharacters(756, "Tokyo Mew Mew (Mew Mew Power)", new Set(), new Set(), new Set(), 150, "Antagoniste", "Mew Mew");
   const NOMS_MEW_MEW = new Set(["ichigo momomiya","momomiya ichigo","mint aizawa","aizawa mint","lettuce midorikawa","midorikawa lettuce","pudding fong","fong pudding","zakuro fujiwara","fujiwara zakuro","masaya aoyama","aoyama masaya","kisshu"]);
   const mewMew = mewMewRaw
     .filter((c) => NOMS_MEW_MEW.has(c.name.toLowerCase().trim()))
@@ -268,6 +268,7 @@ export const cardsQuery = queryOptions({
     const existingIds = new Set(cleaned.map((card) => card.id));
 
     return [
+    ...mewMew.filter((c) => !existingIds.has(c.id)),
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
       ...jjk.filter((card) => !existingIds.has(card.id)),
