@@ -130,7 +130,12 @@ export function CollectionPage() {
   for (const entry of packEntries) {
     if (entry.count) rarityCounts.set(entry.rarity, (rarityCounts.get(entry.rarity) ?? 0) + 1);
   }
-  const termeRecherche = animeSearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const termeRecherche = animeSearch
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/tokyo mew mew power|mew mew power/g, "tokyo mew mew")
+    .trim();
   const filtered = packEntries.filter((entry) => {
     const correspondRarete = rarityFilter === "all" || entry.rarity === rarityFilter;
     const correspondFavori = !favoritesOnly || favoriteIds.has(entry.card.id);
