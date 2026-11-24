@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v68";
+const CARDS_LS_KEY = "zenkai_cards_cache_v69";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v68"],
+  queryKey: ["cards-v69"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -390,6 +390,19 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "fz-lancelot", name: "Berserker (Lancelot)", title: "Fate/Zero • Berserker (Lancelot)", rarity: "legendaire", description: "Chevalier déchu de la Table Ronde en armure noire brandissant Arondight avec une fureur implacable.", sort_order: 13418, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b12732-yayxYNs1FQeF.png", popularity: 27000 },
+  { id: "fz-diarmuid", name: "Lancer (Diarmuid Ua Duibhne)", title: "Fate/Zero • Lancer (Diarmuid Ua Duibhne)", rarity: "legendaire", description: "Chevalier d’honneur de Fianna maniant les deux lances maudites Gáe Dearg et Gáe Buidhe.", sort_order: 13419, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16022-rdonZr99a9XO.png", popularity: 24000 },
+  { id: "fz-kariya", name: "Kariya Matou", title: "Fate/Zero • Kariya Matou", rarity: "epique", description: "Master de Berserker sacrifiant sa propre vie pour tenter de sauver Sakura des Matou.", sort_order: 13420, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16026-cicpiktY4SOs.png", popularity: 18000 },
+  { id: "fz-natalia", name: "Natalia Kaminski", title: "Fate/Zero • Natalia Kaminski", rarity: "epique", description: "Chasseuse de mages d’élite qui a élevé et formé Kiritsugu Emiya.", sort_order: 13421, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16035-d63WNTgYUNIX.png", popularity: 16500 },
+  { id: "fz-gilles", name: "Caster (Gilles de Rais)", title: "Fate/Zero • Caster (Gilles de Rais)", rarity: "epique", description: "Sorcier illuminé invoquant des horreurs abyssales grâce à son grimoire maudit.", sort_order: 13422, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16024-MZXEjshw6q6B.png", popularity: 15500 },
+  { id: "fz-maiya", name: "Maiya Hisau", title: "Fate/Zero • Maiya Hisau", rarity: "rare", description: "Assistante tireuse d’élite et bras droit indéfectible de Kiritsugu Emiya.", sort_order: 13423, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16020-unVmGwhB9rhm.png", popularity: 13000 },
+  { id: "fz-tokiomi", name: "Tokiomi Tohsaka", title: "Fate/Zero • Tokiomi Tohsaka", rarity: "rare", description: "Chef aristocratique de la famille Tohsaka et premier Master de Gilgamesh.", sort_order: 13424, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16017-BgO5m4ZS2Mor.png", popularity: 12000 },
+  { id: "fz-hassan", name: "Assassin (Hassan-i-Sabbah)", title: "Fate/Zero • Assassin (Hassan-i-Sabbah)", rarity: "rare", description: "Ordre d’ombres multiples espionnant et frappant dans l’obscurité de Fuyuki.", sort_order: 13425, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16025-K9BmRRDigyWU.png", popularity: 11000 },
+  { id: "fz-kayneth", name: "Kayneth El-Melloi", title: "Fate/Zero • Kayneth El-Melloi", rarity: "non_commune", description: "Prodige orgueilleux de la Tour de l’Horloge et Master de Lancer.", sort_order: 13426, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16028-ISNmfeK28uCj.png", popularity: 9500 },
+  { id: "fz-ryuunosuke", name: "Ryuunosuke Uryuu", title: "Fate/Zero • Ryuunosuke Uryuu", rarity: "non_commune", description: "Master dément de Caster fascinant son Servant par sa folie.", sort_order: 13427, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16019-nFljwebXHDqc.png", popularity: 9000 },
+  { id: "fz-zouken", name: "Zouken Matou", title: "Fate/Zero • Zouken Matou", rarity: "non_commune", description: "Patriarche millénaire et sinistre du clan des mages Matou.", sort_order: 13428, category: "seinen", series: "Fate/Zero", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16030-WezL5e1dt9kr.png", popularity: 8500 },
+  { id: "fz-leysritt", name: "Leysritt", title: "Fate/Zero • Leysritt", rarity: "commune", description: "Homunculus protectrice d’Illyasviel au service de la famille Einzbern.", sort_order: 13429, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b24333-alhbcqCDBbzZ.jpg", popularity: 7500 },
+  { id: "fz-aoi", name: "Aoi Tohsaka", title: "Fate/Zero • Aoi Tohsaka", rarity: "commune", description: "Épouse douce de Tokiomi et mère de Rin et Sakura.", sort_order: 13430, category: "seinen", series: "Fate/Zero", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16018-bVrg7lsnSubE.png", popularity: 7000 },
   { id: "fate-saber", name: "Saber (Artoria Pendragon)", title: "Fate • Saber (Artoria Pendragon)", rarity: "mythique", description: "Roi des Chevaliers invoquée dans la guerre du Saint Graal, porteuse de la lame sacrée Excalibur.", sort_order: 13401, category: "seinen", series: "Fate", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b497-Yg5pNmC8kxzs.png", popularity: 55000 },
   { id: "fate-gilgamesh", name: "Gilgamesh", title: "Fate • Gilgamesh", rarity: "mythique", description: "Roi des Héros de Babylone régnant avec arrogance grâce à son trésor infini Gate of Babylon.", sort_order: 13402, category: "seinen", series: "Fate", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2514-hnE6LEdqm7Su.png", popularity: 53000 },
   { id: "fate-archer", name: "Archer (EMIYA)", title: "Fate • Archer (EMIYA)", rarity: "mythique", description: "Servant cynique et redoutable maniant deux lames jumelles et la sphère de réalité Unlimited Blade Works.", sort_order: 13403, category: "seinen", series: "Fate", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2087-l5WP4W4vmfJJ.png", popularity: 49000 },
