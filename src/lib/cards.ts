@@ -448,7 +448,7 @@ export function normalizeCatalogCard(card: Card, overrides = getUserRarityOverri
     const rarity = characterRarity(card.name, "mythique", card.id, overrides);
     return { ...card, serverRarity: baseRarity, rarity: rarity === "transcendance" ? "mythique" : rarity, category: "shonen", role: "antagoniste" };
   }
-  const rarity = characterRarity(card.name, baseRarity, card.id, overrides);
+  const pop = card.popularity ?? 0; const popTier: CatalogRarity = (pop >= 8500 || card.id === "tr-mikey") ? "mythique" : pop >= 4800 ? "legendaire" : pop >= 2200 ? "epique" : pop >= 900 ? "rare" : "commune"; const rarity = card.id === "tr-hinata" ? "legendaire" : popTier;
   return rarity === baseRarity || rarity === "transcendance"
     ? { ...card, rarity: baseRarity }
     : { ...card, serverRarity: baseRarity, rarity };
