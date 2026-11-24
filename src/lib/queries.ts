@@ -266,30 +266,7 @@ export const cardsQuery = queryOptions({
     .filter((c) => MEWMEW_ALLOWED_IDS.has(c.id))
     .map((c): Card => ({ ...c, category: "shojo" }));
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
-    const [trJikan, mewMewJikan] = await Promise.all([
-    fetchJikanAnimeCharacters(
-      42249,
-      "Tokyo Revengers",
-      "shonen",
-      new Set([169763, 169764, 169762]), // Mikey, Draken, Takemichi -> Mythique
-      new Set([169765, 169766, 195140, 179391, 195139, 195141]), // Baji, Chifuyu, Hinata Tachibana, Mitsuya, Kisaki, Hanma -> Legendaire
-      new Set([195139, 195141, 195142, 195143]), // Kisaki, Hanma, Kazutora, Taiju -> Antagoniste
-      "Membre du Toman",
-      "Antagoniste"
-    ),
-    fetchJikanAnimeCharacters(
-      13,
-      "Tokyo Mew Mew",
-      "shojo",
-      new Set([3323, 3327]), // Ichigo Momomiya, Zakuro Fujiwara -> Mythique
-      new Set([3324, 3325, 3326, 3328, 3329]), // Mint, Lettuce, Pudding, Deep Blue, Kisshu -> Legendaire
-      new Set([3328, 3329, 3330, 3331]), // Deep Blue, Kisshu, Pai, Taruto -> Antagoniste
-      "Mew Mew",
-      "Antagoniste"
-    ),
-  ]);
-
-  const existingIds = new Set(cleaned.map((card) => card.id));
+    const existingIds = new Set(cleaned.map((card) => card.id));
 
     return [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
@@ -307,8 +284,7 @@ export const cardsQuery = queryOptions({
       ...doremi.filter((card) => !existingIds.has(card.id)),
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
-      ...trJikan.filter((card) => !existingIds.has(card.id)),
-    ...mewMewJikan.filter((card) => !existingIds.has(card.id)),
+      ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
   },
   staleTime: Infinity,
@@ -372,76 +348,5 @@ export function useUserCards(userId?: string | null) {
 
 export function useProfile(userId?: string | null) {
   return useQuery({ ...profileQuery(userId ?? ""), enabled: !!userId });
-}
-
-async function fetchJikanAnimeCharacters(
-  malId: number,
-  seriesName: string,
-  category: "shonen" | "shojo",
-  mythicIds: Set<number>,
-  legendaryIds: Set<number>,
-  antagonistIds: Set<number>,
-  defaultRole: string,
-  antagonistRole: string
-): Promise<Card[]> {
-  const cacheKey = `zenkai_jikan_${malId}_v1`;
-  if (typeof window !== "undefined") {
-    try {
-      const saved = localStorage.getItem(cacheKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-  }
-  try {
-    const res = await fetch(`https://jikan.moe{malId}/characters`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    const list = Array.isArray(json?.data) ? json.data : [];
-    const cards: Card[] = [];
-    for (let i = 0; i < Math.min(list.length, 25); i++) {
-      const item = list[i];
-      const char = item?.character;
-      if (!char?.mal_id || !char?.name) continue;
-      const malCharId = Number(char.mal_id);
-      const parts = String(char.name).split(",").map((x: string) => x.trim());
-      const fullName = parts.length === 2 ? `${parts} ${parts}` : String(char.name).trim();
-      const imageUrl = char.images?.jpg?.image_url || char.images?.webp?.image_url || "";
-      if (!imageUrl || imageUrl.includes("questionmark")) continue;
-      const fav = Number(item?.favorites ?? 100);
-      const rarity: CatalogRarity = mythicIds.has(malCharId)
-        ? "mythique"
-        : legendaryIds.has(malCharId)
-        ? "legendaire"
-        : fav >= 800
-        ? "epique"
-        : fav >= 200
-        ? "rare"
-        : fav >= 50
-        ? "non_commune"
-        : "commune";
-      const isAntagonist = antagonistIds.has(malCharId);
-      cards.push({
-        id: `mal-${malCharId}`,
-        name: fullName,
-        title: `${seriesName} • ${fullName}`,
-        rarity,
-        description: `${fullName} — Personnage de ${seriesName}.`,
-        sort_order: 8000 + i,
-        category,
-        series: seriesName,
-        role: isAntagonist ? antagonistRole : defaultRole,
-        image_url: imageUrl,
-        popularity: fav,
-      });
-    }
-    if (typeof window !== "undefined" && cards.length > 0) {
-      try { localStorage.setItem(cacheKey, JSON.stringify(cards)); } catch {}
-    }
-    return cards;
-  } catch {
-    return [];
-  }
 }
 
