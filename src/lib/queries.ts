@@ -362,7 +362,7 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
     };
     for (const id of "42249,13".split(",")) {
       try {
-        const r = await fetch("https://jikan.moe" + id + "/characters");
+        const r = await fetch("https://api." + "jikan.moe/v4/anime/" + id + "/characters");
         if (r.ok) {
           const j = await r.json();
           for (const it of (j.data || [])) {
