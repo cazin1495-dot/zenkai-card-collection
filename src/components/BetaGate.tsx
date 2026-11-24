@@ -69,6 +69,8 @@ export function BetaGate({ children }: { children: ReactNode }) {
   }, [expired, ready, creator, session, client, retry]);
 
   function unlockCreator() {
+    try { localStorage.setItem("zenkai_acces_createur", "1"); } catch {}
+    setClosed(false);
     try { localStorage.setItem("zenkai_creator_bypass", "1"); } catch {}
     setClosed(false);
     clicks.current++;
