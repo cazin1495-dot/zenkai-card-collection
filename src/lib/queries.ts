@@ -223,9 +223,23 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
+const CARDS_LS_KEY = "zenkai_cards_cache_v49";
 export const cardsQuery = queryOptions({
+  staleTime: Infinity,
+  gcTime: 1000 * 60 * 60,
+  initialData: () => {
+    try {
+      const r = localStorage.getItem(CARDS_LS_KEY);
+      if (r) { const d = JSON.parse(r); if (Array.isArray(d) && d.length > 50) return d; }
+    } catch {}
+    return undefined;
+  },
   queryKey: ["cards-v49"],
   queryFn: async () => {
+    try {
+      const r = localStorage.getItem(CARDS_LS_KEY);
+      if (r) { const d = JSON.parse(r); if (Array.isArray(d) && d.length > 50) return d; }
+    } catch {}
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
     const op = await fetchAnimeCharacters(21, "One Piece", OP_MYTHIC_IDS, OP_LEGENDARY_IDS, OP_ANTAGONIST_IDS, 1000, "Pirate / Antagoniste", "Pirate / Protagoniste");
