@@ -268,7 +268,7 @@ export function BoostersPage() {
     try {
       ownedIdsBeforeOpen = getGuestCollection().map((row) => row.card_id);
       localDraw = sortBoosterCardsByRarity(markNewBoosterCards(
-        createLocalGuestDraw(cards, localPack.id, count, undefined, ownedIdsBeforeOpen),
+        createLocalGuestDraw(cards, localPack.id, count),
         ownedIdsBeforeOpen,
       ));
     } catch (error) {
