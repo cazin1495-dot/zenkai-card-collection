@@ -33,7 +33,7 @@ describe("global rarity persistence", () => {
     }).mockResolvedValueOnce({ data: [{ card_key: "last", rarity: "epique" }], error: null });
     const result = await fetchRarityOverrides();
     expect(Object.keys(result)).toHaveLength(1001);
-    expect(result.last).toBe("epique");
+    expect(result["last"]).toBe("epique");
     expect(mocks.range).toHaveBeenLastCalledWith(1000, 1999);
   });
 });

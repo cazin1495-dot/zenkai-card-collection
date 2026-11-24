@@ -91,12 +91,12 @@ export function MarketSaleDialog({
 
   const selectedCard = selected ? byId.get(selected.card_id) : undefined;
   const sellableCount = selected ? selectable.filter((item) => item.card_id === selected.card_id).length : 0;
-  const medianPrice = selected ? suggestedPrices(selected.id, "fixed").price : 0;
+  const medianPrice = selected ? Number(suggestedPrices(selected.id, "fixed").price) : 0;
   const numericPrice = Math.max(0, Math.floor(Number(price) || 0));
   const listingFee = numericPrice > 0 ? Math.max(10, Math.round(numericPrice * 0.05)) : 20;
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-h-[92vh] max-w-md overflow-y-auto border-white/10 bg-[#12151e] p-5 text-white">
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl font-extrabold tracking-tight text-white">Mettre en vente</DialogTitle>
@@ -136,7 +136,7 @@ export function MarketSaleDialog({
                         setCopyId(copy.id);
                         const suggested = suggestedPrices(copy.id, kind);
                         setPrice(suggested.price);
-                        setBuyoutPrice(suggested.buyoutPrice);
+                        setBuyoutPrice(suggested.buyout);
                         setPickerOpen(false);
                       }}
                       className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
@@ -163,7 +163,7 @@ export function MarketSaleDialog({
         {selected && selectedCard && (
           <div className="flex items-center gap-3.5 rounded-2xl border border-white/10 bg-[#181c27] p-3">
             <img loading="lazy" decoding="async"
-              src={selectedCard.image_url}
+              src={selectedCard.image_url ?? undefined}
               alt={selectedCard.name}
               className="h-20 w-14 shrink-0 rounded-lg border border-white/10 object-cover shadow-md"
             />
@@ -211,7 +211,7 @@ export function MarketSaleDialog({
               if (copyId) {
                 const s = suggestedPrices(copyId, "auction");
                 setPrice(s.price);
-                setBuyoutPrice(s.buyoutPrice);
+                setBuyoutPrice(s.buyout);
               }
             }}
             className={`rounded-xl border py-2.5 text-sm font-bold transition ${

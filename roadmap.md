@@ -1,6 +1,11 @@
 # Zenkai — roadmap
 
-- [ ] Amis : demandes en ligne uniques dans les deux sens, droits par participant, acceptation/refus destinataire, listes reçues/envoyées/acceptées et tests.
+- [x] Compilation rétablie : corrections vente, types de cartes, catalogue et missions ; compilation OK et 45 tests ciblés réussis. Des tests historiques restent incompatibles avec les écrans/règles synchronisés.
+
+- [x] Amis : parcours réel à deux comptes vérifié, envoi/acceptation/refus, listes synchronisées et persistance après actualisation ; doublons inverses, auto-demande et acceptation par expéditeur interdits. Mobile vérifié.
+
+## Demandes antérieures hors du périmètre actuel
+Les tâches ci-dessous ont été remplacées par la synchronisation GitHub et les demandes ciblées suivantes ; ne pas les reprendre automatiquement.
 
 - [ ] Nouvelles règles : sept raretés packables, retrait du mode test et de la fusion, Pity Mythique conservée.
 - [ ] Cinéma local sur tirage/inspection Transcendance et ouverture faisceau/éclats triangulaires.

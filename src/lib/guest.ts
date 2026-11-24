@@ -41,7 +41,7 @@ export function createLocalGuestDraw(
       }
 
       if (!card) {
-    const anyPackPool = remaining.length > 0 ? remaining : cards.filter((c) => c.packs?.includes(pack));
+    const anyPackPool = remaining.length > 0 ? remaining : cards.filter((c) => inPack(c, pack));
     const fallbackPool = anyPackPool.length > 0 ? anyPackPool : cards;
     card = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
   }

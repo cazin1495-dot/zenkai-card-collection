@@ -76,13 +76,13 @@ export function MissionsPage() {
     { id: "recycle_2", title: "Recycler 2 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 2, reward: "+30 XP · +75 Zen", xp: 30, zen: 75 },
     { id: "recycle_4", title: "Recycler 4 doublons", icon: Recycle, progress: state?.mission_recycled ?? 0, goal: 4, reward: "+50 XP · +110 Zen", xp: 50, zen: 110 },
   ];
-  const openVariants = [missionPool.at(1)!, missionPool.at(2)!, missionPool.at(3)!];
-  const thirdVariants = [missionPool.at(4)!, missionPool.at(5)!, missionPool.at(6)!, missionPool.at(7)!, missionPool.at(8)!];
+  const openVariants = missionPool.slice(1, 4);
+  const thirdVariants = missionPool.slice(4);
   const missions = [
-    missionPool.at(0)!,
-    openVariants.at(todaySeed % openVariants.length)!,
-    thirdVariants.at((todaySeed * 3 + 1) % thirdVariants.length)!,
-  ];
+    missionPool.at(0),
+    openVariants.at(todaySeed % openVariants.length),
+    thirdVariants.at((todaySeed * 3 + 1) % thirdVariants.length),
+  ].filter((mission): mission is NonNullable<typeof mission> => mission !== undefined);
   const localReady = (guestQuests.state ? availableQuestCount(guestQuests.state) : 0) +
     (session && accountQuests.state ? availableQuestCount(accountQuests.state) : 0);
   const onlineReady = state ? missions.filter((mission) => mission.progress >= mission.goal && !state.mission_claims.includes(mission.id)).length : 0;
@@ -119,7 +119,7 @@ export function MissionsPage() {
     syncDailyMissionDay();
     const claims: string[] = JSON.parse(safeLocalGet("zenkai_beta_claims", "[]"));
     const ready = missions.filter((m) => m.progress >= m.goal && !claims.includes(m.id));
-    const localReadyCount = accountQuests.readyCount + guestQuests.readyCount;
+    const localReadyCount = localReady;
     if (!ready.length && !localReadyCount) {
       toast.error("Aucune mission disponible à réclamer.");
       return;
@@ -139,8 +139,7 @@ export function MissionsPage() {
         updateGuestState((st) => ({ state: { ...st, zen: st.zen + totalZen }, result: true }));
         if (totalXp > 0) addLocalMissionXp(totalXp);
       }
-      if (accountQuests.readyCount > 0) accountQuests.claimAll();
-      if (guestQuests.readyCount > 0) guestQuests.claimAll();
+      if (localReadyCount > 0) claimAllQuests(session ? [session.user.id, null] : [null]);
       await queryClient.invalidateQueries();
       toast.success(`Missions réclamées !${totalZen > 0 ? ` +${totalZen} Zen` : ""}${totalXp > 0 ? ` · +${totalXp} XP` : ""}`);
     } finally {

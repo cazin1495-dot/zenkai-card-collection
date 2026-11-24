@@ -141,7 +141,7 @@ export function CollectionPage() {
     const correspondFavori = !favoritesOnly || favoriteIds.has(entry.card.id);
     if (!correspondRarete || !correspondFavori) return false;
     if (!termeRecherche) return true;
-    const animeNorm = String(entry.card.anime ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const animeNorm = String(entry.card.series ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const nomNorm = String(entry.card.name ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     return animeNorm.includes(termeRecherche) || nomNorm.includes(termeRecherche);
   });
@@ -344,7 +344,7 @@ function RecycleDialog({ cards, copies, active, userId, onClose }: {
   function submit() {
     try {
       const gain = recycleGuestCollection(selectedCopies.map((copy) => copy.id), cards, { rarities, total }, userId ? getPlus(userId, false).active : undefined);
-      try { if (session?.user?.id) recordQuestActivity(session.user.id, "recycled", selectedCopies.length); recordQuestActivity(null, "recycled", selectedCopies.length); }
+      try { if (userId) recordQuestActivity(userId, "recycled", selectedCopies.length); recordQuestActivity(null, "recycled", selectedCopies.length); }
       catch { toast.error("Recyclage effectué, mais progression des quêtes locales indisponible."); }
       void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
       onClose();
