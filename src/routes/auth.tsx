@@ -103,6 +103,14 @@ function AuthPage() {
               <Button type="button" variant="glass" disabled={loading} onClick={() => social("google")}>
                 <GoogleLogo /> Continuer avec Google
               </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => connexionDeveloppeur()}
+          >
+            Connexion Développeur (Créateur)
+          </Button>
               <Button type="button" variant="glass" disabled={loading} onClick={() => social("lovable")}>
                 <LovableMark /> Continuer avec Lovable
               </Button>

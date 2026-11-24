@@ -16,7 +16,21 @@ export async function signInWithGoogle() {
 const LOCAL_GUEST_KEY = "zenkai:local-guest";
 
 export function canUseLocalGuestMode() {
-  return import.meta.env.DEV || (typeof window !== "undefined" && !betaEnded() && hasBetaAccess());
+  if (import.meta.env.DEV) return true;
+  if (typeof window === "undefined") return false;
+  const hote = window.location.hostname;
+  if (hote.includes("localhost") || hote.includes("127.0.0.1") || hote.includes("github.dev") || hote.includes("id-preview--")) return true;
+  if (window.localStorage.getItem("zenkai_acces_createur") === "1") return true;
+  return !betaEnded() && hasBetaAccess();
+}
+
+export function connexionDeveloppeur() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem("zenkai_acces_createur", "1");
+    window.localStorage.setItem(LOCAL_GUEST_KEY, "true");
+  } catch {}
+  window.location.href = "/";
 }
 
 export function isLocalGuestMode() {
