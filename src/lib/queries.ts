@@ -263,7 +263,7 @@ export const cardsQuery = queryOptions({
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
-  await new Promise((r) => setTimeout(r, 1200));
+  await new Promise((r) => setTimeout(r, 2500));
   await new Promise((r) => setTimeout(r, 1200));
   const trRaw = await fetchAnimeCharacters(120120, "Tokyo Revengers", TR_MYTHIC_IDS, TR_LEGENDARY_IDS, TR_ANTAGONIST_IDS, 1800, "Antagoniste", "Membre du Toman");
   const tr = trRaw.map((c): Card => ({ ...c, category: "shonen" }));
