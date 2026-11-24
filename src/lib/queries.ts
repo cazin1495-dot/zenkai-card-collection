@@ -266,7 +266,30 @@ export const cardsQuery = queryOptions({
     .filter((c) => MEWMEW_ALLOWED_IDS.has(c.id))
     .map((c): Card => ({ ...c, category: "shojo" }));
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
-    const existingIds = new Set(cleaned.map((card) => card.id));
+    const [trJikan, mewMewJikan] = await Promise.all([
+    fetchJikanAnimeCharacters(
+      42249,
+      "Tokyo Revengers",
+      "shonen",
+      new Set([169763, 169764, 169762]), // Mikey, Draken, Takemichi -> Mythique
+      new Set([169765, 169766, 195140, 179391, 195139, 195141]), // Baji, Chifuyu, Hinata Tachibana, Mitsuya, Kisaki, Hanma -> Legendaire
+      new Set([195139, 195141, 195142, 195143]), // Kisaki, Hanma, Kazutora, Taiju -> Antagoniste
+      "Membre du Toman",
+      "Antagoniste"
+    ),
+    fetchJikanAnimeCharacters(
+      13,
+      "Tokyo Mew Mew",
+      "shojo",
+      new Set([3323, 3327]), // Ichigo Momomiya, Zakuro Fujiwara -> Mythique
+      new Set([3324, 3325, 3326, 3328, 3329]), // Mint, Lettuce, Pudding, Deep Blue, Kisshu -> Legendaire
+      new Set([3328, 3329, 3330, 3331]), // Deep Blue, Kisshu, Pai, Taruto -> Antagoniste
+      "Mew Mew",
+      "Antagoniste"
+    ),
+  ]);
+
+  const existingIds = new Set(cleaned.map((card) => card.id));
 
     return [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
@@ -284,7 +307,9 @@ export const cardsQuery = queryOptions({
       ...doremi.filter((card) => !existingIds.has(card.id)),
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
-    ].map((card) => normalizeCatalogCard(card));
+      ...trJikan.filter((card) => !existingIds.has(card.id)),
+    ...mewMewJikan.filter((card) => !existingIds.has(card.id)),
+  ].map((card) => normalizeCatalogCard(card));
   },
   staleTime: 5_000,
   refetchInterval: 5_000,
