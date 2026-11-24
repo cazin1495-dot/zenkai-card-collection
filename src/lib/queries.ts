@@ -287,6 +287,7 @@ export const cardsQuery = queryOptions({
       ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
   return resolveStaticCardImages(normalizedCards);
+  return resolveStaticCardImages(normalizedCards);
   },
   staleTime: Infinity,
   refetchInterval: false,
@@ -334,6 +335,58 @@ export const pityQuery = (userId: string) =>
       return data?.counter ?? 0;
     },
   });
+
+async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
+  if (typeof window === "undefined") return cards;
+  const cacheKey = "zenkai_resolved_imgs_v3";
+  let cachedMap: Record<string, string> = {};
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) cachedMap = JSON.parse(raw);
+  } catch {}
+
+  const needFetch = cards.some((c) => (c.id.startsWith("tr-") || c.id.startsWith("mm-")) && !Object.prototype.hasOwnProperty.call(cachedMap, c.id));
+  if (needFetch) {
+    const nameToId: Record<string, string> = {
+      "Manjirou Sano": "tr-mikey", "Manjiro Sano": "tr-mikey",
+      "Ken Ryuuguji": "tr-draken", "Ken Ryuguji": "tr-draken",
+      "Takemichi Hanagaki": "tr-takemichi",
+      "Keisuke Baji": "tr-baji",
+      "Chifuyu Matsuno": "tr-chifuyu",
+      "Hinata Tachibana": "tr-hinata",
+      "Takashi Mitsuya": "tr-mitsuya",
+      "Tetta Kisaki": "tr-kisaki",
+      "Shuuji Hanma": "tr-hanma", "Shuji Hanma": "tr-hanma",
+      "Kazutora Hanemiya": "tr-kazutora",
+      "Ichigo Momomiya": "mm-ichigo",
+      "Zakuro Fujiwara": "mm-zakuro",
+      "Mint Aizawa": "mm-mint",
+      "Lettuce Midorikawa": "mm-lettuce",
+      "Pudding Fong": "mm-pudding",
+    };
+    for (const malId of "42249,13".split(",")) {
+      try {
+        const res = await fetch(`https://jikan.moe{malId}/characters`);
+        if (res.ok) {
+          const json = await res.json();
+          for (const item of json?.data || []) {
+            const rawName = String(item?.character?.name || "");
+            const parts = rawName.split(",").map((x: string) => x.trim());
+            const fullName = parts.length === 2 ? `${parts.at(1)} ${parts.at(0)}` : rawName.trim();
+            const cardId = Object.prototype.hasOwnProperty.call(nameToId, fullName) ? nameToId[fullName] : "";
+            const img = item?.character?.images?.jpg?.image_url || item?.character?.images?.webp?.image_url || "";
+            if (cardId && img && !img.includes("questionmark")) {
+              cachedMap[cardId] = img;
+            }
+          }
+        }
+      } catch {}
+    }
+    try { localStorage.setItem(cacheKey, JSON.stringify(cachedMap)); } catch {}
+  }
+
+  return cards.map((c) => (Object.prototype.hasOwnProperty.call(cachedMap, c.id) ? { ...c, image_url: cachedMap[c.id] } : c));
+}
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
   { id: "tr-mikey", name: "Manjirou Sano", title: "Tokyo Revengers • Manjirou Sano", rarity: "mythique", description: "Commandant invaincu du Tokyo Manjikai, surnommé Mikey.", sort_order: 9001, category: "shonen", series: "Tokyo Revengers", role: "Membre du Toman", image_url: "https://wsrv.nl/?url=https://myanimelist.net", popularity: 18000 },
