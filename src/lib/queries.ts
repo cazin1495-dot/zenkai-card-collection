@@ -274,6 +274,7 @@ export const cardsQuery = queryOptions({
     return [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
     ...tr.filter((c) => !existingIds.has(c.id)),
+    ...tr.filter((c) => !existingIds.has(c.id)),
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
       ...jjk.filter((card) => !existingIds.has(card.id)),
