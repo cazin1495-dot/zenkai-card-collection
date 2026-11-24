@@ -339,61 +339,46 @@ export const pityQuery = (userId: string) =>
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
   if (typeof window === "undefined") return cards;
-  const cacheKey = "zenkai_anilist_imgs_v1";
+  const cacheKey = "zenkai_jikan_imgs_final";
   let cachedMap: Record<string, string> = {};
-  try {
-    const raw = localStorage.getItem(cacheKey);
-    if (raw) cachedMap = JSON.parse(raw);
-  } catch {}
-
-  const needFetch = cards.some((c) => (c.id.startsWith("tr-") || c.id.startsWith("mm-")) && !Object.prototype.hasOwnProperty.call(cachedMap, c.id));
-  if (needFetch) {
-    const query = `query {
-      tr: Media(id: 120120) { characters(sort: FAVOURITES_DESC, perPage: 25) { nodes { id image { large } } } }
-      mm: Media(id: 687) { characters(sort: FAVOURITES_DESC, perPage: 15) { nodes { id image { large } } } }
-    }`;
-    const alToCardId: Record<number, string> = {
-      145341: "tr-mikey",
-      145345: "tr-draken",
-      145342: "tr-takemichi",
-      145343: "tr-baji",
-      145344: "tr-chifuyu",
-      170484: "tr-hinata",
-      167841: "tr-mitsuya",
-      170483: "tr-kisaki",
-      167845: "tr-hanma",
-      167846: "tr-kazutora",
-      1755: "mm-ichigo",
-      1759: "mm-zakuro",
-      1756: "mm-mint",
-      1757: "mm-lettuce",
-      1758: "mm-pudding",
+  try { const raw = localStorage.getItem(cacheKey); if (raw) cachedMap = JSON.parse(raw); } catch {}
+  const missing = cards.some((c) => (c.id.startsWith("tr-") || c.id.startsWith("mm-")) && !cachedMap[c.id]);
+  if (missing) {
+    const mapNames: Record<string, string> = {
+      "Sano, Manjirou": "tr-mikey", "Sano, Manjiro": "tr-mikey",
+      "Ryuuguji, Ken": "tr-draken", "Ryuguji, Ken": "tr-draken",
+      "Hanagaki, Takemichi": "tr-takemichi",
+      "Baji, Keisuke": "tr-baji",
+      "Matsuno, Chifuyu": "tr-chifuyu",
+      "Tachibana, Hinata": "tr-hinata",
+      "Mitsuya, Takashi": "tr-mitsuya",
+      "Kisaki, Tetta": "tr-kisaki",
+      "Hanma, Shuuji": "tr-hanma", "Hanma, Shuji": "tr-hanma",
+      "Hanemiya, Kazutora": "tr-kazutora",
+      "Momomiya, Ichigo": "mm-ichigo",
+      "Fujiwara, Zakuro": "mm-zakuro",
+      "Aizawa, Mint": "mm-mint",
+      "Midorikawa, Lettuce": "mm-lettuce",
+      "Fong, Pudding": "mm-pudding"
     };
-    try {
-      const res = await fetch("https://anilist.co", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ query }),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        const nodes = [
-          ...(json?.data?.tr?.characters?.nodes || []),
-          ...(json?.data?.mm?.characters?.nodes || []),
-        ];
-        for (const n of nodes) {
-          const cid = alToCardId[Number(n?.id)];
-          const img = n?.image?.large;
-          if (cid && img && !img.includes("default.jpg")) {
-            cachedMap[cid] = img;
+    for (const id of "42249,13".split(",")) {
+      try {
+        const r = await fetch("https://jikan.moe" + id + "/characters");
+        if (r.ok) {
+          const j = await r.json();
+          for (const it of (j.data || [])) {
+            const cid = mapNames[it?.character?.name];
+            const img = it?.character?.images?.jpg?.image_url;
+            if (cid && img) cachedMap[cid] = img;
           }
         }
-        try { localStorage.setItem(cacheKey, JSON.stringify(cachedMap)); } catch {}
-      }
-    } catch {}
+      } catch {}
+    }
+    if (Object.keys(cachedMap).length > 0) {
+      try { localStorage.setItem(cacheKey, JSON.stringify(cachedMap)); } catch {}
+    }
   }
-
-  return cards.map((c) => (Object.prototype.hasOwnProperty.call(cachedMap, c.id) ? { ...c, image_url: cachedMap[c.id] } : c));
+  return cards.map((c) => cachedMap[c.id] ? { ...c, image_url: cachedMap[c.id] } : c);
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
