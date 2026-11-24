@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v98";
+const CARDS_LS_KEY = "zenkai_cards_cache_v99";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,9 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "cm1-matsuda", name: "Touta Matsuda", title: "Death Note • Touta Matsuda", rarity: "commune", description: "Jeune inspecteur enthousiaste et maladroit de la cellule d’enquête Kira.", sort_order: 16805, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n1906-JCWKEGGook3Z.png", popularity: 6500 },
+  { id: "cm1-naomi", name: "Naomi Misora", title: "Death Note • Naomi Misora", rarity: "commune", description: "Ancienne agente d’élite du FBI à l’intuition redoutable.", sort_order: 16806, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b4959-DKXw1VYrvael.png", popularity: 6400 },
+  { id: "cm1-matt", name: "Matt (Mail Jeevas)", title: "Death Note • Matt (Mail Jeevas)", rarity: "commune", description: "Allié loyal de Mello formé à la Wammy’s House.", sort_order: 16807, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n2730-SNbfxShpg90k.png", popularity: 6000 },
   { id: "ca-ylva", name: "Ylva", title: "Vinland Saga • Ylva", rarity: "commune", description: "Sœur aînée forte et travailleuse de Thorfinn veillant sur leur village en Islande.", sort_order: 16708, category: "seinen", series: "Vinland Saga", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b27876-Oji0y5oi88oc.jpg", popularity: 6000 },
   { id: "ca-willibald", name: "Willibald", title: "Vinland Saga • Willibald", rarity: "commune", description: "Prêtre philosophe accompagnant le prince Knut dans sa quête de sens.", sort_order: 16709, category: "seinen", series: "Vinland Saga", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b20704-N5pntGOae3F4.jpg", popularity: 5900 },
   { id: "ca-helga", name: "Helga", title: "Vinland Saga • Helga", rarity: "commune", description: "Mère douce et aimante de Thorfinn et épouse de Thors.", sort_order: 16710, category: "seinen", series: "Vinland Saga", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b141589-z9PsqosVAEpr.jpg", popularity: 5800 },
