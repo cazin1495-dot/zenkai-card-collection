@@ -57,10 +57,6 @@ const DRSTONE_MYTHIC_IDS = parseIds("122320,124034,124035,124036");
 const DRSTONE_LEGENDARY_IDS = parseIds("124037,124038,136028,136029");
 const DRSTONE_ANTAGONIST_IDS = parseIds("124036,136029,158711");
 
-const TR_MYTHIC_IDS = parseIds("145341,145345,145342");
-const TR_LEGENDARY_IDS = parseIds("145343,145344,167841,170483,167845,170484,170484");
-const TR_ANTAGONIST_IDS = parseIds("170483,167845,167846,170480");
-
 const HXH_MYTHIC_IDS = parseIds("27,30,31,28,23277,57,23338,23278");
 const HXH_LEGENDARY_IDS = parseIds("33,3200,27996,58193,4423,23337");
 const HXH_ANTAGONIST_IDS = parseIds("31,23277,57,23278,33,3200,26165,24558,24560,58,12300");
@@ -105,7 +101,12 @@ async function fetchAnimeCharacters(
         }
       }
     `;
-    let res: Response | null = null; for (let i = 0; i < 4; i++) { res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query }) }); if (res.ok) break; await new Promise((r) => setTimeout(r, 2000 * (i + 1))); } if (!res || !res.ok) return new Array<Card>();
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) return new Array<Card>();
     const json = await res.json();
     const edges = json?.data?.Media?.characters?.edges ?? new Array<any>();
 
@@ -258,14 +259,8 @@ export const cardsQuery = queryOptions({
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
-  await new Promise((r) => setTimeout(r, 2500));
   await new Promise((r) => setTimeout(r, 1200));
-  await new Promise((r) => setTimeout(r, 3000));
-  const trRaw = await fetchAnimeCharacters(120120, "Tokyo Revengers", TR_MYTHIC_IDS, TR_LEGENDARY_IDS, TR_ANTAGONIST_IDS, 1800, "Antagoniste", "Membre du Toman");
-  const tr = trRaw.map((c): Card => ({ ...c, category: "shonen" }));
-
-  await new Promise((r) => setTimeout(r, 3500));
-  const mewMewRaw = await fetchAnimeCharacters(687, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 150, "Antagoniste", "Mew Mew");
+  const mewMewRaw = await fetchAnimeCharacters(758, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 150, "Antagoniste", "Mew Mew");
   const MEWMEW_ALLOWED_IDS = new Set(["al-2690","al-2691","al-2692","al-2693","al-2694","al-2695","al-2696","al-2697","al-4289","al-13398","al-13399","al-13400","al-13402"]);
   const mewMew = mewMewRaw
     .filter((c) => MEWMEW_ALLOWED_IDS.has(c.id))
@@ -273,9 +268,8 @@ export const cardsQuery = queryOptions({
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
-  const result = [
+    return [
     ...mewMew.filter((c) => !existingIds.has(c.id)),
-    ...tr.filter((c) => !existingIds.has(c.id)),
       ...cleaned,
       ...DEMON_SLAYER_MYTHIC_CARDS,
       ...jjk.filter((card) => !existingIds.has(card.id)),
@@ -290,13 +284,9 @@ export const cardsQuery = queryOptions({
       ...doremi.filter((card) => !existingIds.has(card.id)),
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
-  ].map((card) => normalizeCatalogCard(card));
-  if (typeof window !== "undefined" && mewMew.length > 0 && tr.length > 0) {
-    try { localStorage.setItem("zenkai_cards_ok_v2", JSON.stringify(result)); } catch {}
-  }
-  return result;
+    ].map((card) => normalizeCatalogCard(card));
   },
-  staleTime: Infinity, gcTime: Infinity,
+  staleTime: 5_000,
   refetchInterval: 5_000,
   refetchOnWindowFocus: true,
 });
