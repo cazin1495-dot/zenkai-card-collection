@@ -260,10 +260,11 @@ export const cardsQuery = queryOptions({
     const hsr = await fetchHsrFromBrowser();
   await new Promise((r) => setTimeout(r, 2500));
   await new Promise((r) => setTimeout(r, 1200));
+  await new Promise((r) => setTimeout(r, 3000));
   const trRaw = await fetchAnimeCharacters(120120, "Tokyo Revengers", TR_MYTHIC_IDS, TR_LEGENDARY_IDS, TR_ANTAGONIST_IDS, 1800, "Antagoniste", "Membre du Toman");
   const tr = trRaw.map((c): Card => ({ ...c, category: "shonen" }));
 
-  await new Promise((r) => setTimeout(r, 2200));
+  await new Promise((r) => setTimeout(r, 3500));
   const mewMewRaw = await fetchAnimeCharacters(687, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 150, "Antagoniste", "Mew Mew");
   const MEWMEW_ALLOWED_IDS = new Set(["al-2690","al-2691","al-2692","al-2693","al-2694","al-2695","al-2696","al-2697","al-4289","al-13398","al-13399","al-13400","al-13402"]);
   const mewMew = mewMewRaw
