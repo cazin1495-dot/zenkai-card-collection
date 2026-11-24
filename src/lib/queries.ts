@@ -224,7 +224,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
 }
 
 export const cardsQuery = queryOptions({
-  queryKey: ["cards-v29"],
+  queryKey: ["cards-v30"],
   queryFn: async () => {
     const base = await getCards();
     const jjk = await fetchAnimeCharacters(113415, "Jujutsu Kaisen", JJK_MYTHIC_IDS, new Array<number>(), JJK_ANTAGONIST_IDS, 900, "Fléau / Antagoniste", "Exorciste");
@@ -338,33 +338,21 @@ export const pityQuery = (userId: string) =>
   });
 
 function rebalancePopularityRarities(cards: Card[]): Card[] {
-  const overrides = getUserRarityOverrides();
-  const eligible = cards.filter((c) => {
-    if (isTranscendanceCatalogCard(c)) return false;
-    const key = c.name.trim().toLowerCase();
-    if (overrides[c.id] || overrides[key]) return false;
-    return true;
-  });
-
-  const sorted = [...eligible].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+  const eligible = cards.filter((c) => !isTranscendanceCatalogCard(c));
+  const sorted = [...eligible].sort((a, b) => ((b.popularity ?? 0) - (a.popularity ?? 0)) || ((a.sort_order ?? 9999) - (b.sort_order ?? 9999)));
   const total = sorted.length || 1;
-  const rankMap = new Map<string, CatalogRarity>();
-
+  const rankMap: Record<string, CatalogRarity> = {};
   sorted.forEach((c, idx) => {
     const ratio = idx / total;
     let r: CatalogRarity = "commune";
-    if (ratio < 0.08) r = "mythique";
-    else if (ratio < 0.25) r = "legendaire";
-    else if (ratio < 0.50) r = "epique";
-    else if (ratio < 0.78) r = "rare";
-    rankMap.set(c.id, r);
+    if (ratio < 0.06) r = "mythique";
+    else if (ratio < 0.20) r = "legendaire";
+    else if (ratio < 0.45) r = "epique";
+    else if (ratio < 0.75) r = "rare";
+    if (c.id === "tr-hinata" && r === "mythique") r = "legendaire";
+    rankMap[c.id] = r;
   });
-
-  return cards.map((c) => {
-    const newRarity = rankMap.get(c.id);
-    if (!newRarity) return c;
-    return { ...c, rarity: newRarity, serverRarity: newRarity };
-  });
+  return cards.map((c) => rankMap[c.id] ? { ...c, rarity: rankMap[c.id], serverRarity: rankMap[c.id] } : c);
 }
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
