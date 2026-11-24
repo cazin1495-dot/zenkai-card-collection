@@ -237,9 +237,7 @@ export const cardsQuery = queryOptions({
       yozakuraRaw,
       atelierRaw,
       doremiRaw,
-      kilariRaw,
       inazumaRaw,
-      mewmewRaw,
       drStoneRaw,
     ] = await Promise.all([
       fetchAnimeCharacters(11061, "Hunter x Hunter", HXH_MYTHIC_IDS, HXH_LEGENDARY_IDS, HXH_ANTAGONIST_IDS, 900, "Antagoniste", "Hunter"),
@@ -249,9 +247,7 @@ export const cardsQuery = queryOptions({
       fetchAnimeCharacters(158898, "Mission: Yozakura Family", YOZAKURA_MYTHIC_IDS, YOZAKURA_LEGENDARY_IDS, YOZAKURA_ANTAGONIST_IDS, 1300, "Antagoniste", "Espion"),
       fetchAnimeCharacters(147105, "L'Atelier des Sorciers", ATELIER_MYTHIC_IDS, ATELIER_LEGENDARY_IDS, ATELIER_ANTAGONIST_IDS, 1400, "Antagoniste", "Sorcier"),
       fetchAnimeCharacters(350, "Magical DoReMi", DOREMI_MYTHIC_IDS, DOREMI_LEGENDARY_IDS, DOREMI_ANTAGONIST_IDS, 1500, "Antagoniste", "Apprentie Sorcière"),
-      fetchAnimeCharacters(1543, "Kilari", KILARI_MYTHIC_IDS, KILARI_LEGENDARY_IDS, KILARI_ANTAGONIST_IDS, 1600, "Antagoniste", "Idole"),
       fetchAnimeCharacters(5231, "Inazuma Eleven", INAZUMA_MYTHIC_IDS, INAZUMA_LEGENDARY_IDS, INAZUMA_ANTAGONIST_IDS, 1700, "Antagoniste", "Joueur"),
-      fetchAnimeCharacters(756, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 1800, "Antagoniste", "Mew Mew"),
       fetchAnimeCharacters(105333, "Dr. STONE", DRSTONE_MYTHIC_IDS, DRSTONE_LEGENDARY_IDS, DRSTONE_ANTAGONIST_IDS, 1900, "Antagoniste", "Scientifique"),
     ]);
 
@@ -260,9 +256,7 @@ export const cardsQuery = queryOptions({
     const yozakura = yozakuraRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const atelier = atelierRaw.map((c): Card => ({ ...c, category: "seinen" }));
     const doremi = doremiRaw.map((c): Card => ({ ...c, category: "shojo" }));
-    const kilari = kilariRaw.map((c): Card => ({ ...c, category: "shojo" }));
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
-    const mewmew = mewmewRaw.map((c): Card => ({ ...c, category: "shojo" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
@@ -281,9 +275,7 @@ export const cardsQuery = queryOptions({
       ...yozakura.filter((card) => !existingIds.has(card.id)),
       ...atelier.filter((card) => !existingIds.has(card.id)),
       ...doremi.filter((card) => !existingIds.has(card.id)),
-      ...kilari.filter((card) => !existingIds.has(card.id)),
       ...inazuma.filter((card) => !existingIds.has(card.id)),
-      ...mewmew.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
     ].map((card) => normalizeCatalogCard(card));
   },
