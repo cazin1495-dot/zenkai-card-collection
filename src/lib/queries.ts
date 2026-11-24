@@ -50,7 +50,9 @@ const INAZUMA_LEGENDARY_IDS = parseIds("22107,22108,22109,22110,27193");
 const INAZUMA_ANTAGONIST_IDS = parseIds("22109,27193,27194,35801");
 
 const MEWMEW_MYTHIC_IDS = parseIds("2300,2301,2302,2303,2304");
-const MEWMEW_LEGENDARY_IDS = parseIds("3679,3680,10455");
+const MEWMEW_MYTHIC_IDS = parseIds("2690,2694");
+const MEWMEW_LEGENDARY_IDS = parseIds("2691,2692,2693,2695,4289,13400");
+const MEWMEW_ANTAGONIST_IDS = parseIds("4289,13398,13399,13400");
 const MEWMEW_ANTAGONIST_IDS = parseIds("3679,3680,10455");
 
 const DRSTONE_MYTHIC_IDS = parseIds("122320,124034,124035,124036");
@@ -259,11 +261,12 @@ export const cardsQuery = queryOptions({
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
     const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
-  const mewMewRaw = await fetchAnimeCharacters(758, "Tokyo Mew Mew (Mew Mew Power)", [], [], [], 150, "Antagoniste", "Mew Mew");
-  const NOMS_MEW_MEW = new Set(["ichigo momomiya","momomiya ichigo","mint aizawa","aizawa mint","lettuce midorikawa","midorikawa lettuce","pudding fong","fong pudding","zakuro fujiwara","fujiwara zakuro","masaya aoyama","aoyama masaya","kisshu"]);
+  await new Promise((r) => setTimeout(r, 1200));
+  const mewMewRaw = await fetchAnimeCharacters(758, "Tokyo Mew Mew", MEWMEW_MYTHIC_IDS, MEWMEW_LEGENDARY_IDS, MEWMEW_ANTAGONIST_IDS, 150, "Antagoniste", "Mew Mew");
+  const MEWMEW_ALLOWED_IDS = new Set(["al-2690","al-2691","al-2692","al-2693","al-2694","al-2695","al-2696","al-2697","al-4289","al-13398","al-13399","al-13400","al-13402"]);
   const mewMew = mewMewRaw
-    .filter((c) => NOMS_MEW_MEW.has(c.name.toLowerCase().trim()))
-    .map((c): Card => ({ ...c, category: "shonen" }));
+    .filter((c) => MEWMEW_ALLOWED_IDS.has(c.id))
+    .map((c): Card => ({ ...c, category: "shojo" }));
     const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
