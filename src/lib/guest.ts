@@ -5,7 +5,7 @@ import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscenda
 export function createLocalGuestDraw(
   cards: Card[],
   pack: PackId,
-  boosterCount: number, ownedCardIds: readonly string[] = [],
+  boosterCount: number,
   customTranscendanceCards: readonly CustomTranscendanceCard[] = CUSTOM_TRANSCENDANCE_CARDS,
 ): PulledCard[] {
   const candidates = [...new Map(cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => [card.id, card])).values()];
