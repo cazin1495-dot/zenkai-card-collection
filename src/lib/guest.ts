@@ -11,7 +11,7 @@ export function createLocalGuestDraw(
   const candidates = [...new Map(cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => [card.id, card])).values()];
   if (candidates.length < CARDS_PER_BOOSTER) return [];
 
-  let drawId = 0; const ownedSet = new Set(ownedCardIds);
+  let drawId = 0; const ownedSet = new Set<string>();
   return Array.from({ length: boosterCount }, (_, boosterIndex) => {
     const remaining = [...candidates];
     const usedIds = new Set<string>();
