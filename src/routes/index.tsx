@@ -56,7 +56,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(cardsQuery),
+  loader: ({ context }) => { if (typeof window !== 'undefined') void context.queryClient.prefetchQuery(cardsQuery); },
   component: BoostersPage,
 });
 
@@ -65,7 +65,7 @@ type Awake = Record<string, "transcended" | "failed">;
 type PackFilter = "free" | "zen" | "all";
 
 export function BoostersPage() {
-  const { data: cards } = useSuspenseQuery(cardsQuery);
+  const { data: cards = [] } = useQuery(cardsQuery);
   const { session, ready, guest } = useAuth();
   const userId = session?.user.id;
   const navigate = useNavigate();
