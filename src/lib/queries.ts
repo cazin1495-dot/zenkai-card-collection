@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v53";
+const CARDS_LS_KEY = "zenkai_cards_cache_v51";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v53"],
+  queryKey: ["cards-v51"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -542,20 +542,6 @@ const STATIC_TR_MEWMEW_CARDS: Card[] = [
   { id: "mm-zakuro", name: "Zakuro Fujiwara", title: "Tokyo Mew Mew • Zakuro Fujiwara", rarity: "mythique", description: "Mannequin charismatique dotée de l'ADN du loup gris.", sort_order: 9012, category: "shojo", series: "Tokyo Mew Mew", role: "Mew Mew", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2694-krd6JKqyvy0Q.png", popularity: 4100 },
   { id: "mm-mint", name: "Mint Aizawa", title: "Tokyo Mew Mew • Mint Aizawa", rarity: "legendaire", description: "Danseuse raffinée dotée de l'ADN du loriquet bleu.", sort_order: 9013, category: "shojo", series: "Tokyo Mew Mew", role: "Mew Mew", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2691-1fRDi6x7s8mh.png", popularity: 3600 },
   { id: "mm-lettuce", name: "Lettuce Midorikawa", title: "Tokyo Mew Mew • Lettuce Midorikawa", rarity: "legendaire", description: "Douce et généreuse, dotée de l'ADN du marsouin aptère.", sort_order: 9014, category: "shojo", series: "Tokyo Mew Mew", role: "Mew Mew", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2692-WGF3QlF22I13.png", popularity: 3400 },
-  { id: "fmab-edward", name: "Edward Elric", title: "Fullmetal Alchemist: Brotherhood • Edward Elric", rarity: "mythique", description: "Plus jeune Alchimiste d’État de l’histoire, surnommé l’Alchimiste Fullmetal.", sort_order: 9015, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 54000 },
-  { id: "fmab-mustang", name: "Roy Mustang", title: "Fullmetal Alchemist: Brotherhood • Roy Mustang", rarity: "mythique", description: "L’Alchimiste de Flamme, colonel ambitieux visant le poste de Führer.", sort_order: 9016, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 35000 },
-  { id: "fmab-alphonse", name: "Alphonse Elric", title: "Fullmetal Alchemist: Brotherhood • Alphonse Elric", rarity: "legendaire", description: "Frère cadet d’Edward dont l’âme est scellée dans une immense armure.", sort_order: 9017, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 26000 },
-  { id: "fmab-hawkeye", name: "Riza Hawkeye", title: "Fullmetal Alchemist: Brotherhood • Riza Hawkeye", rarity: "legendaire", description: "Tireuse d’élite hors pair et fidèle bras droit du colonel Mustang.", sort_order: 9018, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 19000 },
-  { id: "fmab-bradley", name: "King Bradley", title: "Fullmetal Alchemist: Brotherhood • King Bradley", rarity: "legendaire", description: "Führer d’Amestris et incarnation de l’homonculus Wrath.", sort_order: 9019, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "antagoniste", image_url: "https://anilist.co", popularity: 14000 },
-  { id: "fmab-winry", name: "Winry Rockbell", title: "Fullmetal Alchemist: Brotherhood • Winry Rockbell", rarity: "epique", description: "Mécanicienne de génie spécialisée dans la fabrication d’automails.", sort_order: 9020, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 13500 },
-  { id: "fmab-ling", name: "Ling Yao", title: "Fullmetal Alchemist: Brotherhood • Ling Yao", rarity: "epique", description: "Prince héritier de Xing en quête du secret de l’immortalité.", sort_order: 9021, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 12500 },
-  { id: "fmab-greed", name: "Greed", title: "Fullmetal Alchemist: Brotherhood • Greed", rarity: "epique", description: "L’homonculus de l’avarice doté du Bouclier Ultime en carbone.", sort_order: 9022, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 12000 },
-  { id: "fmab-hughes", name: "Maes Hughes", title: "Fullmetal Alchemist: Brotherhood • Maes Hughes", rarity: "rare", description: "Officier dévoué du renseignement militaire et père de famille exemplaire.", sort_order: 9023, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 10500 },
-  { id: "fmab-scar", name: "Scar", title: "Fullmetal Alchemist: Brotherhood • Scar", rarity: "rare", description: "Survivant d’Ishval traquant les Alchimistes d’État grâce à son bras tatoué.", sort_order: 9024, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "antagoniste", image_url: "https://anilist.co", popularity: 9500 },
-  { id: "fmab-envy", name: "Envy", title: "Fullmetal Alchemist: Brotherhood • Envy", rarity: "rare", description: "Homonculus métamorphe incarnant la jalousie et la cruauté.", sort_order: 9025, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "antagoniste", image_url: "https://anilist.co", popularity: 8800 },
-  { id: "fmab-olivier", name: "Olivier Mira Armstrong", title: "Fullmetal Alchemist: Brotherhood • Olivier Mira Armstrong", rarity: "non_commune", description: "La Reine des Glaces commandant la forteresse imprenable de Briggs.", sort_order: 9026, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 7500 },
-  { id: "fmab-armstrong", name: "Alex Louis Armstrong", title: "Fullmetal Alchemist: Brotherhood • Alex Louis Armstrong", rarity: "non_commune", description: "L’Alchimiste aux Bras Puissants, héritier de la noble famille Armstrong.", sort_order: 9027, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 6800 },
-  { id: "fmab-hohenheim", name: "Van Hohenheim", title: "Fullmetal Alchemist: Brotherhood • Van Hohenheim", rarity: "commune", description: "Père d’Edward et Alphonse, alchimiste légendaire au passé millénaire.", sort_order: 9028, category: "shonen", series: "Fullmetal Alchemist: Brotherhood", role: "protagoniste", image_url: "https://anilist.co", popularity: 5200 },
 ];
 
 export function useCards() {
