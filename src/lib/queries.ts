@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v56";
+const CARDS_LS_KEY = "zenkai_cards_cache_v57";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v56"],
+  queryKey: ["cards-v57"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -390,6 +390,18 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "bgs-mai", name: "Mai Sakurajima", title: "Bunny Girl Senpai • Mai Sakurajima", rarity: "mythique", description: "Célèbre actrice lycéenne frappée par le syndrome de la puberté qui la rend invisible aux yeux des autres.", sort_order: 11301, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127222-Jh5hhP7vZ7s1.png", popularity: 51000 },
+  { id: "bgs-sakuta", name: "Sakuta Azusagawa", title: "Bunny Girl Senpai • Sakuta Azusagawa", rarity: "mythique", description: "Lycéen franc et sarcastique au grand cœur qui aide les victimes du syndrome de la puberté.", sort_order: 11302, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n127221-Wxg4xFtW4kaJ.png", popularity: 39000 },
+  { id: "bgs-futaba", name: "Rio Futaba", title: "Bunny Girl Senpai • Rio Futaba", rarity: "legendaire", description: "Amie scientifique rationnelle de Sakuta qui analyse les phénomènes quantiques du syndrome.", sort_order: 11303, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127633-FcCwWK5sQRhK.png", popularity: 24000 },
+  { id: "bgs-shouko", name: "Shouko Makinohara", title: "Bunny Girl Senpai • Shouko Makinohara", rarity: "legendaire", description: "Mystérieuse jeune fille bienveillante qui a bouleversé la vie et la philosophie de Sakuta.", sort_order: 11304, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n127843-nz8GbQ9rhB8R.jpg", popularity: 21000 },
+  { id: "bgs-kaede", name: "Kaede Azusagawa", title: "Bunny Girl Senpai • Kaede Azusagawa", rarity: "legendaire", description: "Petite sœur attachante de Sakuta passionnée par les pandas.", sort_order: 11305, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127613-LBtFkMJfUWpg.png", popularity: 19000 },
+  { id: "bgs-tomoe", name: "Tomoe Koga", title: "Bunny Girl Senpai • Tomoe Koga", rarity: "epique", description: "Cadette énergique de Sakuta prise dans une boucle temporelle par peur du regard des autres.", sort_order: 11306, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127840-z2LUox2R2Ivg.jpg", popularity: 15000 },
+  { id: "bgs-nodoka", name: "Nodoka Toyohama", title: "Bunny Girl Senpai • Nodoka Toyohama", rarity: "epique", description: "Demi-sœur de Mai et membre du groupe d’idoles Sweet Bullet.", sort_order: 11307, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127841-UY9wQq6dW9SY.png", popularity: 13500 },
+  { id: "bgs-yuuma", name: "Yuuma Kunimi", title: "Bunny Girl Senpai • Yuuma Kunimi", rarity: "rare", description: "Meilleur ami loyal et athlétique de Sakuta toujours prêt à le soutenir.", sort_order: 11308, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b130307-QbUIGjAiQbP9.png", popularity: 10500 },
+  { id: "bgs-uzuki", name: "Uzuki Hirokawa", title: "Bunny Girl Senpai • Uzuki Hirokawa", rarity: "rare", description: "Chanteuse principale pleine d’entrain du groupe d’idoles Sweet Bullet.", sort_order: 11309, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b144797-4Wbf9gYygNNC.png", popularity: 9500 },
+  { id: "bgs-saki", name: "Saki Kamisato", title: "Bunny Girl Senpai • Saki Kamisato", rarity: "non_commune", description: "Petite amie de Yuuma au tempérament direct mais sincère.", sort_order: 11310, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b130304-5VhLSgq1zYIQ.png", popularity: 7500 },
+  { id: "bgs-fumika", name: "Fumika Nanjou", title: "Bunny Girl Senpai • Fumika Nanjou", rarity: "non_commune", description: "Journaliste perspicace enquêtant sur les mystères liés au syndrome de la puberté.", sort_order: 11311, category: "seinen", series: "Bunny Girl Senpai", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b144795-1a7VVmegZr4F.png", popularity: 7000 },
+  { id: "bgs-mere-mai", name: "Mère de Mai", title: "Bunny Girl Senpai • Mère de Mai", rarity: "commune", description: "Manager et mère ambitieuse de Mai Sakurajima.", sort_order: 11312, category: "seinen", series: "Bunny Girl Senpai", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n130306-BbD2k4HNPG5Z.png", popularity: 5500 },
   { id: "ano-mei", name: "Mei Misaki", title: "Another • Mei Misaki", rarity: "mythique", description: "Élève solitaire de la classe 3-3 portant un cache-œil capable de percevoir la couleur de la mort.", sort_order: 11001, category: "seinen", series: "Another", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b41402-uMQLbpd8uwKH.png", popularity: 34000 },
   { id: "ano-kouichi", name: "Kouichi Sakakibara", title: "Another • Kouichi Sakakibara", rarity: "legendaire", description: "Nouvel élève transféré à Yomiyama qui tente de percer le mystère de la malédiction de la classe 3-3.", sort_order: 11002, category: "seinen", series: "Another", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b41400-R2RzXzBtXOfJ.png", popularity: 19000 },
   { id: "ano-izumi", name: "Izumi Akazawa", title: "Another • Izumi Akazawa", rarity: "legendaire", description: "Responsable des contre-mesures de la classe 3-3 au caractère fier et déterminé.", sort_order: 11003, category: "seinen", series: "Another", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b51585-Sp3l5TRdrULa.jpg", popularity: 16000 },
