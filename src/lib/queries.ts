@@ -311,9 +311,9 @@ export const cardsQuery = queryOptions({
     ...mewMewJikan.filter((card) => !existingIds.has(card.id)),
   ].map((card) => normalizeCatalogCard(card));
   },
-  staleTime: 5_000,
-  refetchInterval: 5_000,
-  refetchOnWindowFocus: true,
+  staleTime: Infinity,
+  refetchInterval: false,
+  refetchOnWindowFocus: false,
 });
 
 export const profileQuery = (userId: string) =>
