@@ -249,7 +249,7 @@ export const cardsQuery = queryOptions({
       fetchAnimeCharacters(350, "Magical DoReMi", DOREMI_MYTHIC_IDS, DOREMI_LEGENDARY_IDS, DOREMI_ANTAGONIST_IDS, 1500, "Antagoniste", "Apprentie Sorcière"),
       fetchAnimeCharacters(5231, "Inazuma Eleven", INAZUMA_MYTHIC_IDS, INAZUMA_LEGENDARY_IDS, INAZUMA_ANTAGONIST_IDS, 1700, "Antagoniste", "Joueur"),
       fetchAnimeCharacters(105333, "Dr. STONE", DRSTONE_MYTHIC_IDS, DRSTONE_LEGENDARY_IDS, DRSTONE_ANTAGONIST_IDS, 1900, "Antagoniste", "Scientifique"),
-    fetchAnimeCharacters(756, "Tokyo Mew Mew", new Set(), new Set(), new Set([10339]), 150, "Antagoniste", "Mew Mew"),
+    fetchAnimeCharacters(756, "Tokyo Mew Mew", new Set(), new Set(), new Set(), 150, "Antagoniste", "Mew Mew"),
     ]);
 
     const fairyTail = fairyTailRaw.map((c): Card => ({ ...c, category: "shonen" }));
@@ -258,9 +258,9 @@ export const cardsQuery = queryOptions({
     const atelier = atelierRaw.map((c): Card => ({ ...c, category: "seinen" }));
     const doremi = doremiRaw.map((c): Card => ({ ...c, category: "shojo" }));
     const inazuma = inazumaRaw.map((c): Card => ({ ...c, category: "sport" }));
-    const drStone = drStoneRaw.map((c): Card => ({ ...c, category: "shonen" }));
+    const drStone = (drStoneRaw ?? []).map((c): Card => ({ ...c, category: "shonen" }));
   const NOMS_MEW_MEW = new Set(["ichigo momomiya","mint aizawa","lettuce midorikawa","pudding fong","zakuro fujiwara","masaya aoyama","kisshu"]);
-  const mewMew = mewMewRaw
+  const mewMew = (mewMewRaw ?? [])
     .filter((c) => NOMS_MEW_MEW.has(c.name.toLowerCase().trim()))
     .map((c): Card => ({ ...c, category: "shonen" }));
     const hsr = await fetchHsrFromBrowser();
