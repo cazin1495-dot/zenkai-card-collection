@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v49";
+const CARDS_LS_KEY = "zenkai_cards_cache_v50";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v49"],
+  queryKey: ["cards-v50"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -279,7 +279,7 @@ export const cardsQuery = queryOptions({
   const mewMew = mewMewRaw
     .filter((c) => MEWMEW_ALLOWED_IDS.has(c.id))
     .map((c): Card => ({ ...c, category: "shojo" }));
-    const cleaned = base.filter((card) => !isTranscendanceCatalogCard(card) && !isDemonSlayerMythicCardId(card.id));
+    const cleaned = base.filter((card) => !isDemonSlayerMythicCardId(card.id));
     const existingIds = new Set(cleaned.map((card) => card.id));
 
     return [
