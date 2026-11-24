@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v99";
+const CARDS_LS_KEY = "zenkai_cards_cache_v100";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,11 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "cm2-niichan", name: "Nii-chan", title: "Blue Exorcist • Nii-chan", rarity: "commune", description: "Petit familier esprit vert adoré de Shiemi Moriyama.", sort_order: 16809, category: "shonen", series: "Blue Exorcist", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b47527-Ms1bzAyPzCih.png", popularity: 5900 },
+  { id: "cm2-natsumi", name: "Natsumi Raimon", title: "Inazuma Eleven • Natsumi Raimon", rarity: "commune", description: "Manageuse exigeante et brillante de l’équipe de Raimon.", sort_order: 16810, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b31783-F4bSTx1oJiBg.png", popularity: 6300 },
+  { id: "cm2-fudou", name: "Akio Fudou", title: "Inazuma Eleven • Akio Fudou", rarity: "commune", description: "Milieu stratège provocateur devenu pièce maîtresse d’Inazuma Japon.", sort_order: 16811, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b32308-dTBRrI4iDYig.jpg", popularity: 6400 },
+  { id: "cm2-midorikawa", name: "Ryuuji Midorikawa", title: "Inazuma Eleven • Ryuuji Midorikawa", rarity: "commune", description: "Milieu rapide d’Inazuma Japon maître du Dribble Astral.", sort_order: 16812, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b32307-cmzddWV4BU5T.png", popularity: 6200 },
+  { id: "cm2-tsunami", name: "Jousuke Tsunami", title: "Inazuma Eleven • Jousuke Tsunami", rarity: "commune", description: "Défenseur surfeur optimiste d’Okinawa maîtrisant le Tir Tsunami.", sort_order: 16813, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b32305-lkIvCsrgAAnb.jpg", popularity: 6100 },
   { id: "cm1-matsuda", name: "Touta Matsuda", title: "Death Note • Touta Matsuda", rarity: "commune", description: "Jeune inspecteur enthousiaste et maladroit de la cellule d’enquête Kira.", sort_order: 16805, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n1906-JCWKEGGook3Z.png", popularity: 6500 },
   { id: "cm1-naomi", name: "Naomi Misora", title: "Death Note • Naomi Misora", rarity: "commune", description: "Ancienne agente d’élite du FBI à l’intuition redoutable.", sort_order: 16806, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b4959-DKXw1VYrvael.png", popularity: 6400 },
   { id: "cm1-matt", name: "Matt (Mail Jeevas)", title: "Death Note • Matt (Mail Jeevas)", rarity: "commune", description: "Allié loyal de Mello formé à la Wammy’s House.", sort_order: 16807, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n2730-SNbfxShpg90k.png", popularity: 6000 },
