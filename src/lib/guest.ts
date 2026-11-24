@@ -11,7 +11,7 @@ export function createLocalGuestDraw(
   const candidates = [...new Map(cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => [card.id, card])).values()];
   if (candidates.length < CARDS_PER_BOOSTER) return [];
 
-  let drawId = 0;
+  let drawId = 0; const ownedSet = new Set(ownedCardIds);
   return Array.from({ length: boosterCount }, (_, boosterIndex) => {
     const remaining = [...candidates];
     const usedIds = new Set<string>();
@@ -37,7 +37,7 @@ export function createLocalGuestDraw(
       } else {
         const matchingRarity = remaining.filter((candidate) => candidate.rarity === rarity);
         const pool = matchingRarity.length > 0 ? matchingRarity : remaining.filter((candidate) => candidate.rarity === "commune");
-        card = pool[Math.floor(Math.random() * pool.length)];
+        card = pool[Math.floor(Math.random() * pool.length)]; if (card && ownedSet.has(card.id) && pool.length > 1 && Math.random() < 0.35) { card = pool[Math.floor(Math.random() * pool.length)]; }
       }
 
       if (!card) {
