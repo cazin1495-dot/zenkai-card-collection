@@ -37,6 +37,24 @@ export type Database = {
           },
         ]
       }
+      card_rarity_overrides: {
+        Row: {
+          card_key: string
+          rarity: string
+          updated_at: string
+        }
+        Insert: {
+          card_key: string
+          rarity: string
+          updated_at?: string
+        }
+        Update: {
+          card_key?: string
+          rarity?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cards: {
         Row: {
           active: boolean
@@ -132,6 +150,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      player_usernames: {
+        Row: {
+          created_at: string
+          locked: boolean
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          locked?: boolean
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          locked?: boolean
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
