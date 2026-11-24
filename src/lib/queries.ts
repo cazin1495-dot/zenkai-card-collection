@@ -105,12 +105,7 @@ async function fetchAnimeCharacters(
         }
       }
     `;
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query }),
-    });
-    if (!res.ok) return new Array<Card>();
+    let res: Response | null = null; for (let i = 0; i < 4; i++) { res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query }) }); if (res.ok) break; await new Promise((r) => setTimeout(r, 2000 * (i + 1))); } if (!res || !res.ok) return new Array<Card>();
     const json = await res.json();
     const edges = json?.data?.Media?.characters?.edges ?? new Array<any>();
 
