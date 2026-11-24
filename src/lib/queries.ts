@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v88";
+const CARDS_LS_KEY = "zenkai_cards_cache_v89";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v88"],
+  queryKey: ["cards-v89"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
