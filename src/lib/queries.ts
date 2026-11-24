@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v78";
+const CARDS_LS_KEY = "zenkai_cards_cache_v79";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v78"],
+  queryKey: ["cards-v79"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -488,7 +488,7 @@ const STATIC_TR_MEWMEW_CARDS: Card[] = [
   { id: "k8-bakko", name: "Bakko", title: "Kaiju No. 8 • Bakko", rarity: "non_commune", description: "Tigre blanc colossal et fidèle compagnon de combat de Mina Ashiro.", sort_order: 14512, category: "shonen", series: "Kaiju No. 8", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b305768-3JzmAKRPnsaq.png", popularity: 10500 },
   { id: "ff-shinra", name: "Shinra Kusakabe", title: "Fire Force • Shinra Kusakabe", rarity: "mythique", description: "Le Démon de la 8e brigade embrasant ses pieds à la vitesse de la lumière pour sauver les âmes.", sort_order: 14601, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n120462-oSWdz2MhkbDE.png", popularity: 51000 },
   { id: "ff-benimaru", name: "Benimaru Shinmon", title: "Fire Force • Benimaru Shinmon", rarity: "mythique", description: "Le Roi de la Destruction d’Asakusa, commandant invincible de la 7e brigade.", sort_order: 14602, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b130848-AuuIm6GR8ody.jpg", popularity: 54000 },
-  { id: "ff-arthur", name: "Arthur Boyle", title: "Fire Force • Arthur Boyle", rarity: "legendaire", description: "Le Roi Chevalier de la 8e brigade dont l’épée plasma Excalibur décuple selon son imagination.", sort_order: 14603, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n130715-IYNBAHBQa14y.png", popularity: 36000 },
+  { id: "ff-arthur", name: "Arthur Boyle", title: "Fire Force • Arthur Boyle", rarity: "mythique", description: "Le Roi Chevalier de la 8e brigade dont l’épée plasma Excalibur décuple selon son imagination.", sort_order: 14603, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n130715-IYNBAHBQa14y.png", popularity: 36000 },
   { id: "ff-maki", name: "Maki Oze", title: "Fire Force • Maki Oze", rarity: "legendaire", description: "Ancienne militaire de la 8e brigade contrôlant les flammes avec une force physique redoutable.", sort_order: 14604, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b130713-TgLx8rgtGpXV.png", popularity: 31000 },
   { id: "ff-shou", name: "Shou Kusakabe", title: "Fire Force • Shou Kusakabe", rarity: "legendaire", description: "Frère cadet de Shinra et commandant des Chevaliers de la Fumée Cendrée capable de figer le temps.", sort_order: 14605, category: "shonen", series: "Fire Force", role: "antagoniste", pack_ids: ["shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b150194-2OLsrSRrq9cS.jpg", popularity: 28000 },
   { id: "ff-joker", name: "Joker", title: "Fire Force • Joker", rarity: "epique", description: "Anti-héros énigmatique aux cartes enflammées enquêtant dans l’ombre sur l’Empire de Tokyo.", sort_order: 14606, category: "shonen", series: "Fire Force", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b135385-gfcFoxReUVzq.png", popularity: 24000 },
