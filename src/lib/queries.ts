@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v118";
+const CARDS_LS_KEY = "zenkai_cards_cache_v119";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,12 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "pc25-youko-kuro", name: "Youko Kuronuma", title: "Kimi ni Todoke • Youko Kuronuma", rarity: "non_commune", description: "Mère douce et bienveillante de Sawako Kuronuma.", sort_order: 18709, category: "shojo", series: "Kimi ni Todoke", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b29980-58aZPb0x7XWr.jpg", popularity: 8200 },
+  { id: "pc25-tomoko-endou", name: "Tomoko Endou", title: "Kimi ni Todoke • Tomoko Endou", rarity: "non_commune", description: "Amie et camarade de lycée de Sawako Kuronuma.", sort_order: 18710, category: "shojo", series: "Kimi ni Todoke", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b28460-7dCVg0MwgCgC.jpg", popularity: 8100 },
+  { id: "pc25-gou", name: "Gou Matsuoka", title: "Free! • Gou Matsuoka", rarity: "non_commune", description: "Manageuse énergique du club de natation d’Iwatobi et petite sœur de Rin.", sort_order: 18711, category: "sport", series: "Free!", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b85949-Bq21gQmHapYc.png", popularity: 8900 },
+  { id: "pc25-mikoshiba", name: "Seijuurou Mikoshiba", title: "Free! • Seijuurou Mikoshiba", rarity: "non_commune", description: "Capitaine flamboyant du club de natation de Samezuka.", sort_order: 18712, category: "sport", series: "Free!", role: "antagoniste", pack_ids: ["sport", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b88486-4NbNXVgJ1aOG.jpg", popularity: 8800 },
+  { id: "pc25-mello", name: "Mello (Mihael Keehl)", title: "Death Note • Mello (Mihael Keehl)", rarity: "non_commune", description: "Successeur impulsif de L amateur de chocolat et traqueur implacable de Kira.", sort_order: 18704, category: "seinen", series: "Death Note", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b463-QBLeLf6XxVg6.png", popularity: 9200 },
+  { id: "pc25-akio", name: "Akio Furukawa", title: "Clannad • Akio Furukawa", rarity: "non_commune", description: "Père chaleureux et exubérant de Nagisa tenant la boulangerie familiale.", sort_order: 18705, category: "shojo", series: "Clannad", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b7095-C1tzbivkPU0A.png", popularity: 9000 },
   { id: "pc25-sylvia", name: "Sylvia Sherwood (Handler)", title: "SPY x FAMILY • Sylvia Sherwood (Handler)", rarity: "non_commune", description: "Supérieure froide et redoutable de Twilight au sein de WISE.", sort_order: 18610, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b157887-P66pD0ilpmtZ.png", popularity: 9100 },
   { id: "pc25-sharon", name: "Sharon", title: "SPY x FAMILY • Sharon", rarity: "non_commune", description: "Collègue de Yor à la mairie de Berlint.", sort_order: 18611, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b270959-HVflw5p1KQb5.png", popularity: 8400 },
   { id: "pc25-toichirou", name: "Toichirou Suzuki", title: "Mob Psycho 100 • Toichirou Suzuki", rarity: "non_commune", description: "Chef suprême de la Griffe doté d’une puissance psychique colossale.", sort_order: 18613, category: "shonen", series: "Mob Psycho 100", role: "antagoniste", pack_ids: ["shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b133204-KKsIZxLqX7vF.jpg", popularity: 9100 },
