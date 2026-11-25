@@ -190,6 +190,9 @@ export function BoostersPage() {
     }
     tearRequested.current = false;
     setPhase("tearing");
+    window.setTimeout(() => {
+      setPhase((curr) => (curr === "tearing" ? "reveal" : curr));
+    }, 650);
     await new Promise((resolve) => setTimeout(resolve, 1800));
     setPhase("reveal");
   }
