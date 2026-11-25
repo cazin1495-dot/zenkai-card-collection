@@ -32,6 +32,7 @@ import {
   OPEN_COUNTS,
   PACK_ARTWORK_BY_PACK,
   getPackCardBack,
+  inPack,
   PACKS,
   RARITY,
   rarityRank,
@@ -148,7 +149,7 @@ export function BoostersPage() {
     returningToBoosters;
   const featuredMythics = useMemo(() => {
     const all = (cards.data ?? []).map((c) => normalizeCatalogCard(c, rarityOverrides));
-    const inPack = all.filter((c) => c.rarity === "mythique" && c.image_url && (pack === "zenkai" || c.packs.includes(pack)));
+    const inPack = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && inPack(c, pack));
     return (inPack.length >= 3 ? inPack : all.filter((c) => c.rarity === "mythique" && c.image_url)).slice(0, 3);
   }, [cards.data, pack, rarityOverrides]);
   const dailyLogin = useMemo(() => { try { return getDailyLogin(); } catch { return { day: 1 }; } }, []);
@@ -449,7 +450,7 @@ export function BoostersPage() {
                     idx === 2 && "translate-x-20 rotate-12 opacity-90",
                   )}
                 >
-                  <img src={card.image_url} alt={card.name} className="h-full w-full object-cover" loading="lazy" />
+                  <img src={card.image_url ?? ""} alt={card.name} className="h-full w-full object-cover" loading="lazy" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent px-2 py-2 text-center">
                     <p className="truncate text-[11px] font-bold text-white">{card.name}</p>
                   </div>
