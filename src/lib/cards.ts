@@ -611,10 +611,24 @@ export const PACKS: { id: PackId; label: string; hint: string; accent: string }[
 /** Does a card belong to a booster pack / collection filter? */
 export function inPack(card: Card, pack: PackId | string) {
   const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
-  if (["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(normalized)) return true;
-  if (normalized === "antagoniste" || normalized === "protagoniste")
-    return card.role === normalized;
-  return card.category === normalized;
+  if (["all", "allstar", "zenkai", "shonenmix"].includes(normalized)) return true;
+
+  const packIds = Array.isArray(card.pack_ids)
+    ? card.pack_ids.map((id) => id.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, ""))
+    : [];
+  if (packIds.includes(normalized)) return true;
+
+  const category = (card.category ?? "").trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
+  const role = (card.role ?? "").trim().toLocaleLowerCase("fr");
+
+  if (normalized === "antagoniste") {
+    return /antagoniste|vilain|ennemi|boss|rival/.test(role);
+  }
+  if (normalized === "protagoniste") {
+    if (/antagoniste|vilain|ennemi|boss/.test(role)) return false;
+    return /protagoniste|h[ée]ros|membre du toman|mew mew|capitaine|alli[ée]/.test(role) || role === "";
+  }
+  return category === normalized;
 }
 
 /** Live booster stock: +1 every 10 minutes, capped at 15 (mirrors the server). */
