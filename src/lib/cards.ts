@@ -665,6 +665,7 @@ export function customTranscendenceAsCard(card: CustomTranscendenceCard): Card {
 }
 
 export function inPack(card: Card, pack: PackId | string) {
+  if (card.name?.toLowerCase() === "taiyou asano") return false;
   const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
   if (["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(normalized)) return true;
 
