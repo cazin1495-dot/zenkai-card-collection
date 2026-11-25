@@ -1,3 +1,4 @@
+import { CATALOG_RARITIES, Card, PackId, Rarity, applyRemoteRarityOverrides, effectiveDropRate, getUserRarityOverrides, inPack, isCatalogRarity, normalizeCatalogCard } from "@/lib/cards";
 import { RARITY } from "@/lib/cards";
 import { RARITY_ORDER } from "@/lib/cards";
 import { CUSTOM_TRANSCENDENCE_CARDS, customTranscendenceAsCard, customTranscendenceInPack, type CustomTranscendenceCard } from "@/lib/cards";
