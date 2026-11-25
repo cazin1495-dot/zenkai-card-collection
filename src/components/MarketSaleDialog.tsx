@@ -38,7 +38,7 @@ export function MarketSaleDialog({
 }: Props) {
   const queryClient = useQueryClient();
   const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
-  const selectable = copies.filter((copy) => byId.has(copy.card_id));
+  const selectable = copies.filter((copy) => byId.has(copy.card_id) && !copy.transcended && !copy.customTranscendence && !isTranscendenceCatalogCard(byId.get(copy.card_id)));
   function suggestedPrices(id: string, mode: "fixed" | "auction") {
     const copy = selectable.find((item) => item.id === id);
     const card = copy ? byId.get(copy.card_id) : undefined;
