@@ -32,7 +32,6 @@ import {
   OPEN_COUNTS,
   PACK_ARTWORK_BY_PACK,
   getPackCardBack,
-  inPack,
   PACKS,
   RARITY,
   rarityRank,
@@ -149,7 +148,9 @@ export function BoostersPage() {
     returningToBoosters;
   const featuredMythics = useMemo(() => {
     const all = cards.map((c) => normalizeCatalogCard(c, rarityOverrides)).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-    const packMythics = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && inPack(c, pack));
+    const norm = pack.trim().toLowerCase().replace(/[\s_-]+/g, "");
+    const matchesPack = (c: Card) => ["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(norm) ? true : (norm === "antagoniste" || norm === "protagoniste") ? c.role === norm : c.category === norm;
+    const packMythics = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && matchesPack(c));
     return (packMythics.length >= 3 ? packMythics : all.filter((c) => c.rarity === "mythique" && c.image_url)).slice(0, 3);
   }, [cards, pack, rarityOverrides]);
   const dailyLogin = useMemo(() => { try { return getDailyLogin(); } catch { return { day: 1 }; } }, []);
