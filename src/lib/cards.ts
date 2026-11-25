@@ -502,15 +502,35 @@ const CARD_BASE_MARKET_PRICES: Record<BaseRarity, number> = {
   legendaire: 400, mythique: 1200, transcendance: 5000,
 };
 
-export function getCardPopularityFactor(card: Pick<Card, "popularity">): number {
-  return 1 + Math.min(1, Math.max(0, (card.popularity ?? 0) / 80000));
+const ICONIC_PRICE_FACTORS: Record<string, number> = {
+  "ken kaneki": 3.5, "lelouch lamperouge": 3.45, "monkey d. luffy": 3.4, "satoru gojo": 3.35,
+  "levi": 3.3, "l lawliet": 3.25, "roronoa zoro": 3.2, "killua zoldyck": 3.15,
+  "eren yeager": 3.1, "edward elric": 3.05, "light yagami": 3.0, "son goku": 2.95,
+  "naruto uzumaki": 2.9, "itachi uchiha": 2.85, "guts": 2.8, "mikasa ackerman": 2.7,
+  "ichigo kurosaki": 2.65, "sasuke uchiha": 2.6, "vegeta": 2.55, "saitama": 2.5,
+  "tanjiro kamado": 2.45, "denji": 2.4, "makima": 2.38, "kakashi hatake": 2.35,
+  "nezuko kamado": 2.3, "izuku midoriya": 2.25, "katsuki bakugo": 2.2, "sanji": 2.18,
+  "trafalgar law": 2.15, "portgas d. ace": 2.12, "shanks": 2.1, "madara uchiha": 2.08,
+  "sukuna": 2.05, "gon freecss": 2.02, "kurapika": 2.0, "hisoka morow": 1.98,
+  "rimuru tempest": 1.95, "cid kagenou": 1.92, "shouko komi": 1.9, "nazuna nanakusa": 1.88,
+  "rudeus greyrat": 1.85, "kamina": 1.82, "kusuo saiki": 1.8, "shinei nouzen": 1.78,
+};
+
+export function getCardPopularityFactor(card: { name?: string; rarity?: BaseRarity; popularity?: number }): number {
+  if (card.rarity === "transcendance") return 1;
+  const key = card.name?.trim().toLowerCase();
+  if (key && ICONIC_PRICE_FACTORS[key]) return ICONIC_PRICE_FACTORS[key];
+  const pop = card.popularity ?? 0;
+  if (pop <= 0) return 1;
+  const normalized = pop <= 5000 ? pop * 12 : pop;
+  return 1 + Math.min(1.4, Math.max(0, normalized / 50000));
 }
 
-export function getCardMarketPrice(card: { rarity: BaseRarity; popularity?: number }): number {
+export function getCardMarketPrice(card: { name?: string; rarity: BaseRarity; popularity?: number }): number {
   return Math.round((CARD_BASE_MARKET_PRICES[card.rarity] * getCardPopularityFactor(card)) / 5) * 5;
 }
 
-export function getCardRecycleValue(card: { rarity: BaseRarity; popularity?: number }): number {
+export function getCardRecycleValue(card: { name?: string; rarity: BaseRarity; popularity?: number }): number {
   return card.rarity === "transcendance" ? 0 : Math.max(2, Math.round(getCardMarketPrice(card) * 0.4));
 }
 
