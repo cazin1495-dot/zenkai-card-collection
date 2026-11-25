@@ -107,6 +107,7 @@ export function CollectionPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [rarityFilter, setRarityFilter] = useState<Rarity | "all">("all");
   const [animeSearch, setAnimeSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(60);
   const [sort, setSort] = useState<CollectionSort>("owned-rarest");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const { favoriteCardIds } = useFavoriteCards();
@@ -278,7 +279,7 @@ export function CollectionPage() {
       )}
 
       <div className="mt-8 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6">
-        {list.map((entry) => {
+        {list.slice(0, visibleCount).map((entry) => {
           const { card, count, rarity } = entry;
           const evolved = rarity === "transcendance";
           return <div key={`${card.id}-${rarity}`} className="flex flex-col items-center gap-2">

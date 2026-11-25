@@ -392,22 +392,50 @@ export function BoostersPage() {
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
           <p className="game-eyebrow"><Sparkles className="size-3.5" /> LE HUB DES COLLECTIONNEURS</p>
-          <h1 className="mt-2 text-center text-3xl font-black sm:text-4xl">
-            ZENKAI <span className="text-accent">Boosters</span>
-          </h1>
-          <p className="mt-3 max-w-md text-center text-sm text-muted-foreground">
-            {CARDS_PER_BOOSTER} vraies cartes anime par booster. Choisis ton pack.
-      </p>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold text-amber-200 shadow-sm">
-        <span>🎴 {betaBoosters} / {MAX_BETA_BOOSTERS} boosters</span>
-        {betaBoosters < MAX_BETA_BOOSTERS ? (
-          <span className="text-amber-300/90">
-            • ⏳ +1 dans {String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:{String(nextBoosterSec % 60).padStart(2, "0")}
+                <section className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-5 shadow-2xl sm:p-8">
+        <div className="grid items-center gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-200">
+              {pack === "zenkai" ? "Booster Premium • Zen" : "Pack sélectionné • Gratuit"}
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-black tracking-tight sm:text-5xl">
+              {packInfo.label}
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+              {packInfo.tagline} — {CARDS_PER_BOOSTER} cartes par ouverture avec Mythique garantie à 250 cartes.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Button variant="hero" size="lg" className="rounded-full px-6 font-bold" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
+                {pack === "zenkai" ? `Ouvrir (${ZENKAI_PACK_COST} Zen)` : betaBoosters > 0 ? "Ouvrir 1 pack gratuit" : "Stock vide (patiente)"}
+              </Button>
+              <Button variant="glass" size="lg" className="rounded-full px-5" onClick={() => setPreviewPack(pack)}>
+                Voir les cartes du pack
+              </Button>
+            </div>
+          </div>
+          <div className="hidden items-center justify-center sm:flex">
+            <div className="relative flex h-44 w-64 items-center justify-center">
+              {(["shonen", pack, "protagoniste"] as PackId[]).map((pid, idx) => (
+                <div key={`${pid}-${idx}`} className={`absolute h-40 w-28 overflow-hidden rounded-xl border border-amber-300/30 shadow-xl transition-transform ${idx === 0 ? "-translate-x-14 -rotate-12 opacity-80" : idx === 2 ? "translate-x-14 rotate-12 opacity-80" : "z-10 scale-105"}`}>
+                  <BoosterArtwork src={PACK_ARTWORK_BY_PACK[pid]} alt={pid} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs sm:text-sm">
+          <span className="font-semibold text-amber-200">
+            Boosters gratuits : {betaBoosters}/{MAX_BETA_BOOSTERS}{betaBoosters < MAX_BETA_BOOSTERS ? ` (+1 dans ${String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:${String(nextBoosterSec % 60).padStart(2, "0")})` : " (Max)"}
           </span>
-        ) : (
-          <span className="text-emerald-300/90">• Stock max (1 booster / 10 min)</span>
-        )}
-      </div>
+          <span className="text-muted-foreground">
+            Pity Mythique : <strong className="text-foreground">{Math.max(0, 250 - (pityCount ?? 0) * 5)} cartes</strong> avant garantie
+          </span>
+          {localZen !== null && (
+            <span className="font-semibold text-amber-300">{localZen.toLocaleString("fr-FR")} Zen</span>
+          )}
+        </div>
+      </section>
+
 
           {phase === "idle" && (
             <div className="mt-8 grid w-full min-w-0 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
