@@ -149,8 +149,8 @@ export function BoostersPage() {
     returningToBoosters;
   const featuredMythics = useMemo(() => {
     const all = cards.map((c) => normalizeCatalogCard(c, rarityOverrides)).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-    const inPack = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && inPack(c, pack));
-    return (inPack.length >= 3 ? inPack : all.filter((c) => c.rarity === "mythique" && c.image_url)).slice(0, 3);
+    const packMythics = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && inPack(c, pack));
+    return (packMythics.length >= 3 ? packMythics : all.filter((c) => c.rarity === "mythique" && c.image_url)).slice(0, 3);
   }, [cards, pack, rarityOverrides]);
   const dailyLogin = useMemo(() => { try { return getDailyLogin(); } catch { return { day: 1 }; } }, []);
   const readyQuests = useMemo(() => { try { return availableQuestCount(getQuestState(userId ?? null)); } catch { return 0; } }, [userId, opened]);
