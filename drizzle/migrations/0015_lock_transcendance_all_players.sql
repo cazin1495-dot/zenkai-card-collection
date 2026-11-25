@@ -1,4 +1,3 @@
--- Verrou global : aucune carte Transcendance n'est vendable ni echangeable par aucun joueur
 CREATE OR REPLACE FUNCTION public.enforce_no_transcendance_trade()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
@@ -13,5 +12,13 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-DROP TRIGGER IF EXISTS trg_no_transcendance_trade ON public.trade_offers;
-CREATE TRIGGER trg_no_transcendance_trade BEFORE INSERT OR UPDATE ON public.trade_offers FOR EACH ROW EXECUTE FUNCTION public.enforce_no_transcendance_trade();
+
+DO $$
+BEGIN
+  IF to_regclass('public.trade_offers') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS trg_no_transcendance_trade ON public.trade_offers;
+    CREATE TRIGGER trg_no_transcendance_trade
+      BEFORE INSERT OR UPDATE ON public.trade_offers
+      FOR EACH ROW EXECUTE FUNCTION public.enforce_no_transcendance_trade();
+  END IF;
+END $$;
