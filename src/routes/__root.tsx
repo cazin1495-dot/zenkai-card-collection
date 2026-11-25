@@ -141,6 +141,21 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useSyncRarityOverrides(queryClient);
+  useEffect(() => {
+    const onErr = (ev: ErrorEvent | PromiseRejectionEvent) => {
+      const msg = String("reason" in ev ? ev.reason : ev.message ?? "");
+      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
+        if (!sessionStorage.getItem("zenkai_auto_reload")) {
+          sessionStorage.setItem("zenkai_auto_reload", "1");
+          window.location.reload();
+        }
+      }
+    };
+    window.addEventListener("error", onErr);
+    window.addEventListener("unhandledrejection", onErr);
+    return () => { window.removeEventListener("error", onErr); window.removeEventListener("unhandledrejection", onErr); };
+  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>
