@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v120";
+const CARDS_LS_KEY = "zenkai_cards_cache_v121";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,13 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+
+  { id: "pc25-gren", name: "Gren (Grencia Eckener)", title: "Cowboy Bebop • Gren (Grencia Eckener)", rarity: "non_commune", description: "Saxophoniste mélancolique et ancien compagnon d’armes de Vicious sur Titan.", sort_order: 18902, category: "seinen", series: "Cowboy Bebop", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2736-0Eoluq9UxXu4.png", popularity: 8800 },
+  { id: "pc25-shin", name: "Shinichi Okazaki (Shin)", title: "NANA • Shinichi Okazaki (Shin)", rarity: "non_commune", description: "Jeune bassiste prodige et rebelle du groupe punk Blast.", sort_order: 18903, category: "shojo", series: "NANA", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b1424-dcHnhsX7XfrP.jpg", popularity: 9000 },
+  { id: "pc25-yasu", name: "Yasushi Takagi (Yasu)", title: "NANA • Yasushi Takagi (Yasu)", rarity: "non_commune", description: "Batteur chauve à lunettes de soleil et pilier protecteur de Blast.", sort_order: 18904, category: "shojo", series: "NANA", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2450-fybfLw3SlimN.jpg", popularity: 9100 },
+  { id: "pc25-nobu", name: "Nobuo Terashima (Nobu)", title: "NANA • Nobuo Terashima (Nobu)", rarity: "non_commune", description: "Guitariste chaleureux et romantique de Blast amoureux de Hachi.", sort_order: 18905, category: "shojo", series: "NANA", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2449-V3b2fG5cCww5.png", popularity: 9000 },
+  { id: "pc25-ren", name: "Ren Honjou", title: "NANA • Ren Honjou", rarity: "non_commune", description: "Guitariste charismatique de Trapnest et grand amour de Nana Oosaki.", sort_order: 18906, category: "shojo", series: "NANA", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b1425-zZVyHt5cc742.jpg", popularity: 9200 },
+  { id: "pc25-reiria", name: "Reira Serizawa", title: "NANA • Reira Serizawa", rarity: "non_commune", description: "Chanteuse phare de Trapnest à la voix cristalline.", sort_order: 18907, category: "shojo", series: "NANA", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2089-zofXDvhPOO2U.jpg", popularity: 8900 },
   { id: "pc25-kihara", name: "Maya Kihara", title: "Toradora! • Maya Kihara", rarity: "non_commune", description: "Camarade dynamique de Taiga au lycée Ohashi.", sort_order: 18819, category: "shojo", series: "Toradora!", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/17319.jpg", popularity: 8200 },
   { id: "pc25-sakura-tora", name: "Sakura Kanou", title: "Toradora! • Sakura Kanou", rarity: "non_commune", description: "Petite sœur vive et attachante de Sumire Kanou.", sort_order: 18820, category: "shojo", series: "Toradora!", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b20339-uWCbCCDItfRE.png", popularity: 8200 },
   { id: "pc25-kashii", name: "Nanako Kashii", title: "Toradora! • Nanako Kashii", rarity: "non_commune", description: "Amie de Minori Kushieda au lycée Ohashi.", sort_order: 18821, category: "shojo", series: "Toradora!", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/19863.jpg", popularity: 8100 },
