@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v126";
+const CARDS_LS_KEY = "zenkai_cards_cache_v127";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,9 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "r4-kazemaru", name: "Ichirouta Kazemaru", title: "Inazuma Eleven • Ichirouta Kazemaru", rarity: "rare", description: "Défenseur fulgurant de Raimon issu du club d’athlétisme.", sort_order: 19412, category: "sport", series: "Inazuma Eleven", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b29849-QKc7shA3MHEy.jpg", popularity: 18400 },
+  { id: "r4-bond", name: "Bond Forger", title: "SPY x FAMILY • Bond Forger", rarity: "rare", description: "Chien blanc géant de la famille Forger capable de voir brièvement l’avenir.", sort_order: 19404, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b169679-EFPubVtZFYom.jpg", popularity: 18500 },
+  { id: "r4-yuri-sxf", name: "Yuri Briar", title: "SPY x FAMILY • Yuri Briar", rarity: "rare", description: "Agent redoutable de la police secrète d’Ostania et frère surprotecteur de Yor.", sort_order: 19406, category: "shonen", series: "SPY x FAMILY", role: "antagoniste", pack_ids: ["shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b150425-mP852peLh9eS.jpg", popularity: 18300 },
 
 
   { id: "r3-lucy", name: "Lucy Maud Montgomery", title: "Bungo Stray Dogs • Lucy Maud Montgomery", rarity: "rare", description: "Ancienne membre de la Guilde invoquant la chambre d’Anne des pignons verts.", sort_order: 19312, category: "seinen", series: "Bungo Stray Dogs", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n132222-Ue3zZMq9aqMg.jpg", popularity: 18100 },
