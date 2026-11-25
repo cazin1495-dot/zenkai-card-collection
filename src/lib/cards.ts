@@ -666,7 +666,7 @@ export function customTranscendenceAsCard(card: CustomTranscendenceCard): Card {
 
 export function inPack(card: Card, pack: PackId | string) {
   const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
-  if (["all", "allstar", "zenkai", "shonenmix"].includes(normalized)) return true;
+  if (["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(normalized)) return true;
 
   const packIds = Array.isArray(card.pack_ids)
     ? card.pack_ids.map((id) => id.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, ""))
