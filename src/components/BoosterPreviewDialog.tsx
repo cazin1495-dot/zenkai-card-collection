@@ -1,3 +1,4 @@
+import { CUSTOM_TRANSCENDENCE_CARDS, customTranscendenceAsCard, customTranscendenceInPack, type CustomTranscendenceCard } from "@/lib/cards";
 import { isTranscendenceCatalogCard } from "@/lib/cards";
 import { useEffect, useState } from "react";
 import { Eye, Heart, LockKeyhole, Pencil, X } from "lucide-react";

@@ -614,6 +614,55 @@ export function isTranscendenceCatalogCard(card?: { rarity?: string; transcended
   return card.rarity === "transcendance" || card.transcended === true;
 }
 
+export type CustomTranscendenceCard = {
+  id: string;
+  name: string;
+  series: string;
+  image_url: string;
+  pack_ids?: string[] | null;
+  category?: string | null;
+  role?: string | null;
+  popularity?: number | null;
+  quote?: string | null;
+  attack_name?: string | null;
+  attack?: number | null;
+  defense?: number | null;
+};
+
+export const CUSTOM_TRANSCENDENCE_CARDS: CustomTranscendenceCard[] = [];
+
+export function customTranscendenceInPack(card: CustomTranscendenceCard, pack: PackId | string): boolean {
+  const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
+  if (["all", "allstar", "zenkai", "shonenmix"].includes(normalized)) return true;
+  const packIds = Array.isArray(card.pack_ids)
+    ? card.pack_ids.map((id) => id.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, ""))
+    : [];
+  if (packIds.includes(normalized)) return true;
+  if (normalized === "antagoniste" || normalized === "protagoniste") {
+    return (card.role ?? "").trim().toLocaleLowerCase("en") === normalized;
+  }
+  return (card.category ?? "").trim().toLocaleLowerCase("en") === normalized;
+}
+
+export function customTranscendenceAsCard(card: CustomTranscendenceCard): Card {
+  return {
+    id: `custom-${card.id}`,
+    name: card.name,
+    title: `${card.series} • ${card.name}`,
+    series: card.series,
+    rarity: "transcendance",
+    image: card.image_url,
+    quote: card.quote ?? "",
+    attackName: card.attack_name ?? "Technique Ultime",
+    attack: card.attack ?? 9999,
+    defense: card.defense ?? 9999,
+    popularity: card.popularity ?? 9999,
+    category: (card.category as Card["category"]) ?? "shonen",
+    role: card.role ?? "protagoniste",
+    pack_ids: card.pack_ids ?? ["zenkai"],
+  };
+}
+
 export function inPack(card: Card, pack: PackId | string) {
   const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
   if (["all", "allstar", "zenkai", "shonenmix"].includes(normalized)) return true;
