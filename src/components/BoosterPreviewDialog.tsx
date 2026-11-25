@@ -115,8 +115,21 @@ export function BoosterPreviewDialog({
       })),
     ];
 
-    const animePopularity = new Map<string, { maxPop: number; totalPop: number }>();
-    for (const entry of rawEntries) {
+    const seenCharacterKeys = new Set<string>();
+  const dedupedRawEntries = rawEntries.filter((entry) => {
+    const seriesNorm = (entry.card.series || "").trim().toLocaleLowerCase("fr");
+    const nameNorm = entry.card.name
+      .trim()
+      .toLocaleLowerCase("fr")
+      .replace(/ky[uû]bi\s*\(kurama\)/g, "kurama");
+    const key = `${seriesNorm}::${nameNorm}`;
+    if (seenCharacterKeys.has(key)) return false;
+    seenCharacterKeys.add(key);
+    return true;
+  });
+
+  const animePopularity = new Map<string, { maxPop: number; totalPop: number }>();
+    for (const entry of dedupedRawEntries) {
       const seriesKey = (entry.card.series || "Autre").trim().toLocaleLowerCase("fr");
       const pop = previewPopularity(entry.card);
       const current = animePopularity.get(seriesKey) ?? { maxPop: 0, totalPop: 0 };
@@ -126,7 +139,7 @@ export function BoosterPreviewDialog({
       });
     }
 
-    const entries: PreviewEntry[] = rawEntries.sort((left, right) => {
+    const entries: PreviewEntry[] = dedupedRawEntries.sort((left, right) => {
       const leftRarity = left.customTranscendence ? "transcendance" : left.card.rarity;
       const rightRarity = right.customTranscendence ? "transcendance" : right.card.rarity;
       const rarityDiff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity);
