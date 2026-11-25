@@ -98,22 +98,49 @@ export function BoosterPreviewDialog({
   const { favoriteCardIds, toggleFavorite } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
   const customForPack = customCards.filter((card) => customTranscendanceInPack(card, pack));
-  const entries: PreviewEntry[] = [
-    ...cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => ({
-      id: card.id,
-      card: normalizeCatalogCard(card, overrides),
-      customTranscendance: false,
-    })),
-    ...customForPack.map((card) => ({
-      id: `custom-${card.id}`,
-      card: customTranscendanceAsCard(card),
-      customTranscendance: true,
-    })),
-  ].sort((left, right) => {
-    const leftRarity = left.customTranscendance ? "transcendance" : left.card.rarity;
-    const rightRarity = right.customTranscendance ? "transcendance" : right.card.rarity;
-    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : previewPopularity(right.card) - previewPopularity(left.card) || left.id.localeCompare(right.id);
-  });
+  const rawEntries: PreviewEntry[] = [
+      ...cards.filter((card) => !isTranscendenceCatalogCard(card) && inPack(card, pack)).map((card) => ({
+        id: card.id,
+        card: normalizeCatalogCard(card, overrides),
+        customTranscendence: false,
+      })),
+      ...customForPack.map((card) => ({
+        id: `custom-${card.id}`,
+        card: customTranscendenceAsCard(card),
+        customTranscendence: true,
+      })),
+    ];
+
+    const animePopularity = new Map<string, { maxPop: number; totalPop: number }>();
+    for (const entry of rawEntries) {
+      const seriesKey = (entry.card.series || "Autre").trim().toLocaleLowerCase("fr");
+      const pop = previewPopularity(entry.card);
+      const current = animePopularity.get(seriesKey) ?? { maxPop: 0, totalPop: 0 };
+      animePopularity.set(seriesKey, {
+        maxPop: Math.max(current.maxPop, pop),
+        totalPop: current.totalPop + pop,
+      });
+    }
+
+    const entries: PreviewEntry[] = rawEntries.sort((left, right) => {
+      const leftRarity = left.customTranscendence ? "transcendance" : left.card.rarity;
+      const rightRarity = right.customTranscendence ? "transcendance" : right.card.rarity;
+      const rarityDiff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity);
+      if (rarityDiff !== 0) return rarityDiff;
+
+      const leftSeries = (left.card.series || "Autre").trim();
+      const rightSeries = (right.card.series || "Autre").trim();
+      const leftAnime = animePopularity.get(leftSeries.toLocaleLowerCase("fr")) ?? { maxPop: 0, totalPop: 0 };
+      const rightAnime = animePopularity.get(rightSeries.toLocaleLowerCase("fr")) ?? { maxPop: 0, totalPop: 0 };
+
+      if (rightAnime.maxPop !== leftAnime.maxPop) return rightAnime.maxPop - leftAnime.maxPop;
+      if (rightAnime.totalPop !== leftAnime.totalPop) return rightAnime.totalPop - leftAnime.totalPop;
+
+      const seriesDiff = leftSeries.localeCompare(rightSeries, "fr");
+      if (seriesDiff !== 0) return seriesDiff;
+
+      return previewPopularity(right.card) - previewPopularity(left.card) || left.id.localeCompare(right.id);
+    });
   const searchTerm = searchKey(search);
   const visibleEntries = entries.filter((entry) => (
     (!favoritesOnly || favoriteIds.has(entry.card.id)) &&
