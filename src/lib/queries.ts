@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v159";
+const CARDS_LS_KEY = "zenkai_cards_cache_v160";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v108"],
+  queryKey: ["cards-v109"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -307,7 +307,9 @@ export const cardsQuery = queryOptions({
           const norm = c.name.toLowerCase().replace(/uu/g, "u").replace(/ou/g, "o").trim();
           return !seenNames.has(norm);
         });
-  return resolveStaticCardImages(normalized);
+  const sNames = new Set(STATIC_TR_MEWMEW_CARDS.map((c) => c.name.toLowerCase().replace(/uu/g, "u").replace(/ou/g, "o").trim()));
+        const sIds = new Set(STATIC_TR_MEWMEW_CARDS.map((c) => c.id));
+        return resolveStaticCardImages(normalized.filter((c) => sIds.has(c.id) || !sNames.has(c.name.toLowerCase().replace(/uu/g, "u").replace(/ou/g, "o").trim())));
   return resolveStaticCardImages(dedupedCards);
   return resolveStaticCardImages(dedupedCards);
   },
