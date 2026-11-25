@@ -149,7 +149,7 @@ function RootComponent() {
         <SecretQuestEffects />
         <AuctionEffects />
         <SiteHeader />
-        <main className="min-w-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="min-w-0 overflow-x-clip pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </main>

@@ -414,23 +414,23 @@ export function BoostersPage() {
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
           <p className="game-eyebrow"><Sparkles className="size-3.5" /> LE HUB DES COLLECTIONNEURS</p>
-                      <section onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)} className="relative w-full overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-6 shadow-2xl sm:p-9">
+                      <section onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)} className="relative w-full overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-4 shadow-2xl sm:p-9">
         <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-amber-300">
               {pack === "zenkai" ? "Booster Premium • Zen" : "Catégorie de pack • Gratuit"}
             </p>
-            <h1 className="mt-2 font-display text-4xl font-black tracking-tight sm:text-6xl">
+            <h1 className="mt-2 font-display text-3xl font-black tracking-tight sm:text-5xl lg:text-6xl">
               {packInfo.label}
             </h1>
             <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
               {packInfo.tagline} — 5 cartes par ouverture, Épique garantie
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button variant="hero" size="lg" className="rounded-full px-7 font-bold shadow-lg" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
+              <Button variant="hero" size="lg" className="w-full rounded-full px-7 font-bold shadow-lg sm:w-auto" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
                 {pack === "zenkai" ? `Ouvrir le pack (${ZENKAI_BOOSTER_COST} Zen)` : betaBoosters > 0 ? "Ouvrir le pack" : "Stock vide"}
               </Button>
-              <Button variant="glass" size="lg" className="rounded-full px-6" onClick={() => setPreviewPack(pack)}>
+              <Button variant="glass" size="lg" className="w-full rounded-full px-6 sm:w-auto" onClick={() => setPreviewPack(pack)}>
                 Voir le booster
               </Button>
             </div>
@@ -450,17 +450,17 @@ export function BoostersPage() {
             </div>
           </div>
           <div className="flex items-center justify-center py-2">
-            <div className="relative flex h-52 w-72 items-center justify-center sm:h-56 sm:w-80">
+            <div className="relative flex h-44 w-64 items-center justify-center sm:h-56 sm:w-80">
               {featuredMythics.map((card, idx) => (
                 <button
                   key={card.id}
                   type="button"
                   onClick={() => setPreviewPack(pack)}
                   className={cn(
-                    "group absolute h-48 w-32 overflow-hidden rounded-2xl border-2 border-rose-500/85 bg-surface shadow-[0_14px_34px_rgba(244,63,94,0.45)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
-                    idx === 0 && "-translate-x-20 -rotate-12 opacity-90",
+                    "group absolute h-40 w-28 overflow-hidden rounded-2xl border-2 border-rose-500/85 bg-surface shadow-[0_14px_34px_rgba(244,63,94,0.45)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
+                    idx === 0 && "-translate-x-14 -rotate-12 opacity-90 sm:-translate-x-20",
                     idx === 1 && "z-10 scale-105 border-rose-400",
-                    idx === 2 && "translate-x-20 rotate-12 opacity-90",
+                    idx === 2 && "translate-x-14 rotate-12 opacity-90 sm:translate-x-20",
                   )}
                 >
                   <img src={card.image_url ?? ""} alt={card.name} className="h-full w-full object-cover" loading="lazy" />
@@ -472,7 +472,7 @@ export function BoostersPage() {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs sm:text-sm">
+        <div className="mt-6 grid grid-cols-1 gap-2.5 border-t border-white/10 pt-4 text-xs sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:text-sm">
           <span className="inline-flex items-center gap-2 text-muted-foreground">
             <span className="inline-flex size-6 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300"><Package className="size-3.5" /></span>
             <strong className="text-foreground">{betaBoosters}/{MAX_BETA_BOOSTERS}</strong> boosters gratuits{betaBoosters < MAX_BETA_BOOSTERS ? ` • +1 dans ${String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:${String(nextBoosterSec % 60).padStart(2, "0")}` : ""}
