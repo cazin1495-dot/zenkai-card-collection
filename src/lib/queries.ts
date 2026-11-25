@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v160";
+const CARDS_LS_KEY = "zenkai_cards_cache_v161";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v109"],
+  queryKey: ["cards-v110"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -361,6 +361,17 @@ export const pityQuery = (userId: string) =>
   });
 
 async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
+  const staticIds = new Set(STATIC_TR_MEWMEW_CARDS.map((c) => c.id));
+  const staticNames = new Set(
+    STATIC_TR_MEWMEW_CARDS.map((c) =>
+      c.name.toLowerCase().replace(/uu/g, "u").replace(/ou/g, "o").trim()
+    )
+  );
+  cards = cards.filter((c) => {
+    if (staticIds.has(c.id)) return true;
+    const norm = c.name.toLowerCase().replace(/uu/g, "u").replace(/ou/g, "o").trim();
+    return !staticNames.has(norm);
+  });
   if (typeof window === "undefined") return cards;
   const cacheKey = "zenkai_al_final_v1";
   let cachedMap: Record<string, string> = {};
