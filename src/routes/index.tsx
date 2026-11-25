@@ -20,7 +20,7 @@ import { useRarityOverrides } from "@/hooks/use-rarity-overrides";
 import { cardsQuery, pityQuery, profileQuery } from "@/lib/queries";
 import { createLocalGuestDraw } from "@/lib/guest";
 import { getGuestState, updateGuestState } from "@/lib/guest-collection";
-import { recordBoosterOpen, recordSecretDraw } from "@/lib/quests";
+import { availableQuestCount, getDailyLogin, getQuestState, recordBoosterOpen, recordSecretDraw } from "@/lib/quests";
 import { getGuestBalance, getGuestCollection } from "@/lib/guest-collection";
 import { markNewBoosterCards, sortBoosterCardsByRarity } from "@/lib/booster-order";
 import {
@@ -146,6 +146,14 @@ export function BoostersPage() {
     phase === "tearing" ||
     phase === "reveal" ||
     returningToBoosters;
+  const featuredMythics = useMemo(() => {
+    const all = (cards.data ?? []).map((c) => normalizeCatalogCard(c, rarityOverrides));
+    const inPack = all.filter((c) => c.rarity === "mythique" && c.image_url && (pack === "zenkai" || c.packs.includes(pack)));
+    return (inPack.length >= 3 ? inPack : all.filter((c) => c.rarity === "mythique" && c.image_url)).slice(0, 3);
+  }, [cards.data, pack, rarityOverrides]);
+  const dailyLogin = useMemo(() => { try { return getDailyLogin(); } catch { return { day: 1 }; } }, []);
+  const readyQuests = useMemo(() => { try { return availableQuestCount(getQuestState(userId ?? null)); } catch { return 0; } }, [userId, opened]);
+
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
   const cardBack = getPackCardBack(pack);
@@ -392,47 +400,85 @@ export function BoostersPage() {
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
           <p className="game-eyebrow"><Sparkles className="size-3.5" /> LE HUB DES COLLECTIONNEURS</p>
-                <section className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-5 shadow-2xl sm:p-8">
-        <div className="grid items-center gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                      <section className="relative w-full overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-6 shadow-2xl sm:p-9">
+        <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-200">
-              {pack === "zenkai" ? "Booster Premium • Zen" : "Pack sélectionné • Gratuit"}
-            </span>
-            <h1 className="mt-3 font-display text-3xl font-black tracking-tight sm:text-5xl">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-amber-300">
+              {pack === "zenkai" ? "Booster Premium • Zen" : "Catégorie de pack • Gratuit"}
+            </p>
+            <h1 className="mt-2 font-display text-4xl font-black tracking-tight sm:text-6xl">
               {packInfo.label}
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
-              {packInfo.tagline} — {CARDS_PER_BOOSTER} cartes par ouverture avec Mythique garantie à 250 cartes.
+            <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+              {packInfo.tagline} — 5 cartes par ouverture, Épique garantie
             </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button variant="hero" size="lg" className="rounded-full px-6 font-bold" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
-                {pack === "zenkai" ? `Ouvrir (${ZENKAI_PACK_COST} Zen)` : betaBoosters > 0 ? "Ouvrir 1 pack gratuit" : "Stock vide (patiente)"}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Button variant="hero" size="lg" className="rounded-full px-7 font-bold shadow-lg" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
+                {pack === "zenkai" ? `Ouvrir le pack (${ZENKAI_PACK_COST} Zen)` : betaBoosters > 0 ? "Ouvrir le pack" : "Stock vide"}
               </Button>
-              <Button variant="glass" size="lg" className="rounded-full px-5" onClick={() => setPreviewPack(pack)}>
-                Voir les cartes du pack
+              <Button variant="glass" size="lg" className="rounded-full px-6" onClick={() => setPreviewPack(pack)}>
+                Voir le booster
               </Button>
             </div>
+            <div className="mt-7 flex items-center gap-2" aria-label="Changer de catégorie">
+              {PACKS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setPack(item.id)}
+                  title={item.label}
+                  className={cn(
+                    "h-2 rounded-full transition-all",
+                    item.id === pack ? "w-8 bg-amber-400" : "w-2 bg-white/25 hover:bg-white/50",
+                  )}
+                />
+              ))}
+            </div>
           </div>
-          <div className="hidden items-center justify-center sm:flex">
-            <div className="relative flex h-44 w-64 items-center justify-center">
-              {(["shonen", pack, "protagoniste"] as PackId[]).map((pid, idx) => (
-                <div key={`${pid}-${idx}`} className={`absolute h-40 w-28 overflow-hidden rounded-xl border border-amber-300/30 shadow-xl transition-transform ${idx === 0 ? "-translate-x-14 -rotate-12 opacity-80" : idx === 2 ? "translate-x-14 rotate-12 opacity-80" : "z-10 scale-105"}`}>
-                  <BoosterArtwork src={PACK_ARTWORK_BY_PACK[pid]} alt={pid} />
-                </div>
+          <div className="flex items-center justify-center py-2">
+            <div className="relative flex h-52 w-72 items-center justify-center sm:h-56 sm:w-80">
+              {featuredMythics.map((card, idx) => (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => setPreviewPack(pack)}
+                  className={cn(
+                    "group absolute h-48 w-32 overflow-hidden rounded-2xl border-2 border-amber-300/70 bg-surface shadow-[0_14px_34px_rgba(0,0,0,0.65)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
+                    idx === 0 && "-translate-x-20 -rotate-12 opacity-90",
+                    idx === 1 && "z-10 scale-105 border-amber-300",
+                    idx === 2 && "translate-x-20 rotate-12 opacity-90",
+                  )}
+                >
+                  <img src={card.image_url} alt={card.name} className="h-full w-full object-cover" loading="lazy" />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent px-2 py-2 text-center">
+                    <p className="truncate text-[11px] font-bold text-white">{card.name}</p>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs sm:text-sm">
-          <span className="font-semibold text-amber-200">
-            Boosters gratuits : {betaBoosters}/{MAX_BETA_BOOSTERS}{betaBoosters < MAX_BETA_BOOSTERS ? ` (+1 dans ${String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:${String(nextBoosterSec % 60).padStart(2, "0")})` : " (Max)"}
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300"><Package className="size-3.5" /></span>
+            <strong className="text-foreground">{betaBoosters}/{MAX_BETA_BOOSTERS}</strong> boosters gratuits{betaBoosters < MAX_BETA_BOOSTERS ? ` • +1 dans ${String(Math.floor(nextBoosterSec / 60)).padStart(2, "0")}:${String(nextBoosterSec % 60).padStart(2, "0")}` : ""}
           </span>
-          <span className="text-muted-foreground">
-            Pity Mythique : <strong className="text-foreground">{Math.max(0, 250 - (pityCount ?? 0) * 5)} cartes</strong> avant garantie
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-sky-500/20 text-sky-300"><Sparkles className="size-3.5" /></span>
+            <strong className="text-foreground">{readyQuests}</strong> missions disponibles
           </span>
-          {localZen !== null && (
-            <span className="font-semibold text-amber-300">{localZen.toLocaleString("fr-FR")} Zen</span>
-          )}
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300"><Clock className="size-3.5" /></span>
+            <strong className="text-foreground">J{dailyLogin.day}/7</strong> série de connexion
+          </span>
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-yellow-500/20 text-yellow-300"><Gem className="size-3.5" /></span>
+            <strong className="text-foreground">{(localZen ?? 0).toLocaleString("fr-FR")}</strong> Zen
+          </span>
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-rose-500/20 text-rose-300"><Sparkles className="size-3.5" /></span>
+            <strong className="text-foreground">{Math.max(0, 250 - (pityCount ?? 0) * 5)}</strong> avant Mythique sûre
+          </span>
         </div>
       </section>
 
