@@ -80,14 +80,14 @@ describe("card identity", () => {
 
 describe("booster content", () => {
   const rates = {
-    commune: 54,
-    non_commune: 26.5,
-    rare: 14,
-    epique: 4,
-    legendaire: 1.2,
-    mythique: 0.25,
-    transcendance: 0.05,
-  } as const;
+      commune: 44,
+      non_commune: 31.5,
+      rare: 17.5,
+      epique: 5,
+      legendaire: 1.6,
+      mythique: 0.35,
+      transcendance: 0.05,
+    } as const;
   it("uses the requested per-card rates and totals 100%", () => {
     expect(DROP_RATES).toEqual(rates);
     expect(Object.values(DROP_RATES).reduce((total, rate) => total + rate, 0)).toBe(100);

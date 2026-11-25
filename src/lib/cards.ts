@@ -477,12 +477,12 @@ export function cardIdentity(card: Card, transcended = false) {
 
 /** Drop chance per card, in percent (mirrors the SQL thresholds). */
 export const DROP_RATES: Record<BaseRarity, number> = {
-  commune: 54,
-  non_commune: 26.5,
-  rare: 14,
-  epique: 4,
-  legendaire: 1.2,
-  mythique: 0.25,
+  commune: 44,
+  non_commune: 31.5,
+  rare: 17.5,
+  epique: 5,
+  legendaire: 1.6,
+  mythique: 0.35,
   transcendance: 0.05,
 };
 
