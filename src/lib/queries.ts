@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v155";
+const CARDS_LS_KEY = "zenkai_cards_cache_v157";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v104"],
+  queryKey: ["cards-v106"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -2199,7 +2199,7 @@ const STATIC_TR_MEWMEW_CARDS: Card[] = [
   { id: "mm-lettuce", name: "Lettuce Midorikawa", title: "Tokyo Mew Mew • Lettuce Midorikawa", rarity: "legendaire", description: "Douce et généreuse, dotée de l'ADN du marsouin aptère.", sort_order: 9014, category: "shojo", pack_ids: ["shojo", "protagoniste"], series: "Tokyo Mew Mew", role: "Mew Mew", image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2692-WGF3QlF22I13.png", popularity: 3400 },
   { id: "fw-souma", name: "Souma Yukihira", title: "Food Wars! • Souma Yukihira", rarity: "mythique", description: "Jeune prodige de la cuisine prêt à relever tous les duels culinaires à Totsuki.", sort_order: 16201, category: "shonen", series: "Food Wars!", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b75216-KDU8333eIcqf.jpg", popularity: 54000 },
   { id: "fw-erina", name: "Erina Nakiri", title: "Food Wars! • Erina Nakiri", rarity: "mythique", description: "Héritière de la famille Nakiri dotée du légendaire Palais Divin.", sort_order: 16202, category: "shonen", series: "Food Wars!", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b75284-4Hiyq7DOwvy7.png", popularity: 52000 },
-  { id: "yz-taiyo", name: "Taiyo Asano", title: "Mission: Yozakura Family • Taiyo Asano", rarity: "mythique", description: "Espion d'élite de la famille Yozakura prêt à tout pour protéger Mutsumi.", sort_order: 16203, category: "shonen", series: "Mission: Yozakura Family", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://cdn.myanimelist.net/images/characters/7/531036.jpg", popularity: 48000 },
+  { id: "yz-taiyo", name: "Taiyo Asano", title: "Mission: Yozakura Family • Taiyo Asano", rarity: "mythique", description: "Espion d'élite de la famille Yozakura prêt à tout pour protéger Mutsumi.", sort_order: 16203, category: "shonen", series: "Mission: Yozakura Family", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b162723-2veq2yEY2trS.png", popularity: 48000 },
   { id: "yz-mutsumi", name: "Mutsumi Yozakura", title: "Mission: Yozakura Family • Mutsumi Yozakura", rarity: "mythique", description: "10e cheffe de la lignée Yozakura et cœur de la famille d'espions.", sort_order: 16204, category: "shonen", series: "Mission: Yozakura Family", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://cdn.myanimelist.net/images/characters/13/531035.jpg", popularity: 47000 },
   { id: "yz-ban", name: "Ban Yozakura", title: "Mission: Yozakura Family • Ban Yozakura", rarity: "epique", description: "Membre redoutable du clan Yozakura aux techniques martiales foudroyantes.", sort_order: 16205, category: "shonen", series: "Mission: Yozakura Family", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://cdn.myanimelist.net/images/characters/10/544348.jpg", popularity: 21000 },
 ];
