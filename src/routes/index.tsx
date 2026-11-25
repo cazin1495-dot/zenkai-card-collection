@@ -156,6 +156,18 @@ export function BoostersPage() {
   const dailyLogin = useMemo(() => { try { return getDailyLogin(); } catch { return { day: 1 }; } }, []);
   const readyQuests = useMemo(() => { try { return availableQuestCount(getQuestState(userId ?? null)); } catch { return 0; } }, [userId, opened]);
 
+  const [heroPaused, setHeroPaused] = useState(false);
+  useEffect(() => {
+    if (heroPaused || phase !== "idle" || isPackChoiceOpen || Boolean(previewPack)) return;
+    const id = window.setInterval(() => {
+      setPack((curr) => {
+        const idx = PACKS.findIndex((item) => item.id === curr);
+        return PACKS[(idx + 1) % PACKS.length].id;
+      });
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [heroPaused, phase, isPackChoiceOpen, previewPack]);
+
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
   const cardBack = getPackCardBack(pack);
@@ -402,7 +414,7 @@ export function BoostersPage() {
       {(phase === "idle" || phase === "opening" || phase === "tearing") && (
         <>
           <p className="game-eyebrow"><Sparkles className="size-3.5" /> LE HUB DES COLLECTIONNEURS</p>
-                      <section className="relative w-full overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-6 shadow-2xl sm:p-9">
+                      <section onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)} className="relative w-full overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-surface/95 to-surface p-6 shadow-2xl sm:p-9">
         <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-amber-300">
