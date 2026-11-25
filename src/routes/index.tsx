@@ -444,9 +444,9 @@ export function BoostersPage() {
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{CARDS_PER_BOOSTER}</strong><p className="text-[10px] text-muted-foreground">cartes par booster</p></div>
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{pack === "zenkai" ? "Taux ×2" : "Taux standard"}</strong><p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Chances doublées" : "par carte"}</p></div>
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3">
-                    <strong>{pack === "zenkai" || pityCount === null ? "—" : PITY_LIMIT - pityCount}</strong>
-                    <p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Garantie non définie" : "avant Mythique sûre"}</p>
-                    {pack !== "zenkai" && pityCount !== null && <div role="progressbar" aria-label="Garantie Mythique" aria-valuemin={0} aria-valuemax={PITY_LIMIT} aria-valuenow={pityCount} className="mt-2 h-1 rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400" style={{ width: `${pityCount / PITY_LIMIT * 100}%` }} /></div>}
+                    <strong>{Math.max(0, 250 - (pityCount ?? 0) * 5)} cartes</strong>
+                    <p className="text-[10px] text-muted-foreground">avant Mythique sûre (250 cartes)</p>
+                    <div role="progressbar" aria-label="Garantie Mythique" aria-valuemin={0} aria-valuemax={250} aria-valuenow={(pityCount ?? 0) * 5} className="mt-2 h-1 rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400" style={{ width: `${Math.min(100, ((pityCount ?? 0) * 5) / 250 * 100)}%` }} /></div>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3">
                     <strong>{betaBoosters}/{MAX_BETA_BOOSTERS}</strong>

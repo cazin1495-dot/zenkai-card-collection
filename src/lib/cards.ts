@@ -514,7 +514,7 @@ export function getCardRecycleValue(card: { rarity: BaseRarity; popularity?: num
   return card.rarity === "transcendance" ? 0 : Math.max(2, Math.round(getCardMarketPrice(card) * 0.4));
 }
 
-export const PITY_LIMIT = 200;
+export const PITY_LIMIT = 50;
 
 export function rarityFromRoll(roll: number): BaseRarity {
   if (roll < 44) return "commune";

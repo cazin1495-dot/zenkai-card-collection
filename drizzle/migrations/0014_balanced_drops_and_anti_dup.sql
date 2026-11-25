@@ -54,7 +54,7 @@ BEGIN
       END IF;
    ELSE r:=public.booster_rarity_for_roll(roll); END IF;
    IF i=5 AND special IS NOT NULL AND special<>'divin_transcendance' AND NOT myth THEN r:=CASE WHEN special IN ('sceau_mythique','divin_mythique') THEN 'mythique'::public.card_rarity ELSE special::public.card_rarity END; END IF;
-   IF pity>=199 AND i=5 AND NOT myth THEN r:='mythique'; END IF;
+   IF pity>=49 AND i=5 AND NOT myth THEN r:='mythique'; END IF;
    SELECT c.id INTO cid FROM public.cards c
       WHERE c.active AND c.rarity=r
         AND (genre='zenkai' OR c.category=genre OR (genre='antagoniste' AND c.role='antagoniste') OR (genre='protagoniste' AND c.role='protagoniste'))
