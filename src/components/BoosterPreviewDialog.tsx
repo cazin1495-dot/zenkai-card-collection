@@ -50,17 +50,17 @@ function searchKey(value: string) {
 }
 
 const TOP_POPULARITY: Record<string, number> = {
-  "monkey d. luffy": 100000, "roronoa zoro": 98000, "satoru gojo": 97000, "levi": 96000,
-  "son goku": 95000, "naruto uzumaki": 94000, "killua zoldyck": 93000, "itachi uchiha": 92000,
-  "sasuke uchiha": 91000, "eren yeager": 90000, "edward elric": 89000, "l lawliet": 88000,
-  "light yagami": 87000, "vegeta": 86000, "ichigo kurosaki": 85000, "tanjiro kamado": 84000,
-  "nezuko kamado": 83000, "denji": 82000, "makima": 81000, "saitama": 80000,
-  "guts": 79000, "ken kaneki": 78000, "izuku midoriya": 77000, "katsuki bakugo": 76000,
-  "sanji": 75000, "trafalgar law": 74000, "portgas d. ace": 73000, "shanks": 72000,
-  "kakashi hatake": 71000, "madara uchiha": 70000, "sukuna": 69500, "megumi fushiguro": 69000,
-  "gon freecss": 68500, "kurapika": 68000, "hisoka morow": 67500, "mikasa ackerman": 67000,
-  "rimuru tempest": 66500, "cid kagenou": 66000, "shouko komi": 65500, "nazuna nanakusa": 65000,
-  "rudeus greyrat": 64500, "kamina": 64000, "kusuo saiki": 63500, "shinei nouzen": 63000,
+  "lelouch lamperouge": 182000, "monkey d. luffy": 150400, "satoru gojo": 149000, "levi": 147400,
+  "l lawliet": 132400, "roronoa zoro": 116700, "killua zoldyck": 115000, "eren yeager": 112000,
+  "edward elric": 105000, "light yagami": 100000, "son goku": 98000, "naruto uzumaki": 95000,
+  "itachi uchiha": 93000, "guts": 91000, "ken kaneki": 89000, "mikasa ackerman": 87000,
+  "ichigo kurosaki": 85000, "sasuke uchiha": 83000, "vegeta": 81000, "saitama": 79000,
+  "tanjiro kamado": 77000, "denji": 75000, "makima": 74000, "kakashi hatake": 73000,
+  "nezuko kamado": 72000, "izuku midoriya": 71000, "katsuki bakugo": 70000, "sanji": 69000,
+  "trafalgar law": 68000, "portgas d. ace": 67000, "shanks": 66000, "madara uchiha": 65000,
+  "sukuna": 64500, "gon freecss": 64000, "kurapika": 63500, "hisoka morow": 63000,
+  "rimuru tempest": 62500, "cid kagenou": 62000, "shouko komi": 61500, "nazuna nanakusa": 61000,
+  "rudeus greyrat": 60500, "kamina": 60000, "kusuo saiki": 59500, "shinei nouzen": 59000,
 };
 const previewPopularity = (card: Card) => {
   const key = card.name.trim().toLowerCase();
