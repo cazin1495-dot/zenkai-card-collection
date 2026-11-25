@@ -334,6 +334,11 @@ export function BoostersPage() {
     setPulled(localDraw);
     void queryClient.invalidateQueries({ queryKey: ["guest-collection"] });
     setOpened(count);
+      let nextPity = pityCount ?? 0;
+      for (let b = 0; b < count; b++) { const gotM = localDraw.slice(b * 5, (b + 1) * 5).some((it) => it.card.rarity === "mythique" || it.card.rarity === "transcendance"); nextPity = gotM ? 0 : Math.min(PITY_LIMIT, nextPity + 1); }
+      localStorage.setItem(`zenkai_pity_v1:${userId || "guest"}`, String(nextPity));
+      setLocalPity(nextPity);
+      if (userId) { queryClient.setQueryData(["pity", userId], nextPity); void supabase.from("booster_pity").upsert({ user_id: userId, counter: nextPity }, { onConflict: "user_id" }); }
     const prevXp = Number(localStorage.getItem("zenkai_beta_xp") || "0");
     localStorage.setItem("zenkai_beta_xp", String(prevXp + count * 15));
     const prevOp = Number(localStorage.getItem("zenkai_beta_opened") || "0");

@@ -7,6 +7,7 @@ export function createLocalGuestDraw(
   pack: PackId,
   boosterCount: number,
   customTranscendanceCards: readonly CustomTranscendanceCard[] = CUSTOM_TRANSCENDANCE_CARDS,
+  initialPity = 0,
 ): PulledCard[] {
   const candidates = [...new Map(cards.filter((card) => !isTranscendanceCatalogCard(card) && inPack(card, pack)).map((card) => [card.id, card])).values()];
   if (candidates.length < CARDS_PER_BOOSTER) return [];
@@ -15,7 +16,9 @@ export function createLocalGuestDraw(
   const ownedSet = new Set<string>();
   const usedIds = new Set<string>();
   let hasEpiquePlus = false;
+  let pityTracker = Math.max(0, Math.floor(initialPity));
   return Array.from({ length: boosterCount }, (_, boosterIndex) => {
+    let boosterHasMythic = false;
     const remaining = [...candidates];
     return Array.from({ length: CARDS_PER_BOOSTER }, (_, cardIndex) => {
       const roll = Math.random() * 100;
@@ -23,7 +26,9 @@ export function createLocalGuestDraw(
       if (boosterCount === 10 && boosterIndex === 9 && cardIndex === 4 && !hasEpiquePlus) {
         rarity = "epique";
       }
-      if (rarity === "epique" || rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance") {
+      if (cardIndex === CARDS_PER_BOOSTER - 1 && !boosterHasMythic && pityTracker >= 49) { rarity = "mythique"; }
+    if (rarity === "mythique" || rarity === "transcendance") { boosterHasMythic = true; }
+    if (rarity === "epique" || rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance") {
         hasEpiquePlus = true;
       }
       let card: Card | undefined;
