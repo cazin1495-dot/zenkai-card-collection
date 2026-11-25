@@ -158,7 +158,7 @@ export function BoostersPage() {
 
   const [heroPaused, setHeroPaused] = useState(false);
   useEffect(() => {
-    if (heroPaused || phase !== "idle" || isPackChoiceOpen || Boolean(previewPack)) return;
+    if (heroPaused || phase !== "idle") return;
     const id = window.setInterval(() => {
       setPack((curr) => {
         const idx = PACKS.findIndex((item) => item.id === curr);
@@ -166,7 +166,7 @@ export function BoostersPage() {
       });
     }, 5000);
     return () => window.clearInterval(id);
-  }, [heroPaused, phase, isPackChoiceOpen, previewPack]);
+  }, [heroPaused, phase]);
 
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
