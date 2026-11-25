@@ -631,6 +631,7 @@ export function inPack(card: Card, pack: PackId | string) {
   return category === normalized;
 }
 
+
 /** Live booster stock: +1 every 10 minutes, capped at 15 (mirrors the server). */
 export function boosterStock(stored: number, updatedAt: string | Date, now: number) {
   const upd = new Date(updatedAt).getTime();
