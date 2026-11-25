@@ -1,3 +1,4 @@
+import { RARITY } from "@/lib/cards";
 import { RARITY_ORDER } from "@/lib/cards";
 import { CUSTOM_TRANSCENDENCE_CARDS, customTranscendenceAsCard, customTranscendenceInPack, type CustomTranscendenceCard } from "@/lib/cards";
 import { isTranscendenceCatalogCard } from "@/lib/cards";
