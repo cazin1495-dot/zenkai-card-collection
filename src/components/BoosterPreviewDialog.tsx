@@ -112,7 +112,7 @@ export function BoosterPreviewDialog({
   ].sort((left, right) => {
     const leftRarity = left.customTranscendance ? "transcendance" : left.card.rarity;
     const rightRarity = right.customTranscendance ? "transcendance" : right.card.rarity;
-    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : previewPopularity(right.card) - previewPopularity(left.card);
+    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : previewPopularity(right.card) - previewPopularity(left.card) || left.id.localeCompare(right.id);
   });
   const searchTerm = searchKey(search);
   const visibleEntries = entries.filter((entry) => (

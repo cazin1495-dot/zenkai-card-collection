@@ -147,7 +147,7 @@ export function BoostersPage() {
     phase === "reveal" ||
     returningToBoosters;
   const featuredMythics = useMemo(() => {
-    const all = cards.map((c) => normalizeCatalogCard(c, rarityOverrides)).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+    const all = cards.map((c) => normalizeCatalogCard(c, rarityOverrides)).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0) || a.id.localeCompare(b.id));
     const norm = pack.trim().toLowerCase().replace(/[\s_-]+/g, "");
     const matchesPack = (c: Card) => ["shonen", "shonenmix", "all", "allstar", "zenkai"].includes(norm) ? true : (norm === "antagoniste" || norm === "protagoniste") ? c.role === norm : c.category === norm;
     const packMythics = all.filter((c) => c.rarity === "mythique" && Boolean(c.image_url) && matchesPack(c));
@@ -158,15 +158,9 @@ export function BoostersPage() {
 
   const [heroPaused, setHeroPaused] = useState(false);
   useEffect(() => {
-    if (heroPaused || phase !== "idle") return;
-    const id = window.setInterval(() => {
-      setPack((curr) => {
-        const idx = PACKS.findIndex((item) => item.id === curr);
-        return PACKS[(idx + 1) % PACKS.length].id;
-      });
-    }, 5000);
-    return () => window.clearInterval(id);
-  }, [heroPaused, phase]);
+    if (!isPackPreviewOpen) return;
+    setHeroPaused(true);
+  }, [isPackPreviewOpen]);
 
   const packInfo = PACKS.find((p) => p.id === pack) ?? PACKS[0];
   if (!packInfo) return null;
