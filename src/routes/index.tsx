@@ -363,6 +363,10 @@ export function BoostersPage() {
     await revealAfterOpening();
   }
 
+  async function handleOpen(count: number = 1) {
+    await open(count, pack);
+  }
+
   async function returnToBoosterSelection() {
     setPulled([]);
     setAwake({});
