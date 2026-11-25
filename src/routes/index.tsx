@@ -338,6 +338,12 @@ export function BoostersPage() {
 
     tearRequested.current = false;
     setPhase("opening");
+    window.setTimeout(() => {
+      setPhase((curr) => (curr === "opening" ? "tearing" : curr));
+    }, 700);
+    window.setTimeout(() => {
+      setPhase((curr) => (curr === "opening" || curr === "tearing" ? "reveal" : curr));
+    }, 1350);
     setPulled([]);
     setAwake(
       Object.fromEntries(
