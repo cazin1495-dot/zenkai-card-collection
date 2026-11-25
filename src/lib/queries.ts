@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v117";
+const CARDS_LS_KEY = "zenkai_cards_cache_v118";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,12 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "pc25-sylvia", name: "Sylvia Sherwood (Handler)", title: "SPY x FAMILY • Sylvia Sherwood (Handler)", rarity: "non_commune", description: "Supérieure froide et redoutable de Twilight au sein de WISE.", sort_order: 18610, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b157887-P66pD0ilpmtZ.png", popularity: 9100 },
+  { id: "pc25-sharon", name: "Sharon", title: "SPY x FAMILY • Sharon", rarity: "non_commune", description: "Collègue de Yor à la mairie de Berlint.", sort_order: 18611, category: "shonen", series: "SPY x FAMILY", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b270959-HVflw5p1KQb5.png", popularity: 8400 },
+  { id: "pc25-toichirou", name: "Toichirou Suzuki", title: "Mob Psycho 100 • Toichirou Suzuki", rarity: "non_commune", description: "Chef suprême de la Griffe doté d’une puissance psychique colossale.", sort_order: 18613, category: "shonen", series: "Mob Psycho 100", role: "antagoniste", pack_ids: ["shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b133204-KKsIZxLqX7vF.jpg", popularity: 9100 },
+  { id: "pc25-angry", name: "Souya Kawata (Angry)", title: "Tokyo Revengers • Souya Kawata (Angry)", rarity: "non_commune", description: "Vice-capitaine de la 4e division du Tokyo Manji au cœur tendre et à la force cachée.", sort_order: 18602, category: "shonen", series: "Tokyo Revengers", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b168678-gf2ljBfKDnmC.png", popularity: 9000 },
+  { id: "pc25-smiley", name: "Nahoya Kawata (Smiley)", title: "Tokyo Revengers • Nahoya Kawata (Smiley)", rarity: "non_commune", description: "Capitaine toujours souriant de la 4e division du Tokyo Manji.", sort_order: 18603, category: "shonen", series: "Tokyo Revengers", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b168679-CRZktzv0DvBl.jpg", popularity: 9000 },
+  { id: "pc25-angel", name: "Démon-Ange (Tenshi)", title: "Chainsaw Man • Démon-Ange (Tenshi)", rarity: "non_commune", description: "Homme-démon pacifique de la 4e section spéciale aspirant l’espérance de vie au toucher.", sort_order: 18604, category: "shonen", series: "Chainsaw Man", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b152231-xNV2YsTRzEcS.png", popularity: 9300 },
   { id: "pc50-maehara", name: "Hiroto Maehara", title: "Assassination Classroom • Hiroto Maehara", rarity: "non_commune", description: "Épéiste agile de la classe 3-E et meilleur ami d’Yuma Isogai.", sort_order: 18517, category: "shonen", series: "Assassination Classroom", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/88797-2VttDgoBtz0X.png", popularity: 8700 },
   { id: "pc50-motoko-hori", name: "Motoko Iura", title: "Horimiya • Motoko Iura", rarity: "non_commune", description: "Petite sœur réservée de Shuu Iura.", sort_order: 18518, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b72467-PpdDmPQFbaMC.png", popularity: 8100 },
   { id: "pc50-yasuda", name: "Shin Yasuda", title: "Horimiya • Shin Yasuda", rarity: "non_commune", description: "Professeur excentrique mais attentionné du lycée Katagiri.", sort_order: 18519, category: "shojo", series: "Horimiya", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b66975-1ENOxQZ7SJPm.png", popularity: 8200 },
