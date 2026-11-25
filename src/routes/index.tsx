@@ -442,7 +442,7 @@ export function BoostersPage() {
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{CARDS_PER_BOOSTER}</strong><p className="text-[10px] text-muted-foreground">cartes par booster</p></div>
-                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{pack === "zenkai" ? "Taux ×10" : "Taux standard"}</strong><p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Mythique & Transcendance" : "par carte"}</p></div>
+                  <div className="rounded-xl border border-white/5 bg-black/20 p-3"><strong>{pack === "zenkai" ? "Taux ×2" : "Taux standard"}</strong><p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Chances doublées" : "par carte"}</p></div>
                   <div className="rounded-xl border border-white/5 bg-black/20 p-3">
                     <strong>{pack === "zenkai" || pityCount === null ? "—" : PITY_LIMIT - pityCount}</strong>
                     <p className="text-[10px] text-muted-foreground">{pack === "zenkai" ? "Garantie non définie" : "avant Mythique sûre"}</p>
