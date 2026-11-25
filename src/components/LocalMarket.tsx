@@ -36,7 +36,7 @@ export function LocalMarket() {
   const [snapshot, setSnapshot] = useState<MarketSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [tab, setTab] = useState<"fixed" | "auction">(() =>
+  const [tab, setTab] = useState<"fixed" | "auction" | "my-sales" | "my-auctions">(() =>
     typeof window !== "undefined" && window.location.hash === "#encheres" ? "auction" : "fixed",
   );
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -136,6 +136,14 @@ export function LocalMarket() {
     });
   }
 
+  const mySalesCount = snapshot?.listings.filter((item) => item.seller === "guest" && item.kind === "fixed").length ?? 0;
+  const myAuctionsCount = snapshot?.listings.filter((item) => item.kind === "auction" && (item.seller === "guest" || item.bidder === "guest")).length ?? 0;
+  const matchesTab = (item: MarketListing) => {
+    if (tab === "my-sales") return item.seller === "guest" && item.kind === "fixed";
+    if (tab === "my-auctions") return item.kind === "auction" && (item.seller === "guest" || item.bidder === "guest");
+    return item.kind === tab;
+  };
+
   return (
     <section className="mt-8 border-t border-border pt-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -199,6 +207,20 @@ export function LocalMarket() {
         >
           <Gavel className="size-4" /> Enchères
         </Button>
+        <Button
+          variant={tab === "my-sales" ? "hero" : "glass"}
+          aria-pressed={tab === "my-sales"}
+          onClick={() => setTab("my-sales")}
+        >
+          <ShoppingBag className="size-4" /> Mes ventes ({mySalesCount})
+        </Button>
+        <Button
+          variant={tab === "my-auctions" ? "hero" : "glass"}
+          aria-pressed={tab === "my-auctions"}
+          onClick={() => setTab("my-auctions")}
+        >
+          <Gavel className="size-4" /> Mes enchères ({myAuctionsCount})
+        </Button>
       </div>
       {tab === "fixed" && snapshot && !snapshot.listings.some((item) => item.seller === "npc" && item.kind === "fixed") && (
         <Button
@@ -215,12 +237,12 @@ export function LocalMarket() {
           Renouveler les offres fictives
         </Button>
       )}
-      {snapshot && snapshot.listings.filter((item) => item.kind === tab).length === 0 && (
+      {snapshot && snapshot.listings.filter(matchesTab).length === 0 && (
         <p className="mt-5 text-sm text-muted-foreground">Aucune annonce dans cet onglet.</p>
       )}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {snapshot?.listings
-          .filter((item) => item.kind === tab)
+          .filter(matchesTab)
           .map((item) => {
             const card = byId.get(item.cardId);
             const rarity = item.copy?.transcended || item.copy?.customTranscendance || item.rarity === "transcendance"
