@@ -1,3 +1,4 @@
+import { isTranscendenceCatalogCard } from "@/lib/cards";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getCardMarketPrice, isTranscendanceCatalogCard, type Card , isTranscendenceCatalogCard } from "@/lib/cards";
 import { getGuestCollection, getGuestState, type GuestOwnedRow } from "@/lib/guest-collection";
 import { AUCTION_DURATIONS, AUCTION_PRICE_SUGGESTIONS, initializeGuestMarket, listGuestCopy, type MarketListing } from "@/lib/guest-market";
 

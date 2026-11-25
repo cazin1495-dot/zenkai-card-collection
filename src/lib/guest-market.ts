@@ -1,3 +1,4 @@
+import { isTranscendenceCatalogCard } from "@/lib/cards";
 import { z } from "zod";
 import { characterRarity, getCardMarketPrice, isLegacyDemonSlayerTranscendanceCardId, isTranscendanceCatalogCard, rarityRank, type Card, type Rarity } from "./cards";
 import { getGuestState, syncGuestAuctionStorage, updateGuestState, type GuestOwnedRow, type GuestState } from "./guest-collection";
