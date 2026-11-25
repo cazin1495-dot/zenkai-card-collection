@@ -457,9 +457,9 @@ export function BoostersPage() {
                   type="button"
                   onClick={() => setPreviewPack(pack)}
                   className={cn(
-                    "group absolute h-48 w-32 overflow-hidden rounded-2xl border-2 border-amber-300/70 bg-surface shadow-[0_14px_34px_rgba(0,0,0,0.65)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
+                    "group absolute h-48 w-32 overflow-hidden rounded-2xl border-2 border-rose-500/85 bg-surface shadow-[0_14px_34px_rgba(244,63,94,0.45)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
                     idx === 0 && "-translate-x-20 -rotate-12 opacity-90",
-                    idx === 1 && "z-10 scale-105 border-amber-300",
+                    idx === 1 && "z-10 scale-105 border-rose-400",
                     idx === 2 && "translate-x-20 rotate-12 opacity-90",
                   )}
                 >
@@ -484,10 +484,6 @@ export function BoostersPage() {
           <span className="inline-flex items-center gap-2 text-muted-foreground">
             <span className="inline-flex size-6 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300"><Clock className="size-3.5" /></span>
             <strong className="text-foreground">J{dailyLogin.day}/7</strong> série de connexion
-          </span>
-          <span className="inline-flex items-center gap-2 text-muted-foreground">
-            <span className="inline-flex size-6 items-center justify-center rounded-lg bg-yellow-500/20 text-yellow-300"><Gem className="size-3.5" /></span>
-            <strong className="text-foreground">{(localZen ?? 0).toLocaleString("fr-FR")}</strong> Zen
           </span>
           <span className="inline-flex items-center gap-2 text-muted-foreground">
             <span className="inline-flex size-6 items-center justify-center rounded-lg bg-rose-500/20 text-rose-300"><Sparkles className="size-3.5" /></span>
