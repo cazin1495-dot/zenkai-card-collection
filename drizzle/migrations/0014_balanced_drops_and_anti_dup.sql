@@ -57,7 +57,7 @@ BEGIN
    IF pity>=199 AND i=5 AND NOT myth THEN r:='mythique'; END IF;
    SELECT c.id INTO cid FROM public.cards c
       WHERE c.active AND c.rarity=r
-        AND (c.category=genre OR (genre='antagoniste' AND c.role='antagoniste') OR (genre='protagoniste' AND c.role='protagoniste'))
+        AND (genre='zenkai' OR c.category=genre OR (genre='antagoniste' AND c.role='antagoniste') OR (genre='protagoniste' AND c.role='protagoniste'))
         AND NOT (c.id = ANY(cids))
       ORDER BY
         CASE WHEN random() < 0.5 AND NOT EXISTS (SELECT 1 FROM public.user_cards uc WHERE uc.user_id=u AND uc.card_id=c.id) THEN 0 ELSE 1 END,
@@ -71,7 +71,7 @@ BEGIN
       IF cid IS NULL THEN
         SELECT c.id INTO cid FROM public.cards c
         WHERE c.active AND c.rarity=r
-          AND (c.category=genre OR (genre='antagoniste' AND c.role='antagoniste') OR (genre='protagoniste' AND c.role='protagoniste'))
+          AND (genre='zenkai' OR c.category=genre OR (genre='antagoniste' AND c.role='antagoniste') OR (genre='protagoniste' AND c.role='protagoniste'))
         ORDER BY random() LIMIT 1;
       END IF;
       IF cid IS NULL AND genre='protagoniste' THEN
