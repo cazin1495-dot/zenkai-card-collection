@@ -153,10 +153,28 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
     [catalog.data],
   );
   const byId = useMemo(() => new Map(owned.map((item) => [item.card.id, item])), [owned]);
+  const ownedIds = useMemo(() => new Set((copies ?? []).map((copy) => copy.card_id)), [copies]);
+  const unlockedAvatarCards = useMemo(
+    () =>
+      allCards
+        .filter((card) => card.rarity === "legendaire" || ownedIds.has(card.id))
+        .sort((a, b) => {
+          const rank = (r: string) => (r === "transcendance" ? 3 : r === "mythique" ? 2 : r === "legendaire" ? 1 : 0);
+          return rank(b.rarity) - rank(a.rarity) || (b.popularity ?? 0) - (a.popularity ?? 0);
+        }),
+    [allCards, ownedIds],
+  );
+  const lockedMythicCards = useMemo(
+    () =>
+      allCards
+        .filter((card) => card.rarity === "mythique" && !ownedIds.has(card.id))
+        .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0)),
+    [allCards, ownedIds],
+  );
   const avatarById = useMemo(
     () =>
       new Map(
-        allCards.map((card) => [
+        unlockedAvatarCards.map((card) => [
           card.id,
           byId.get(card.id) ?? {
             card,
@@ -164,10 +182,9 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
           },
         ]),
       ),
-    [allCards, byId],
+    [unlockedAvatarCards, byId],
   );
-  const ownedIds = useMemo(() => new Set((copies ?? []).map((copy) => copy.card_id)), [copies]);
-  const avatarIds = useMemo(() => new Set(allCards.map((card) => card.id)), [allCards]);
+  const avatarIds = useMemo(() => new Set(unlockedAvatarCards.map((card) => card.id)), [unlockedAvatarCards]);
   const frameOptions = unlockedProfileFrames(level.level ?? 1, owned, copies ?? []);
   const series = [
     ...new Set(albumCards.flatMap((card) => (card.series?.trim() ? [card.series.trim()] : []))),
@@ -585,8 +602,8 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
             </DialogTitle>
             <DialogDescription>
               {selector === "avatar"
-                ? "Tous les avatars du catalogue sont disponibles."
-                : "Choisis des cartes possédées dans ta collection locale."}
+                ? "Tous les personnages Légendaires populaires sont ouverts à tous. Droppe une carte Mythique en booster pour débloquer son avatar !"
+                : "Choisis des cartes possédées dans ta collection."}
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -595,6 +612,11 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Rechercher une carte ou une série…"
           />
+          {selector === "avatar" && lockedMythicCards.length > 0 && (
+            <p className="text-xs font-medium text-rose-300">
+              {unlockedAvatarCards.length} avatars débloqués • {lockedMythicCards.length} avatars Mythiques à débloquer en booster
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {filtered.map((item) => {
               const image = profilePortrait(item);
@@ -625,6 +647,41 @@ function PlayerProfileContent({ onSaved }: { onSaved: () => void }) {
                 </button>
               );
             })}
+            {selector === "avatar" &&
+              lockedMythicCards
+                .filter((card) =>
+                  `${card.name} ${card.series ?? ""}`
+                    .toLocaleLowerCase("fr")
+                    .includes(search.trim().toLocaleLowerCase("fr")),
+                )
+                .map((card) => {
+                  const image = profilePortrait({ card, copy: { card_id: card.id, transcended: false } });
+                  return (
+                    <div
+                      key={`locked-${card.id}`}
+                      title="Droppe cette carte Mythique pour débloquer son avatar"
+                      className="flex min-w-0 cursor-not-allowed items-center gap-2 rounded-lg border border-rose-500/25 bg-rose-950/15 p-2 text-left opacity-55"
+                    >
+                      {image.src ? (
+                        <img
+                          loading="lazy"
+                          decoding="async"
+                          src={image.src}
+                          alt={card.name}
+                          className="size-10 shrink-0 rounded-md object-cover grayscale"
+                        />
+                      ) : (
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-rose-950/40 text-xs font-bold text-rose-200">
+                          🔒
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-rose-100">{card.name}</span>
+                        <span className="block truncate text-[11px] text-rose-300/80">🔒 Mythique • À dropper</span>
+                      </span>
+                    </div>
+                  );
+                })}
           </div>
           {!filtered.length && (
             <p className="text-sm text-muted-foreground">
