@@ -487,8 +487,13 @@ export const DROP_RATES: Record<BaseRarity, number> = {
 };
 
 export const ZENKAI_DROP_RATES: Record<BaseRarity, number> = {
-  commune: 10, non_commune: 25, rare: 35, epique: 19,
-  legendaire: 8, mythique: 2.5, transcendance: 0.5,
+  commune: 30,
+  non_commune: 32,
+  rare: 24,
+  epique: 10,
+  legendaire: 3.2,
+  mythique: 0.7,
+  transcendance: 0.1,
 };
 export const ZENKAI_BOOSTER_COST = 500;
 
@@ -512,11 +517,11 @@ export function getCardRecycleValue(card: { rarity: BaseRarity; popularity?: num
 export const PITY_LIMIT = 200;
 
 export function rarityFromRoll(roll: number): BaseRarity {
-  if (roll < 54) return "commune";
-  if (roll < 80.5) return "non_commune";
-  if (roll < 94.5) return "rare";
-  if (roll < 98.5) return "epique";
-  if (roll < 99.7) return "legendaire";
+  if (roll < 44) return "commune";
+  if (roll < 75.5) return "non_commune";
+  if (roll < 93) return "rare";
+  if (roll < 98) return "epique";
+  if (roll < 99.6) return "legendaire";
   if (roll < 99.95) return "mythique";
   return "transcendance";
 }

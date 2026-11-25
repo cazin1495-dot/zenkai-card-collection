@@ -566,7 +566,6 @@ function PackOption({ info, selected, onSelect }: { info: (typeof PACKS)[number]
         <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-3 pt-8 text-sm font-bold text-white">{info.label}</span>
       </div>
       <span className={cn("mt-3 block text-xs font-semibold", exclusive ? "text-amber-400" : "text-muted-foreground")}>{exclusive ? "500 Zen" : "Gratuit"}</span>
-      {exclusive && <span className="mt-1 block text-[10px] text-amber-300">Mythique &amp; Transcendance ×10</span>}
     </button>
   );
 }
