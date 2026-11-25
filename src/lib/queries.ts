@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v125";
+const CARDS_LS_KEY = "zenkai_cards_cache_v126";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,8 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+
+
   { id: "r3-lucy", name: "Lucy Maud Montgomery", title: "Bungo Stray Dogs • Lucy Maud Montgomery", rarity: "rare", description: "Ancienne membre de la Guilde invoquant la chambre d’Anne des pignons verts.", sort_order: 19312, category: "seinen", series: "Bungo Stray Dogs", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/n132222-Ue3zZMq9aqMg.jpg", popularity: 18100 },
   { id: "r3-yosano", name: "Akiko Yosano", title: "Bungo Stray Dogs • Akiko Yosano", rarity: "rare", description: "Médecin redoutable de l’Agence maniant le pouvoir Ne Meurs Jamais.", sort_order: 19313, category: "seinen", series: "Bungo Stray Dogs", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b89208-Zjsz22lCmrIE.png", popularity: 18400 },
   { id: "r3-midnight", name: "Midnight (Nemuri Kayama)", title: "My Hero Academia • Midnight (Nemuri Kayama)", rarity: "rare", description: "Héroïne professionnelle et professeure à Yuei maîtrisant l’alter Somnambulisme.", sort_order: 19301, category: "shonen", series: "My Hero Academia", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b127427-urv42J2E7TZ2.png", popularity: 17900 },
