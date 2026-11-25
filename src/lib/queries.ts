@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v157";
+const CARDS_LS_KEY = "zenkai_cards_cache_v158";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v106"],
+  queryKey: ["cards-v107"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -299,7 +299,7 @@ export const cardsQuery = queryOptions({
       ...inazuma.filter((card) => !existingIds.has(card.id)),
       ...drStone.filter((card) => !existingIds.has(card.id)),
       ...STATIC_TR_MEWMEW_CARDS.filter((card) => !existingIds.has(card.id)),
-  ].map((card) => normalizeCatalogCard(card));
+  ].map((card) => normalizeCatalogCard(card)).filter((card) => card.name.toLowerCase() !== "taiyou asano");
   return resolveStaticCardImages(normalized);
   return resolveStaticCardImages(normalizedCards);
   return resolveStaticCardImages(normalizedCards);
