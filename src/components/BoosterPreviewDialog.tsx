@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { applyRemoteRarityOverrides, CATALOG_RARITIES, effectiveDropRate, getUserRarityOverrides, inPack, isCatalogRarity, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, type Card, type PackId, type Rarity } from "@/lib/cards";
+import { applyRemoteRarityOverrides, CATALOG_RARITIES, effectiveDropRate, getUserRarityOverrides, inPack, isCatalogRarity, isTranscendanceCatalogCard, normalizeCatalogCard, RARITY, RARITY_ORDER, type Card, type PackId, type Rarity , isTranscendenceCatalogCard } from "@/lib/cards";
 import { saveRarityOverride } from "@/lib/rarity-overrides";
 import { CUSTOM_TRANSCENDANCE_CARDS, customTranscendanceAsCard, customTranscendanceInPack, type CustomTranscendanceCard } from "@/lib/transcendance-cards";
 import { useFavoriteCards } from "@/lib/favorites";

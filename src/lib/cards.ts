@@ -609,6 +609,11 @@ export const PACKS: { id: PackId; label: string; hint: string; accent: string }[
 ];
 
 /** Does a card belong to a booster pack / collection filter? */
+export function isTranscendenceCatalogCard(card?: { rarity?: string; transcended?: boolean } | null): boolean {
+  if (!card) return false;
+  return card.rarity === "transcendance" || card.transcended === true;
+}
+
 export function inPack(card: Card, pack: PackId | string) {
   const normalized = pack.trim().toLocaleLowerCase("en").replace(/[\s_-]+/g, "");
   if (["all", "allstar", "zenkai", "shonenmix"].includes(normalized)) return true;

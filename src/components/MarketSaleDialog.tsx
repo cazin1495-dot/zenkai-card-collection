@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getCardMarketPrice, isTranscendanceCatalogCard, type Card } from "@/lib/cards";
+import { getCardMarketPrice, isTranscendanceCatalogCard, type Card , isTranscendenceCatalogCard } from "@/lib/cards";
 import { getGuestCollection, getGuestState, type GuestOwnedRow } from "@/lib/guest-collection";
 import { AUCTION_DURATIONS, AUCTION_PRICE_SUGGESTIONS, initializeGuestMarket, listGuestCopy, type MarketListing } from "@/lib/guest-market";
 
