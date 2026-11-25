@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v139";
+const CARDS_LS_KEY = "zenkai_cards_cache_v140";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,15 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "re3-morgiana", name: "Morgiana", title: "Magi • Morgiana", rarity: "epique", description: "Guerrière Fanalis d’une force colossale libérée de l’esclavage par Alibaba et Aladdin.", sort_order: 21215, category: "shonen", series: "Magi", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b43121-o2KuUeEfh6AS.png", popularity: 29200 },
+  { id: "re3-judar", name: "Judar", title: "Magi • Judar", rarity: "epique", description: "Magi noir arrogant et redoutable affilié à l’empire de Kou et Al-Thamen.", sort_order: 21216, category: "shonen", series: "Magi", role: "antagoniste", pack_ids: ["shonen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b42502-suDfjEugIuVT.jpg", popularity: 29100 },
+  { id: "re3-ryouko-para", name: "Ryouko Tamiya", title: "Parasyte • Ryouko Tamiya", rarity: "epique", description: "Parasite brillante et fascinante étudiant la coexistence avec l’humanité.", sort_order: 21217, category: "seinen", series: "Parasyte", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b16586-5BBzHsx1GLGC.jpg", popularity: 29200 },
+  { id: "re3-hakuryuu", name: "Hakuryuu Ren", title: "Magi • Hakuryuu Ren", rarity: "rare", description: "Quatrième prince impérial de Kou animé par une quête de vengeance.", sort_order: 21204, category: "shonen", series: "Magi", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b46823-beP1dqsuJMHs.png", popularity: 18600 },
+  { id: "re3-jafar", name: "Ja’far", title: "Magi • Ja’far", rarity: "rare", description: "Conseiller dévoué de Sinbad et ancien assassin de Sindria.", sort_order: 21205, category: "shonen", series: "Magi", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b42529-7FMW51RoDetA.png", popularity: 18500 },
+  { id: "re3-kana", name: "Kana Kimishima", title: "Parasyte • Kana Kimishima", rarity: "rare", description: "Lycéenne sensible capable de percevoir instinctivement l’aura des parasites.", sort_order: 21206, category: "seinen", series: "Parasyte", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b19215-oei5N1hu9w9w.png", popularity: 18100 },
+  { id: "re3-satomi", name: "Satomi Murano", title: "Parasyte • Satomi Murano", rarity: "rare", description: "Amie d’enfance et soutien émotionnel indéfectible de Shinichi Izumi.", sort_order: 21207, category: "seinen", series: "Parasyte", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b19436-d9ImDTVNQPKt.jpg", popularity: 18200 },
+  { id: "re3-uda", name: "Mamoru Uda", title: "Parasyte • Mamoru Uda", rarity: "rare", description: "Allié loyal de Shinichi cohabitant avec le parasite Jaw.", sort_order: 21208, category: "seinen", series: "Parasyte", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/22146-52mNApPBCdja.jpg", popularity: 18000 },
+  { id: "re3-gotou", name: "Gotou", title: "Parasyte • Gotou", rarity: "rare", description: "Parasite ultime regroupant cinq entités en un seul corps quasi invincible.", sort_order: 21209, category: "seinen", series: "Parasyte", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/22145-Ps1VhfHtirGQ.jpg", popularity: 18700 },
 
   { id: "re1-hagoromo", name: "Hagoromo Ootsutsuki (Sage des Six Chemins)", title: "Naruto • Hagoromo Ootsutsuki (Sage des Six Chemins)", rarity: "epique", description: "Fondateur légendaire du Ninshu ayant légué ses pouvoirs à Naruto et Sasuke.", sort_order: 21020, category: "shonen", series: "Naruto", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b57883-TrjcL1LU7qnj.png", popularity: 29500 },
   { id: "re1-vicious", name: "Vicious", title: "Cowboy Bebop • Vicious", rarity: "epique", description: "Némésis impitoyable de Spike Spiegel au sein du syndicat du Dragon Rouge.", sort_order: 21021, category: "seinen", series: "Cowboy Bebop", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2734-aglO8RKNVxnn.jpg", popularity: 29200 },
