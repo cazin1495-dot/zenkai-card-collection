@@ -49,6 +49,26 @@ function searchKey(value: string) {
   return value.trim().toLocaleLowerCase("fr").normalize("NFD").replace(/\p{M}/gu, "");
 }
 
+const TOP_POPULARITY: Record<string, number> = {
+  "monkey d. luffy": 100000, "roronoa zoro": 98000, "satoru gojo": 97000, "levi": 96000,
+  "son goku": 95000, "naruto uzumaki": 94000, "killua zoldyck": 93000, "itachi uchiha": 92000,
+  "sasuke uchiha": 91000, "eren yeager": 90000, "edward elric": 89000, "l lawliet": 88000,
+  "light yagami": 87000, "vegeta": 86000, "ichigo kurosaki": 85000, "tanjiro kamado": 84000,
+  "nezuko kamado": 83000, "denji": 82000, "makima": 81000, "saitama": 80000,
+  "guts": 79000, "ken kaneki": 78000, "izuku midoriya": 77000, "katsuki bakugo": 76000,
+  "sanji": 75000, "trafalgar law": 74000, "portgas d. ace": 73000, "shanks": 72000,
+  "kakashi hatake": 71000, "madara uchiha": 70000, "sukuna": 69500, "megumi fushiguro": 69000,
+  "gon freecss": 68500, "kurapika": 68000, "hisoka morow": 67500, "mikasa ackerman": 67000,
+  "rimuru tempest": 66500, "cid kagenou": 66000, "shouko komi": 65500, "nazuna nanakusa": 65000,
+  "rudeus greyrat": 64500, "kamina": 64000, "kusuo saiki": 63500, "shinei nouzen": 63000,
+};
+const previewPopularity = (card: Card) => {
+  const key = card.name.trim().toLowerCase();
+  if (TOP_POPULARITY[key]) return TOP_POPULARITY[key];
+  if (card.popularity && card.popularity > 0) return card.popularity;
+  return Math.max(1, 50000 - (card.sort_order ?? 99999));
+};
+
 export function BoosterPreviewDialog({
   cards,
   pack,
@@ -92,7 +112,7 @@ export function BoosterPreviewDialog({
   ].sort((left, right) => {
     const leftRarity = left.customTranscendance ? "transcendance" : left.card.rarity;
     const rightRarity = right.customTranscendance ? "transcendance" : right.card.rarity;
-    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : (right.card.popularity ?? 0) - (left.card.popularity ?? 0);
+    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : previewPopularity(right.card) - previewPopularity(left.card);
   });
   const searchTerm = searchKey(search);
   const visibleEntries = entries.filter((entry) => (
