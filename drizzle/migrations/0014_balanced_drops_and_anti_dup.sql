@@ -46,6 +46,12 @@ BEGIN
    roll:=(random()*100)::numeric;
    IF special='divin_transcendance' THEN
     r:=CASE WHEN roll<0.04 THEN 'transcendance'::public.card_rarity WHEN roll<0.6 THEN 'mythique'::public.card_rarity ELSE public.booster_rarity_for_roll(roll) END;
+      IF count = 10 AND b = 10 AND i = 5 AND NOT has_epique_plus THEN
+        r := 'epique';
+      END IF;
+      IF r IN ('epique', 'legendaire', 'mythique', 'transcendance') THEN
+        has_epique_plus := true;
+      END IF;
    ELSE r:=public.booster_rarity_for_roll(roll); END IF;
    IF i=5 AND special IS NOT NULL AND special<>'divin_transcendance' AND NOT myth THEN r:=CASE WHEN special IN ('sceau_mythique','divin_mythique') THEN 'mythique'::public.card_rarity ELSE special::public.card_rarity END; END IF;
    IF pity>=199 AND i=5 AND NOT myth THEN r:='mythique'; END IF;

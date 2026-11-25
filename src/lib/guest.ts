@@ -15,9 +15,16 @@ export function createLocalGuestDraw(
   return Array.from({ length: boosterCount }, (_, boosterIndex) => {
     const remaining = [...candidates];
     const usedIds = new Set<string>();
+  let hasEpiquePlus = false;
     return Array.from({ length: CARDS_PER_BOOSTER }, (_, cardIndex) => {
       const roll = Math.random() * 100;
-      const rarity = rarityFromRoll(roll);
+      let rarity = rarityFromRoll(roll);
+      if (count === 10 && boosterIndex === 9 && cardIndex === 4 && !hasEpiquePlus) {
+        rarity = "epique";
+      }
+      if (rarity === "epique" || rarity === "legendaire" || rarity === "mythique" || rarity === "transcendance") {
+        hasEpiquePlus = true;
+      }
       let card: Card | undefined;
       let customTranscendance = false;
 

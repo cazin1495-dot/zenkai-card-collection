@@ -500,7 +500,7 @@ export function BoostersPage() {
                         setIsPackChoiceOpen(false);
                         void open(count);
                       }}>
-                        Ouvrir x{count} · {pack === "zenkai" ? `${(count * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : "Gratuit"}
+                        Ouvrir x{count}{count === 10 ? " • Épique min. garantie" : ""} · {pack === "zenkai" ? `${(count * ZENKAI_BOOSTER_COST).toLocaleString("fr-FR")} Zen` : "Gratuit"}
                       </Button>
                     ))}
                     <Button type="button" variant="link" className="min-h-11" onClick={() => {
