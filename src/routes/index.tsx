@@ -437,7 +437,7 @@ export function BoostersPage() {
               <Button variant="hero" size="lg" className="w-full rounded-full px-7 font-bold shadow-lg sm:w-auto" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
                 {pack === "zenkai" ? `Ouvrir le pack (${ZENKAI_BOOSTER_COST} Zen)` : betaBoosters > 0 ? "Ouvrir le pack" : "Stock vide"}
               </Button>
-              <Button variant="glass" size="lg" className="w-full rounded-full px-6 sm:w-auto" onClick={() => setPreviewPack(pack)}>
+              <Button variant="glass" size="lg" className="w-full rounded-full px-6 sm:w-auto" onClick={() => setIsPackPreviewOpen(true)}>
                 Voir le booster
               </Button>
             </div>
@@ -462,7 +462,7 @@ export function BoostersPage() {
                 <button
                   key={card.id}
                   type="button"
-                  onClick={() => setPreviewPack(pack)}
+                  onClick={() => setIsPackPreviewOpen(true)}
                   className={cn(
                     "group absolute h-40 w-28 overflow-hidden rounded-2xl border-2 border-rose-500/85 bg-surface shadow-[0_14px_34px_rgba(244,63,94,0.45)] transition-transform duration-300 hover:scale-105 sm:h-52 sm:w-36",
                     idx === 0 && "-translate-x-14 -rotate-12 opacity-90 sm:-translate-x-20",
