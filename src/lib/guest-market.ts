@@ -255,6 +255,7 @@ export function listGuestCopy(
     const market = readMarket(state.market);
     const copy = state.rows.find((row) => row.id === copyId && row.card_id === card.id);
     if (!copy) throw new Error("Cette copie n'est plus dans ta collection.");
+    if (copy.transcended || copy.customTranscendence || isTranscendenceCatalogCard(card) || card.rarity === "transcendance") throw new Error("Les cartes Transcendance ne sont ni vendables ni échangeables.");
     const listing: MarketListing = {
       id: crypto.randomUUID(),
       seller: "guest",

@@ -400,7 +400,7 @@ function CardValues({ entry, bonus }: { entry: CollectionEntry; bonus: boolean }
   const value = recycle + plusRecycleBonus(recycle, bonus);
   return <div className="w-full text-center text-xs">
     {getCardPopularityFactor(entry.card) >= 1.4 && <span className="inline-block rounded-full bg-amber-400/15 px-2 py-0.5 font-semibold text-amber-400">Populaire 🔥</span>}
-    <p className="mt-1 font-bold text-primary">Valeur locale : {getCardMarketPrice(priced).toLocaleString("fr-FR")} Zen</p>
+    {entry.rarity === "transcendance" ? <p className="mt-1 font-semibold text-amber-300">Non vendable • Non échangeable</p> : <p className="mt-1 font-bold text-primary">Valeur locale : {getCardMarketPrice(priced).toLocaleString("fr-FR")} Zen</p>}
     <p className="text-muted-foreground">Recyclage local : {value.toLocaleString("fr-FR")} Zen{entry.rarity === "transcendance" ? " · non recyclable" : bonus ? " · Zenkai+" : ""}</p>
   </div>;
 }
