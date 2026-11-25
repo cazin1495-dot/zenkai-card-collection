@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v138";
+const CARDS_LS_KEY = "zenkai_cards_cache_v139";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,7 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+
   { id: "re1-hagoromo", name: "Hagoromo Ootsutsuki (Sage des Six Chemins)", title: "Naruto • Hagoromo Ootsutsuki (Sage des Six Chemins)", rarity: "epique", description: "Fondateur légendaire du Ninshu ayant légué ses pouvoirs à Naruto et Sasuke.", sort_order: 21020, category: "shonen", series: "Naruto", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b57883-TrjcL1LU7qnj.png", popularity: 29500 },
   { id: "re1-vicious", name: "Vicious", title: "Cowboy Bebop • Vicious", rarity: "epique", description: "Némésis impitoyable de Spike Spiegel au sein du syndicat du Dragon Rouge.", sort_order: 21021, category: "seinen", series: "Cowboy Bebop", role: "antagoniste", pack_ids: ["seinen", "antagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b2734-aglO8RKNVxnn.jpg", popularity: 29200 },
   { id: "re1-hatsuharu", name: "Hatsuharu Souma", title: "Fruits Basket • Hatsuharu Souma", rarity: "epique", description: "Membre au double tempérament du clan Souma maudit par l’esprit du Bœuf.", sort_order: 21022, category: "shojo", series: "Fruits Basket", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b369-NDFi2A2BzqO6.png", popularity: 28800 },
