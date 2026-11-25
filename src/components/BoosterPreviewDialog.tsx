@@ -92,7 +92,7 @@ export function BoosterPreviewDialog({
   ].sort((left, right) => {
     const leftRarity = left.customTranscendance ? "transcendance" : left.card.rarity;
     const rightRarity = right.customTranscendance ? "transcendance" : right.card.rarity;
-    return RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity);
+    const diff = RARITY_ORDER.indexOf(leftRarity) - RARITY_ORDER.indexOf(rightRarity); return diff !== 0 ? diff : (right.card.popularity ?? 0) - (left.card.popularity ?? 0);
   });
   const searchTerm = searchKey(search);
   const visibleEntries = entries.filter((entry) => (
