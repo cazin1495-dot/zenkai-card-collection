@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v110";
+const CARDS_LS_KEY = "zenkai_cards_cache_v111";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -390,6 +390,9 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "c35-coffee", name: "Coffee", title: "Cowboy Bebop • Coffee", rarity: "commune", description: "Chien fidèle d’un chasseur de primes croisé par l’équipage du Bebop.", sort_order: 17726, category: "seinen", series: "Cowboy Bebop", role: "protagoniste", pack_ids: ["seinen", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b15713-UBG3R1CYJkYG.png", popularity: 5700 },
+
+
   { id: "c35-katsuya-gp", name: "Katsuya Honda (Grand-père)", title: "Fruits Basket • Katsuya Honda (Grand-père)", rarity: "commune", description: "Grand-père paternel affectueux ayant accueilli Tohru Honda.", sort_order: 17718, category: "shojo", series: "Fruits Basket", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b243715-TBu327HRHZD2.jpg", popularity: 5700 },
   { id: "c35-shimada-hq", name: "Makoto Shimada", title: "Haikyu!! • Makoto Shimada", rarity: "commune", description: "Ancien joueur de Karasuno enseignant le service flottant sauté à Yamaguchi.", sort_order: 17719, category: "sport", series: "Haikyu!!", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/80513.jpg", popularity: 6300 },
   { id: "c35-shibayama", name: "Yuuki Shibayama", title: "Haikyu!! • Yuuki Shibayama", rarity: "commune", description: "Libéro remplaçant persévérant du lycée Nekoma.", sort_order: 17720, category: "sport", series: "Haikyu!!", role: "protagoniste", pack_ids: ["sport", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b73677-Q6cR5bzHez9T.jpg", popularity: 6100 },
