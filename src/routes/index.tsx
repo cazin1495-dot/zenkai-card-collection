@@ -416,7 +416,7 @@ export function BoostersPage() {
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button variant="hero" size="lg" className="rounded-full px-7 font-bold shadow-lg" onClick={() => void handleOpen(1)} disabled={phase !== "idle" || (pack !== "zenkai" && betaBoosters <= 0)}>
-                {pack === "zenkai" ? `Ouvrir le pack (${ZENKAI_PACK_COST} Zen)` : betaBoosters > 0 ? "Ouvrir le pack" : "Stock vide"}
+                {pack === "zenkai" ? `Ouvrir le pack (${ZENKAI_BOOSTER_COST} Zen)` : betaBoosters > 0 ? "Ouvrir le pack" : "Stock vide"}
               </Button>
               <Button variant="glass" size="lg" className="rounded-full px-6" onClick={() => setPreviewPack(pack)}>
                 Voir le booster
