@@ -1,3 +1,4 @@
+import { CUSTOM_TRANSCENDANCE_CARDS } from "@/lib/transcendance-cards";
 import { useRef, useState, type PointerEvent } from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -151,7 +152,7 @@ export function TranscendFrame() {
 export function AnimeCard({ card, backTheme, flipped = true, className, count, locked, transcended, customTranscendance, compact, staticEffects, comparisonForm, transformationKey = 0 }: Props) {
   const rarity = displayRarity(card, transcended, customTranscendance);
   const r = RARITY[rarity];
-  const art = cardArt(card, transcended);
+  const rawArt = cardArt(card, transcended); const cid = card.id.replace(/^custom-/, ""); const cname = (card.name || "").trim().toLowerCase(); const fbTr = !rawArt && rarity === "transcendance" ? CUSTOM_TRANSCENDANCE_CARDS.find((d) => d.id === cid || d.name.trim().toLowerCase() === cname || (cname.length >= 4 && d.name.trim().toLowerCase().includes(cname.split(" ")[0]))) : undefined; const art = rawArt || fbTr?.image_url || "";
   const identity = cardIdentity(card, transcended);
   const tiltRef = useRef<HTMLDivElement | null>(null);
   const interactive = rarity === "transcendance" && flipped && !locked && !staticEffects;
