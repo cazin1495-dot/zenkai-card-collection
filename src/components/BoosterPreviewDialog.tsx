@@ -103,7 +103,7 @@ export function BoosterPreviewDialog({
   const favoriteIds = new Set(favoriteCardIds);
   const customForPack = customCards.filter((card) => customTranscendanceInPack(card, pack));
   const rawEntries: PreviewEntry[] = [
-      ...cards.filter((card) => !isTranscendenceCatalogCard(card) && inPack(card, pack)).map((card) => ({
+      ...cards.filter((card) => inPack(card, pack)).map((card) => ({
         id: card.id,
         card: normalizeCatalogCard(card, overrides),
         customTranscendence: false,
@@ -246,7 +246,7 @@ export function BoosterPreviewDialog({
             {showMystery && <MysteryCard pack={pack} />}
             {visibleEntries.slice(0, visibleCount - Number(showMystery)).map((entry) => {
               const rarity = entry.customTranscendance ? "transcendance" : entry.card.rarity;
-              const concealed = rarity === "transcendance" && !ownedCardIds?.has(entry.card.id);
+              const concealed = false;
               const favoriteName = concealed ? "une carte Transcendance mystère" : entry.card.name;
               return (
                 <article key={entry.id} className="mx-auto flex w-full max-w-44 flex-col items-center gap-2">
