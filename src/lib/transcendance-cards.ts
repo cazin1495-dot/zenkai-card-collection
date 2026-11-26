@@ -154,22 +154,26 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
 const GENRES: readonly Genre[] = ["shonen", "seinen", "shojo", "sport"];
 
 export function customTranscendanceAsCard(card: CustomTranscendanceCard): Card {
-  const category = GENRES.find((genre) => card.pack_ids.includes(genre)) ?? null;
-  const role = card.pack_ids.find((pack) => pack === "antagoniste" || pack === "protagoniste") ?? null;
+  const fallback = DEFAULT_TRANSCENDANCE_CARDS.find(
+    (d) => d.id === card.id || d.name.trim().toLowerCase() === card.name.trim().toLowerCase()
+  );
+  const merged = fallback ? { ...fallback, ...card, image_url: card.image_url || fallback.image_url, series_number: card.series_number || fallback.series_number } : card;
+  const category = GENRES.find((genre) => merged.pack_ids.includes(genre)) ?? null;
+  const role = merged.pack_ids.find((pack) => pack === "antagoniste" || pack === "protagoniste") ?? null;
   return {
-    id: card.id,
-    name: card.name,
-    title: card.title ?? card.anime,
+    id: merged.id,
+    name: merged.name,
+    title: merged.title ?? merged.anime,
     rarity: "mythique",
-    description: card.description ?? "Carte Transcendance exclusive.",
+    description: merged.description ?? "Carte Transcendance exclusive.",
     sort_order: -1,
     category,
-    series: card.anime,
+    series: merged.anime,
     role,
-    image_url: card.image_url,
-    ...(card.image_position !== undefined ? { image_position: card.image_position } : {}),
-    ...(card.image_scale !== undefined ? { image_scale: card.image_scale } : {}),
-    ...(card.popularity !== undefined ? { popularity: card.popularity } : {}),
-    transcendance_series_number: card.series_number,
+    image_url: merged.image_url,
+    ...(merged.image_position !== undefined ? { image_position: merged.image_position } : {}),
+    ...(merged.image_scale !== undefined ? { image_scale: merged.image_scale } : {}),
+    ...(merged.popularity !== undefined ? { popularity: merged.popularity } : {}),
+    transcendance_series_number: merged.series_number ?? "ZEN-001-TR",
   };
 }
