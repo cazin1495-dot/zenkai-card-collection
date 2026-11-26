@@ -109,15 +109,15 @@ export function BoosterPreviewDialog({
   ];
   const customForPack = mergedCustomCards.filter((card) => customTranscendanceInPack(card, pack));
   const rawEntries: PreviewEntry[] = [
-      ...cards.filter((card) => inPack(card, pack)).map((card) => ({
-        id: card.id,
-        card: normalizeCatalogCard(card, overrides),
-        customTranscendence: false,
-      })),
       ...customForPack.map((card) => ({
         id: `custom-${card.id}`,
         card: customTranscendenceAsCard(card),
         customTranscendence: true,
+      })),
+      ...cards.filter((card) => inPack(card, pack)).map((card) => ({
+        id: card.id,
+        card: normalizeCatalogCard(card, overrides),
+        customTranscendence: false,
       })),
     ];
 
