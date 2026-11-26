@@ -154,7 +154,7 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
 const GENRES: readonly Genre[] = ["shonen", "seinen", "shojo", "sport"];
 
 export function customTranscendanceAsCard(card: CustomTranscendanceCard): Card {
-  const fallback = DEFAULT_TRANSCENDANCE_CARDS.find(
+  const fallback = CUSTOM_TRANSCENDANCE_CARDS.find(
     (d) => d.id === card.id || d.name.trim().toLowerCase() === card.name.trim().toLowerCase()
   );
   const merged = fallback ? { ...fallback, ...card, image_url: card.image_url || fallback.image_url, series_number: card.series_number || fallback.series_number } : card;
