@@ -135,6 +135,20 @@ export const CUSTOM_TRANSCENDANCE_CARDS: CustomTranscendanceCard[] = [
     rarity: "Transcendance",
     series_number: "ZEN-011-TR",
   },
+  {
+    id: "trans-meliodas",
+    name: "Meliodas • Mode Assaut",
+    anime: "Seven Deadly Sins",
+    title: "Seven Deadly Sins • Roi des Démons",
+    description: "Libérant toute la noirceur de son pouvoir originel, le Capitaine des Seven Deadly Sins retrouve sa puissance terrifiante de chef des Dix Commandements.",
+    popularity: 99300,
+    image_url: "/meliodas%20demon.jpg",
+    image_position: "center",
+    image_scale: 0.95,
+    pack_ids: ["shonen", "protagoniste"],
+    rarity: "Transcendance",
+    series_number: "ZEN-012-TR",
+  },
 ];
 
 const GENRES: readonly Genre[] = ["shonen", "seinen", "shojo", "sport"];
