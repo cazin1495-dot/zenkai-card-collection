@@ -223,7 +223,7 @@ async function fetchHsrFromBrowser(): Promise<Card[]> {
   }
 }
 
-const CARDS_LS_KEY = "zenkai_cards_cache_v162";
+const CARDS_LS_KEY = "zenkai_cards_cache_v163";
 export const cardsQuery = queryOptions({
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60,
@@ -234,7 +234,7 @@ export const cardsQuery = queryOptions({
     } catch {}
     return undefined;
   },
-  queryKey: ["cards-v111"],
+  queryKey: ["cards-v112"],
   queryFn: async () => {
     try {
       const r = localStorage.getItem(CARDS_LS_KEY);
@@ -399,6 +399,7 @@ async function resolveStaticCardImages(cards: Card[]): Promise<Card[]> {
 }
 
 const STATIC_TR_MEWMEW_CARDS: Card[] = [
+  { id: "sds-meliodas-assaut-tr", name: "Meliodas (Mode Assaut)", title: "Seven Deadly Sins • Meliodas (Mode Assaut)", rarity: "transcendance", description: "Le Capitaine des Seven Deadly Sins libérant toute sa puissance originelle de chef des Dix Commandements.", sort_order: 10001, category: "shonen", series: "Seven Deadly Sins", role: "protagoniste", pack_ids: ["shonen", "protagoniste"], image_url: "/meliodas demon.jpg", popularity: 99999 },
   { id: "given-mafuyu-satou", name: "Mafuyu Satou", title: "Given • Mafuyu Satou", rarity: "mythique", description: "Chanteur et guitariste à la voix bouleversante.", sort_order: 23142, category: "shojo", series: "Given", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b136844-UoqciaLvz5Jf.png", popularity: 5000 },
   { id: "given-ritsuka-uenoyama", name: "Ritsuka Uenoyama", title: "Given • Ritsuka Uenoyama", rarity: "mythique", description: "Guitariste prodige de Given.", sort_order: 23143, category: "shojo", series: "Given", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b136843-z6IjhOi636WT.png", popularity: 5000 },
   { id: "given-haruki-nakayama", name: "Haruki Nakayama", title: "Given • Haruki Nakayama", rarity: "legendaire", description: "Bassiste bienveillant de Given.", sort_order: 23144, category: "shojo", series: "Given", role: "protagoniste", pack_ids: ["shojo", "protagoniste"], image_url: "https://s4.anilist.co/file/anilistcdn/character/large/b136845-4jHomiPMsJ6n.png", popularity: 3200 },
