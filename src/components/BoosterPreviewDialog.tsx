@@ -128,7 +128,7 @@ export function BoosterPreviewDialog({
       .trim()
       .toLocaleLowerCase("fr")
       .replace(/ky[uû]bi\s*\(kurama\)/g, "kurama");
-    const key = `${seriesNorm}::${nameNorm}`;
+    const rarityNorm = entry.customTranscendance ? "transcendance" : entry.card.rarity; const baseSeries = seriesNorm.startsWith("dragon ball") ? "dragon ball" : seriesNorm; const baseName = nameNorm.replace(/\s*[(\u2022].*$/, "").replace(/^son\s+/, "").trim(); const key = rarityNorm === "transcendance" ? `tr::${baseSeries}::${baseName}` : `${seriesNorm}::${nameNorm}`;
     if (seenCharacterKeys.has(key)) return false;
     seenCharacterKeys.add(key);
     return true;
