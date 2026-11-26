@@ -60,7 +60,7 @@ function CardIllustration({
   }
   return (
     <>
-      {loadedSource !== src && fallback(false)}
+      
       <img
         src={src}
         alt={alt}
