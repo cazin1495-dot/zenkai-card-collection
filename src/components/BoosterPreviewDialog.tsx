@@ -101,7 +101,13 @@ export function BoosterPreviewDialog({
   const overrides = useRarityOverrides();
   const { favoriteCardIds, toggleFavorite } = useFavoriteCards();
   const favoriteIds = new Set(favoriteCardIds);
-  const customForPack = customCards.filter((card) => customTranscendanceInPack(card, pack));
+  const mergedCustomCards = [
+    ...CUSTOM_TRANSCENDANCE_CARDS,
+    ...customCards.filter(
+      (c) => !CUSTOM_TRANSCENDANCE_CARDS.some((d) => d.id === c.id || d.name.trim().toLowerCase() === c.name.trim().toLowerCase())
+    ),
+  ];
+  const customForPack = mergedCustomCards.filter((card) => customTranscendanceInPack(card, pack));
   const rawEntries: PreviewEntry[] = [
       ...cards.filter((card) => inPack(card, pack)).map((card) => ({
         id: card.id,
@@ -251,7 +257,7 @@ export function BoosterPreviewDialog({
               return (
                 <article key={entry.id} className="mx-auto flex w-full max-w-44 flex-col items-center gap-2">
                   <div className="relative w-full">
-                    {concealed ? <MysteryTranscendanceCard /> : <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact staticEffects />}
+                    {concealed ? <MysteryTranscendanceCard /> : <AnimeCard card={entry.card} customTranscendance={entry.customTranscendance} compact />}
                     <button
                       type="button"
                       aria-label={`${favoriteIds.has(entry.card.id) ? "Retirer" : "Ajouter"} ${favoriteName} ${favoriteIds.has(entry.card.id) ? "des" : "aux"} favoris`}
